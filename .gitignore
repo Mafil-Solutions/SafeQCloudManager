@@ -1,0 +1,66 @@
+# Environment variables - סודות ואישורים
+.env
+.env.local
+*.env
+!.env.example
+
+# Streamlit secrets
+.streamlit/secrets.toml
+!.streamlit/secrets.toml.example
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Audit logs
+*.log
+safeq_audit.log
+safeq_audit.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temp_verifier_*.txt
+auth_data_*.json
+
+# Compiled files
+*.pyc
+*.pyo
