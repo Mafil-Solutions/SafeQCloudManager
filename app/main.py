@@ -694,23 +694,11 @@ def show_login_page():
                 st.info("כל משתמשי הארגון יכולים לגשת לאפליקציה זו")
 
 def show_header():
-    # Header with logos
-    col1, col2, col3, col4 = st.columns([1.6, 6, 1, 2])
-    
+    # Header with logos - מותאם לעברית RTL
+    col1, col2, col3, col4 = st.columns([2, 1, 6, 1.6])
+
     with col1:
-        # לוגו של החברה
-        try:
-            logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=250)
-        except Exception as e:
-            pass
-    
-    with col2:
-        st.title("מנהל הענן של SafeQ")
-    
-    # col3 ריקה - לא משתמשים בה
-    
-    with col4:
+        # כפתורים בצד ימין (בגלל RTL)
         # כפתור יציאה
         if st.button("🚪 יציאה", key="logout_btn"):
             logger = AuditLogger()
@@ -721,27 +709,40 @@ def show_header():
                 ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else "",
                 True, st.session_state.access_level
             )
-            
+
             # נקה הכל
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
-            
+
             st.rerun()
-        
+
         # כפתור ניקוי נתונים
         if st.button("🔄 ניקוי נתונים", key="refresh_page"):
-            keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level', 
+            keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level',
                             'login_time', 'auth_method', 'session_id']
-            
+
             for key in list(st.session_state.keys()):
                 if key not in keys_to_keep:
                     del st.session_state[key]
-            
+
             # מונה לאיפוס טפסים
             st.session_state.form_reset_key = datetime.now().timestamp()
-            
+
             st.success("כל הנתונים נוקו!")
             st.rerun()
+
+    # col2 ריקה
+
+    with col3:
+        st.title("מנהל הענן של SafeQ")
+
+    with col4:
+        # לוגו של החברה בצד שמאל (בגלל RTL)
+        try:
+            logo_path = resource_path("assets/MafilIT_Logo.png")
+            st.image(logo_path, width=250)
+        except Exception as e:
+            pass
 
 def show_audit_dashboard():
     st.header("📊 דשבורד ביקורת")
@@ -1109,6 +1110,56 @@ def apply_modern_styling(rtl=False):
             padding: 8px 12px;
             font-size: 0.9rem;
         }}
+
+        /* תיקון סיידבר במובייל */
+        [data-testid="stSidebar"] {{
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+        }}
+
+        [data-testid="stSidebar"] > div {{
+            width: 100% !important;
+            max-width: 100% !important;
+        }}
+
+        /* תיקון כפתורים במובייל */
+        .stButton > button {{
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }}
+
+        /* תיקון טקסט ותיבות במובייל */
+        .stTextInput > div > div > input,
+        .stSelectbox > div > div > div {{
+            font-size: 0.9rem;
+        }}
+
+        /* תיקון header במובייל */
+        [data-testid="stHorizontalBlock"] {{
+            flex-direction: column !important;
+        }}
+
+        /* תיקון לוגו במובייל */
+        img {{
+            max-width: 150px !important;
+            height: auto !important;
+        }}
+    }}
+
+    /* תיקון נוסף לסיידבר */
+    [data-testid="stSidebar"] {{
+        padding: 1rem;
+    }}
+
+    [data-testid="stSidebar"] .element-container {{
+        width: 100%;
+    }}
+
+    [data-testid="stSidebar"] .stButton > button {{
+        width: 100%;
+        text-align: center;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -1195,13 +1246,19 @@ def main():
     # Tab 1: Users
     with tabs[0]:
         st.header("רשימת משתמשים")
-        
-        col1, col2, col3 = st.columns(3)
+
+        # שורה ראשונה: צ'קבוקסים בצד ימין
+        col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
             show_local = st.checkbox("משתמשים מקומיים", value=True)
         with col2:
             show_entra = st.checkbox("משתמשי Entra", value=True)
         with col3:
+            st.write("")  # ריווח
+
+        # שורה שנייה: משתמשים להצגה
+        col_users = st.columns([1, 2])
+        with col_users[0]:
             max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=50)
         
         if st.button("🔄 טען משתמשים", type="primary", key="load_users_main"):
@@ -1576,12 +1633,12 @@ def main():
     # Tab 4: Groups
     with tabs[3]:
         st.header("ניהול קבוצות")
-    
-        # שורה עליונה - טעינת קבוצות וחיפוש
-        col1, col2 = st.columns([1, 2])
-    
+
+        # שורה עליונה - טעינת קבוצות וחיפוש (מותאם לRTL)
+        col1, col2, col3 = st.columns([1.5, 2, 1])
+
         with col1:
-            if st.button("🔄 טען קבוצות", key="refresh_groups_btn"):
+            if st.button("🔄 טען קבוצות", key="refresh_groups_btn", use_container_width=True):
                 user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                 logger.log_action(st.session_state.username, "Load Groups", "",
                                 st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
@@ -1592,12 +1649,15 @@ def main():
                         st.success(f"נטענו {len(groups)} קבוצות")
                     else:
                         st.warning("לא נמצאו קבוצות")
-        
+
         with col2:
             # חיפוש בקבוצות
             search_term = ""
             if 'available_groups_list' in st.session_state:
                 search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
+
+        with col3:
+            st.write("")  # ריווח
         
         # הצגת רשימת קבוצות מסוננת
         if 'available_groups_list' in st.session_state:
