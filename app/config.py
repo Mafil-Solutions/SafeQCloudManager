@@ -78,6 +78,13 @@ class Config:
                 'ADMIN_GROUPS': self._parse_list(self._get_secret('ADMIN_GROUPS', '')),
                 'SUPERADMIN_GROUP': self._get_secret('SUPERADMIN_GROUP', 'SafeQ-SuperAdmin'),
                 'DENY_MESSAGE': 'Access denied. You must be a member of SafeQ authorized groups.',
+                # Role mapping from Entra groups (4 levels)
+                'ROLE_MAPPING': {
+                    'SafeQ-View': 'viewer',
+                    'SafeQ-Support': 'support',
+                    'SafeQ-Admin': 'admin',
+                    'SafeQ-SuperAdmin': 'superadmin'
+                }
             },
             
             # Session

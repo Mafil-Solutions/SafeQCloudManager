@@ -18,6 +18,8 @@ import sys
 
 # ייבוא config
 from config import config
+# ייבוא permissions (hybrid auth)
+from permissions import initialize_user_permissions
 
 def resource_path(relative_path: str) -> str:
     """
@@ -519,7 +521,10 @@ class SafeQAPI:
 def init_session_state():
     defaults = {
         'logged_in': False, 'username': None, 'user_email': None, 'user_groups': [],
-        'access_level': 'user', 'login_time': None, 'auth_method': None, 'session_id': None
+        'access_level': 'user', 'login_time': None, 'auth_method': None, 'session_id': None,
+        # Hybrid auth fields
+        'entra_username': None, 'local_username': None, 'role': None,
+        'local_groups': [], 'allowed_departments': []
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -597,29 +602,74 @@ def show_login_page():
                         )
                         
                         if entra_auth.check_group_membership(user_groups, CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']):
+                            # Initialize hybrid authentication & permissions
+                            with st.spinner("מאמת הרשאות..."):
+                                api = SafeQAPI()
+                                perm_result = initialize_user_permissions(api, user_info, user_groups, CONFIG)
+
+                            # בדיקה אם אתחול ההרשאות הצליח
+                            if not perm_result['success']:
+                                st.error("❌ אימות הרשאות נכשל")
+                                st.error(perm_result['error_message'])
+
+                                logger.log_action(
+                                    user_info['displayName'], "Permission Check Failed",
+                                    perm_result['error_message'],
+                                    user_email, ', '.join(user_groups_names), False
+                                )
+
+                                # הצג הוראות למשתמש
+                                st.info("💡 אנא וודא שקיים משתמש לוקאלי תואם במערכת SafeQ עם אותו שם משתמש.")
+
+                                # לא ממשיכים - לא מבצעים login
+                                st.stop()
+
+                            # הרשאות אושרו - עדכון session_state
                             st.session_state.logged_in = True
                             st.session_state.username = user_info['displayName']
                             st.session_state.user_email = user_email
                             st.session_state.user_groups = user_groups
-                            st.session_state.access_level = entra_auth.get_user_access_level(user_groups)
+
+                            # הוספת שדות הרשאות חדשים
+                            st.session_state.entra_username = perm_result['entra_username']
+                            st.session_state.local_username = perm_result['local_username']
+                            st.session_state.role = perm_result['role']
+                            st.session_state.local_groups = perm_result['local_groups']
+                            st.session_state.allowed_departments = perm_result['allowed_departments']
+
+                            # Backward compatibility
+                            st.session_state.access_level = perm_result['role']
+
                             st.session_state.login_time = datetime.now()
                             st.session_state.auth_method = 'entra_id'
+
                             # Clean up auth session data
                             for key in ['auth_flow', 'auth_state', 'code_verifier']:
                                 if key in st.session_state:
                                     del st.session_state[key]
-                            
+
+                            # הצגת מידע על ההרשאות שהתקבלו
+                            role_display = {
+                                'viewer': 'צופה',
+                                'support': 'תמיכה',
+                                'admin': 'מנהל',
+                                'superadmin': 'מנהל על'
+                            }.get(perm_result['role'], perm_result['role'])
+
+                            dept_display = "כל המחלקות" if perm_result['allowed_departments'] == ["ALL"] else f"{len(perm_result['allowed_departments'])} מחלקות"
+
                             logger.log_action(
                                 st.session_state.username, "Login Success",
-                                f"Entra ID - Access level: {st.session_state.access_level}",
+                                f"Entra ID - Role: {role_display}, Local User: {perm_result['local_username']}, Departments: {dept_display}",
                                 st.session_state.user_email, ', '.join(user_groups_names),
                                 True, st.session_state.access_level
                             )
-                            
+
                             # Clear the URL parameters
                             st.query_params.clear()
-                            
+
                             st.success(f"ברוך הבא, {st.session_state.username}!")
+                            st.info(f"🔐 רמת הרשאה: {role_display} | 📁 הרשאות: {dept_display}")
                             st.balloons()
                             st.rerun()
                         else:
@@ -1247,14 +1297,44 @@ def main():
         # הזזת שם המשתמש מהheader לכאן
         auth_text = "🌐 Entra ID" if st.session_state.auth_method == 'entra_id' else "🔑 מקומי"
         st.info(f"🔐 אימות: {auth_text}")
-        
+
         # שם המשתמש
-        access_icon = "👑" if st.session_state.access_level == 'admin' else "👤"
+        role = st.session_state.get('role', st.session_state.access_level)
+        role_icons = {
+            'viewer': '👁️',
+            'support': '🛠️',
+            'admin': '👑',
+            'superadmin': '⭐'
+        }
+        access_icon = role_icons.get(role, '👤')
+
         st.info(f"{access_icon} {st.session_state.username}")
         st.info(f"📧 אימייל: {st.session_state.user_email}")
-        
-        level_text = "👑 מנהל" if st.session_state.access_level == 'admin' else "👤 משתמש"
+
+        # הצגת Role
+        role_names = {
+            'viewer': '👁️ צופה',
+            'support': '🛠️ תמיכה',
+            'admin': '👑 מנהל',
+            'superadmin': '⭐ מנהל על'
+        }
+        level_text = role_names.get(role, "👤 משתמש")
         st.info(f"רמה: {level_text}")
+
+        # הצגת משתמש לוקאלי (אם קיים)
+        if st.session_state.get('local_username'):
+            st.info(f"🏠 משתמש לוקאלי: {st.session_state.local_username}")
+
+        # הצגת הרשאות מחלקות
+        if st.session_state.get('allowed_departments'):
+            if st.session_state.allowed_departments == ["ALL"]:
+                st.success("📁 הרשאות: כל המחלקות")
+            else:
+                dept_count = len(st.session_state.allowed_departments)
+                st.info(f"📁 מחלקות מורשות: {dept_count}")
+                with st.expander("הצג מחלקות"):
+                    for dept in st.session_state.allowed_departments:
+                        st.write(f"• {dept}")
         
         if st.button("🔍 בדיקת חיבור", key="sidebar_test_connection"):
             with st.spinner("בודק..."):
@@ -1275,7 +1355,10 @@ def main():
                     st.text(f"{status} {log_entry['action']}")
     
     # Main tabs
-    if st.session_state.access_level == 'admin':
+    role = st.session_state.get('role', st.session_state.access_level)
+
+    # כולם רואים את אותם tabs, בדיקות הרשאות בתוך כל tab
+    if role in ['admin', 'superadmin']:
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 ביקורת מלאה"])
     else:
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 הפעילות שלי"])

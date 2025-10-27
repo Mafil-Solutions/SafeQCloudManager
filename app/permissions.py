@@ -1,0 +1,216 @@
+"""
+SafeQ Manager - Hybrid Authentication & Permissions
+מיפוי בין משתמשי Entra ID למשתמשים לוקאליים ב-SafeQ
+"""
+
+import re
+from typing import Dict, List, Optional
+import streamlit as st
+
+
+def get_entra_username(user_info: dict) -> str:
+    """
+    חילוץ username מתוך user_info מ-Entra ID
+
+    Args:
+        user_info: מידע משתמש מ-Microsoft Graph API
+
+    Returns:
+        str: Username מלא (כולל @domain.com)
+    """
+    return user_info.get('userPrincipalName') or user_info.get('mail') or ''
+
+
+def get_entra_user_role(user_groups: list, role_mapping: dict) -> Optional[str]:
+    """
+    קביעת role לפי קבוצות Entra ID
+
+    Args:
+        user_groups: רשימת קבוצות משתמש מ-Entra
+        role_mapping: מיפוי של שמות קבוצות ל-roles (מ-config)
+
+    Returns:
+        str: role (viewer/support/admin/superadmin) או None
+    """
+    # עדיפות: SuperAdmin > Admin > Support > View
+    priority_order = ['SafeQ-SuperAdmin', 'SafeQ-Admin', 'SafeQ-Support', 'SafeQ-View']
+
+    user_group_names = [g.get('displayName', '') for g in user_groups]
+
+    for group_name in priority_order:
+        if group_name in user_group_names:
+            return role_mapping.get(group_name)
+
+    return None
+
+
+def fetch_local_user(api, username: str, provider_id: int) -> Optional[dict]:
+    """
+    חיפוש משתמש לוקאלי ב-SafeQ
+
+    Args:
+        api: SafeQAPI instance
+        username: שם משתמש לחיפוש (Entra username)
+        provider_id: מזהה ספק (12348 ל-Local)
+
+    Returns:
+        dict: נתוני משתמש או None אם לא נמצא
+    """
+    try:
+        return api.search_user(username, provider_id=provider_id)
+    except Exception as e:
+        st.warning(f"שגיאה בחיפוש משתמש לוקאלי: {str(e)}")
+        return None
+
+
+def fetch_local_user_groups(api, username: str) -> list:
+    """
+    קבלת קבוצות לוקאליות של משתמש מ-SafeQ
+
+    Args:
+        api: SafeQAPI instance
+        username: שם משתמש
+
+    Returns:
+        list: רשימת קבוצות
+    """
+    try:
+        return api.get_user_groups(username)
+    except Exception as e:
+        st.warning(f"שגיאה בקבלת קבוצות משתמש: {str(e)}")
+        return []
+
+
+def extract_departments_from_groups(groups_list: list) -> list:
+    """
+    חילוץ מספרי בתי ספר/מחלקות מרשימת קבוצות
+
+    פורמט קבוצות: "צפת - 240234", "עלי זהב - 234768", וכו'
+    (עם רווחים סביב המקף)
+    חילוץ: המספר אחרי המקף והרווח
+
+    Args:
+        groups_list: רשימת קבוצות (dict או string)
+
+    Returns:
+        list: רשימת מספרי מחלקות ייחודיים (["240234", "234768"])
+    """
+    departments = []
+    # Pattern: מספר אחרי מקף (עם או בלי רווחים) בסוף השם
+    # תומך ב: "צפת - 240234" או "צפת-240234" או "צפת -240234"
+    pattern = re.compile(r'-\s*(\d+)$')
+
+    for group in groups_list:
+        # קבוצה יכולה להיות dict או string
+        if isinstance(group, dict):
+            group_name = group.get('groupName') or group.get('name') or ''
+        else:
+            group_name = str(group)
+
+        match = pattern.search(group_name)
+        if match:
+            dept_num = match.group(1)
+            if dept_num not in departments:
+                departments.append(dept_num)
+
+    return departments
+
+
+def initialize_user_permissions(api, user_info: dict, entra_groups: list, config: dict) -> dict:
+    """
+    הפונקציה המרכזית - אתחול הרשאות משתמש (Hybrid Authentication)
+
+    תהליך:
+    1. חילוץ username מ-Entra
+    2. קביעת role מקבוצות Entra
+    3. חיפוש local user ב-SafeQ
+    4. טעינת קבוצות לוקאליות
+    5. חילוץ departments מהקבוצות
+
+    Args:
+        api: SafeQAPI instance
+        user_info: מידע משתמש מ-Entra
+        entra_groups: קבוצות Entra של המשתמש
+        config: הגדרות מ-config.py
+
+    Returns:
+        dict: {
+            'success': bool,
+            'error_message': str,
+            'entra_username': str,
+            'local_username': str or None,
+            'role': str,
+            'local_groups': list,
+            'allowed_departments': list
+        }
+    """
+    result = {
+        'success': False,
+        'error_message': '',
+        'entra_username': '',
+        'local_username': None,
+        'role': '',
+        'local_groups': [],
+        'allowed_departments': []
+    }
+
+    try:
+        # 1. חילוץ username מ-Entra
+        entra_username = get_entra_username(user_info)
+        if not entra_username:
+            result['error_message'] = "לא ניתן לחלץ שם משתמש מ-Entra ID"
+            return result
+
+        result['entra_username'] = entra_username
+
+        # 2. קביעת role מקבוצות Entra
+        role_mapping = config['ACCESS_CONTROL']['ROLE_MAPPING']
+        role = get_entra_user_role(entra_groups, role_mapping)
+
+        if not role:
+            result['error_message'] = "לא נמצאה קבוצת הרשאות מתאימה ב-Entra ID (SafeQ-View/Support/Admin/SuperAdmin)"
+            return result
+
+        result['role'] = role
+
+        # 3. חיפוש local user ב-SafeQ (Provider ID 12348)
+        local_provider_id = config['PROVIDERS']['LOCAL']
+        local_user = fetch_local_user(api, entra_username, local_provider_id)
+
+        if not local_user:
+            result['error_message'] = (
+                "לא נמצא משתמש לוקאלי תואם במערכת SafeQ.\n\n"
+                "אנא פנה לספק המערכת לצורך בירור נוסף."
+            )
+            return result
+
+        result['local_username'] = local_user.get('userName') or local_user.get('username')
+
+        # 4. טעינת קבוצות לוקאליות
+        local_groups = fetch_local_user_groups(api, result['local_username'])
+        result['local_groups'] = local_groups
+
+        # 5. חילוץ departments
+        if role == 'superadmin':
+            # SuperAdmin מקבל גישה לכל המחלקות
+            result['allowed_departments'] = ["ALL"]
+        else:
+            # שאר המשתמשים: חלץ departments מהקבוצות
+            departments = extract_departments_from_groups(local_groups)
+
+            if not departments:
+                # לא נמצאו departments - ייתכן שהמשתמש לא משויך לאף בית ספר
+                result['error_message'] = (
+                    "לא נמצאו הרשאות מחלקה עבור משתמש זה.\n\n"
+                    "המשתמש לא משויך לאף בית ספר. אנא פנה לספק המערכת."
+                )
+                return result
+
+            result['allowed_departments'] = departments
+
+        result['success'] = True
+        return result
+
+    except Exception as e:
+        result['error_message'] = f"שגיאה באתחול הרשאות: {str(e)}"
+        return result
