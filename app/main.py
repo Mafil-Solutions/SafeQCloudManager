@@ -1285,7 +1285,7 @@ def main():
         st.header("רשימת משתמשים")
 
         # שורה ראשונה: צ'קבוקסים
-        col_check1, col_check2, col_spacer = st.columns([1, 1, 2])
+        col_check1, col_check2, col_spacer = st.columns([3, 1, 1])
 
         with col_check1:
             show_local = st.checkbox("משתמשים מקומיים", value=True)
@@ -1297,7 +1297,7 @@ def main():
         col_num, col_btn = st.columns([2, 2])
 
         with col_num:
-            max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=50)
+            max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=200)
 
         with col_btn:
             st.write("")  # ריווח לגובה
