@@ -37,7 +37,7 @@ CONFIG = config.get()
 # בדיקת תקינות הגדרות
 is_valid, errors, warnings = config.validate()
 if not is_valid:
-    st.error("⚠️ Configuration Errors:")
+    st.error("⚠️ שגיאות תצורה:")
     for error in errors:
         st.error(error)
     st.stop()
@@ -79,7 +79,7 @@ class AuditLogger:
             conn.commit()
             conn.close()
         except Exception as e:
-            st.error(f"Failed to initialize database: {str(e)}")
+            st.error(f"כשל באתחול מסד הנתונים: {str(e)}")
     
     def log_action(self, username, action, details="", user_email="", user_groups="", success=True, access_level="user"):
         timestamp = datetime.now().isoformat()
@@ -175,7 +175,7 @@ class EntraIDAuth:
             
             return auth_url
         except Exception as e:
-            st.error(f"Failed to get auth URL: {str(e)}")
+            st.error(f"כשל בקבלת URL לאימות: {str(e)}")
             return None
     
     def get_token_from_code(self, auth_code):
@@ -183,9 +183,9 @@ class EntraIDAuth:
             # Get state from query params
             query_params = st.query_params.to_dict()
             state = query_params.get('state', '')
-            
+
             if not state:
-                st.error("No state parameter found")
+                st.error("לא נמצא פרמטר state")
                 return None
             
             # Read auth data from file
@@ -197,13 +197,13 @@ class EntraIDAuth:
                     auth_data = json.load(f)
                 # Clean up the file
                 os.remove(f'auth_data_{state}.json')
-                st.info("Retrieved auth data successfully")
+                st.info("נתוני אימות נשלפו בהצלחה")
             except Exception as e:
-                st.error(f"Failed to retrieve auth data: {e}")
+                st.error(f"כשל בשליפת נתוני אימות: {e}")
                 return None
-            
+
             if not auth_data or 'code_verifier' not in auth_data:
-                st.error("Invalid auth data")
+                st.error("נתוני אימות לא תקינים")
                 return None
             
             # Make token request
@@ -219,25 +219,25 @@ class EntraIDAuth:
                 'scope': ' '.join(self.scope)
             }
             
-            st.info("Making token request...")
+            st.info("מבצע בקשת Token...")
             response = requests.post(token_url, data=data)
             
             if response.status_code == 200:
                 token_data = response.json()
                 if 'access_token' in token_data:
-                    st.success("Token acquired successfully!")
+                    st.success("Token התקבל בהצלחה!")
                     return token_data
                 else:
-                    st.error(f"No access token in response: {token_data}")
+                    st.error(f"אין access token בתגובה: {token_data}")
             else:
                 error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text
-                st.error(f"Token request failed: {response.status_code}")
-                st.error(f"Error details: {error_data}")
-            
+                st.error(f"בקשת Token נכשלה: {response.status_code}")
+                st.error(f"פרטי שגיאה: {error_data}")
+
             return None
-            
+
         except Exception as e:
-            st.error(f"Token acquisition failed: {str(e)}")
+            st.error(f"קבלת Token נכשלה: {str(e)}")
             return None
     
     def get_user_info(self, access_token):
@@ -248,10 +248,10 @@ class EntraIDAuth:
             if response.status_code == 200:
                 return response.json()
             else:
-                st.error(f"Failed to get user info: {response.status_code}")
+                st.error(f"כשל בקבלת פרטי משתמש: {response.status_code}")
                 return None
         except Exception as e:
-            st.error(f"User info error: {str(e)}")
+            st.error(f"שגיאה בקבלת פרטי משתמש: {str(e)}")
             return None
     
     def get_user_groups(self, access_token):
@@ -274,10 +274,10 @@ class EntraIDAuth:
                         })
                 return groups
             else:
-                st.warning(f"Could not retrieve user groups: {response.status_code}")
+                st.warning(f"לא ניתן לשלוף קבוצות משתמש: {response.status_code}")
                 return []
         except Exception as e:
-            st.warning(f"Failed to get user groups: {str(e)}")
+            st.warning(f"כשל בקבלת קבוצות משתמש: {str(e)}")
             return []
     
     def check_group_membership(self, user_groups, required_groups):
@@ -333,17 +333,17 @@ class SafeQAPI:
                     elif isinstance(data, list):
                         return data  # אם זה כבר רשימה
                     else:
-                        st.error(f"Unexpected response format: {type(data)}")
+                        st.error(f"פורמט תגובה לא צפוי: {type(data)}")
                         return []
                         
                 except json.JSONDecodeError as e:
-                    st.error(f"Invalid JSON response: {str(e)}")
+                    st.error(f"תגובת JSON לא תקינה: {str(e)}")
                     return []
             else:
-                st.error(f"Error: HTTP {response.status_code}")
+                st.error(f"שגיאה: HTTP {response.status_code}")
                 return []
         except Exception as e:
-            st.error(f"Connection error: {str(e)}")
+            st.error(f"שגיאת חיבור: {str(e)}")
             return []
     
     def search_user(self, username, provider_id=None):
@@ -365,7 +365,7 @@ class SafeQAPI:
                 return None
             return None
         except Exception as e:
-            st.error(f"Search error: {str(e)}")
+            st.error(f"שגיאת חיפוש: {str(e)}")
             return None
     
     def create_user(self, username, provider_id, details):
@@ -385,7 +385,7 @@ class SafeQAPI:
             response = requests.put(url, headers=self.headers, data=data, verify=False, timeout=10)
             return response.status_code == 200
         except Exception as e:
-            st.error(f"Create user error: {str(e)}")
+            st.error(f"שגיאה ביצירת משתמש: {str(e)}")
             return False
             
     def update_user_detail(self, username, detail_type, detail_data, provider_id=None):
@@ -412,16 +412,16 @@ class SafeQAPI:
             if response.status_code == 200:
                 return True
             else:
-                st.error(f"Failed to update user: HTTP {response.status_code}")
+                st.error(f"כשל בעדכון משתמש: HTTP {response.status_code}")
                 if response.text:
                     try:
                         error_detail = response.json()
-                        st.error(f"Error details: {error_detail}")
+                        st.error(f"פרטי שגיאה: {error_detail}")
                     except:
-                        st.error(f"Error details: {response.text}")
+                        st.error(f"פרטי שגיאה: {response.text}")
                 return False
         except Exception as e:
-            st.error(f"Error updating user: {str(e)}")
+            st.error(f"שגיאה בעדכון משתמש: {str(e)}")
             return False
 
     def get_single_user(self, username, provider_id=None):
@@ -441,7 +441,7 @@ class SafeQAPI:
                     return data
             return None
         except Exception as e:
-            st.error(f"Error getting user: {str(e)}")
+            st.error(f"שגיאה בקבלת משתמש: {str(e)}")
             return None
     
     def get_groups(self):
@@ -452,7 +452,7 @@ class SafeQAPI:
                 return response.json()
             return []
         except Exception as e:
-            st.error(f"Groups error: {str(e)}")
+            st.error(f"שגיאת קבוצות: {str(e)}")
             return []
     
     def get_group_members(self, group_id):
@@ -463,7 +463,7 @@ class SafeQAPI:
                 return response.json()
             return []
         except Exception as e:
-            st.error(f"Group members error: {str(e)}")
+            st.error(f"שגיאת חברי קבוצה: {str(e)}")
             return []
             
     def add_user_to_group(self, username, group_id):
@@ -482,16 +482,16 @@ class SafeQAPI:
             if response.status_code == 200:
                 return True
             else:
-                st.error(f"Failed to add user to group: HTTP {response.status_code}")
+                st.error(f"כשל בהוספת משתמש לקבוצה: HTTP {response.status_code}")
                 if response.text:
                     try:
                         error_detail = response.json()
-                        st.error(f"Error details: {error_detail}")
+                        st.error(f"פרטי שגיאה: {error_detail}")
                     except:
-                        st.error(f"Error details: {response.text}")
+                        st.error(f"פרטי שגיאה: {response.text}")
                 return False
         except Exception as e:
-            st.error(f"Error adding user to group: {str(e)}")
+            st.error(f"שגיאה בהוספת משתמש לקבוצה: {str(e)}")
             return False
                 
     def get_user_groups(self, username):
@@ -510,10 +510,10 @@ class SafeQAPI:
                 elif response.status_code == 404:
                     return []  # User not found or no groups
                 else:
-                    st.warning(f"Failed to get user groups: HTTP {response.status_code}")
+                    st.warning(f"כשל בקבלת קבוצות משתמש: HTTP {response.status_code}")
                     return []
             except Exception as e:
-                st.warning(f"Error getting user groups: {str(e)}")
+                st.warning(f"שגיאה בקבלת קבוצות משתמש: {str(e)}")
                 return []
 
 def init_session_state():
@@ -536,14 +536,14 @@ def is_session_valid():
     return session_duration <= timedelta(minutes=CONFIG['SESSION_TIMEOUT'])
 
 def show_access_denied_page():
-    st.title("🚫 Access Denied")
+    st.title("🚫 הגישה נדחתה")
     st.error(CONFIG['ACCESS_CONTROL']['DENY_MESSAGE'])
-    st.info("**Required Groups:**")
+    st.info("**קבוצות נדרשות:**")
     for group in CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']:
         st.write(f"• {group}")
     st.markdown("---")
-    st.write("If you believe this is an error, contact your IT administrator.")
-    if st.button("🔄 Try Again"):
+    st.write("אם לדעתך זו טעות, פנה למנהל ה-IT שלך.")
+    if st.button("🔄 נסה שוב"):
         st.rerun()
 
 def show_login_page():
@@ -561,7 +561,7 @@ def show_login_page():
         
          # Check if we're on the auth_callback path
         if st.query_params.to_dict().get('path') == '/auth_callback' or '/auth_callback' in str(st.query_params):
-            st.info("Processing authentication...")
+            st.info("מעבד אימות...")
             # Force a rerun to process the callback
             st.rerun()
             
@@ -576,10 +576,10 @@ def show_login_page():
             auth_code = query_params['code']
             entra_auth = EntraIDAuth()
             logger = AuditLogger()
-            
-            st.success("Authentication code received! Processing...")
-            
-            with st.spinner("Authenticating with Entra ID..."):
+
+            st.success("קוד אימות התקבל! מעבד...")
+
+            with st.spinner("מתחבר ל-Entra ID..."):
                 token_result = entra_auth.get_token_from_code(auth_code)
                 
                 if token_result and 'access_token' in token_result:
@@ -619,7 +619,7 @@ def show_login_page():
                             # Clear the URL parameters
                             st.query_params.clear()
                             
-                            st.success(f"Welcome, {st.session_state.username}!")
+                            st.success(f"ברוך הבא, {st.session_state.username}!")
                             st.balloons()
                             st.rerun()
                         else:
@@ -632,9 +632,9 @@ def show_login_page():
                             st.query_params.clear()
                             st.rerun()
                     else:
-                        st.error("Failed to get user information")
+                        st.error("כשל בקבלת מידע על המשתמש")
                 else:
-                    st.error("Authentication failed - no access token received")
+                    st.error("האימות נכשל - לא התקבל access token")
         
         # Check access denied
         if hasattr(st.session_state, 'access_denied') and st.session_state.access_denied:
@@ -643,25 +643,25 @@ def show_login_page():
         
          # Main Entra ID Login
         if CONFIG['USE_ENTRA_ID']:
-            st.markdown("#### 🌐 Enterprise Login")
-            
+            st.markdown("#### 🌐 התחברות ארגונית")
+
             entra_auth = EntraIDAuth()
             auth_url = entra_auth.get_auth_url()
-        
+
         if auth_url:
-            st.link_button("🔒 Login with Entra ID", auth_url, type="primary", use_container_width=True)
-        
+            st.link_button("🔒 התחבר עם Entra ID", auth_url, type="primary", use_container_width=True)
+
         # Emergency Admin Login - מוסתר בתוך expander
-        with st.expander("🔑Local Admin Login"):
+        with st.expander("🔑 התחברות מנהל מקומי"):
             #st.markdown("#### 🔑 Local Admin Login")
             with st.form("local_login_form"):
-                username = st.text_input("👤 Username")
-                password = st.text_input("🔒 Password", type="password")
-                login_button = st.form_submit_button("🚀 Login", use_container_width=True)
+                username = st.text_input("👤 שם משתמש")
+                password = st.text_input("🔒 סיסמה", type="password")
+                login_button = st.form_submit_button("🚀 התחבר", use_container_width=True)
             
             if login_button:
                 if not username or not password:
-                    st.error("❌ Please enter both username and password")
+                    st.error("❌ אנא הזן שם משתמש וסיסמה")
                 else:
                     import hashlib
                     password_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -676,22 +676,22 @@ def show_login_page():
                         st.session_state.login_time = datetime.now()
                         st.session_state.auth_method = 'local'
                         
-                        logger.log_action(username, "Login Success", "Local emergency auth", 
+                        logger.log_action(username, "Login Success", "Local emergency auth",
                                         st.session_state.user_email, "Emergency Admin", True, 'admin')
-                        st.success(f"✅ Welcome, {username}!")
+                        st.success(f"✅ ברוך הבא, {username}!")
                         st.rerun()
                     else:
                         logger.log_action(username, "Login Failed", "Invalid local credentials", "", "", False)
-                        st.error("❌ Invalid credentials")
+                        st.error("❌ שם משתמש או סיסמה שגויים")
         
         # Access info
-        with st.expander("ℹ️ Access Information"):
+        with st.expander("ℹ️ מידע על הרשאות"):
             if CONFIG['ACCESS_CONTROL']['ENABLE_GROUP_RESTRICTION']:
-                st.info("**Required Groups:**")
+                st.info("**קבוצות נדרשות:**")
                 for group in CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']:
                     st.write(f"• {group}")
             else:
-                st.info("All tenant users can access this application")
+                st.info("כל משתמשי הארגון יכולים לגשת לאפליקציה זו")
 
 def show_header():
     # Header with logos
@@ -828,17 +828,17 @@ def show_audit_dashboard():
             
             conn.close()
         except Exception as e:
-            st.error(f"Failed to load logs: {str(e)}")
+            st.error(f"כשל בטעינת לוגים: {str(e)}")
 
 def check_config():
     if CONFIG['SERVER_URL'] == 'https://your-server.com:7300':
-        st.error("⚠️ SERVER_URL not configured!")
+        st.error("⚠️ SERVER_URL לא מוגדר!")
         return False
     if CONFIG['API_KEY'] == 'YOUR_API_KEY_HERE':
-        st.error("⚠️ API_KEY not configured!")
+        st.error("⚠️ API_KEY לא מוגדר!")
         return False
     if CONFIG['USE_ENTRA_ID'] and CONFIG['ENTRA_ID']['CLIENT_ID'] == 'your-app-client-id':
-        st.warning("⚠️ Entra ID not configured - using local auth only")
+        st.warning("⚠️ Entra ID לא מוגדר - משתמש באימות מקומי בלבד")
         CONFIG['USE_ENTRA_ID'] = False
     return True
 
@@ -1129,7 +1129,7 @@ def main():
 
     if not is_logged_in:
         if st.session_state.logged_in and not is_session_valid():
-            st.warning("⚠️ Session expired. Please login again.")
+            st.warning("⚠️ פג תוקף ההתחברות. אנא התחבר שוב.")
             logger = AuditLogger()
             logger.log_action(st.session_state.username or "Unknown", "Session Expired", "Timeout")
             
@@ -1232,7 +1232,7 @@ def main():
                 df_data = []
                 for user in all_users:
                     if not isinstance(user, dict):
-                        st.error(f"Invalid user data format: {type(user)}")
+                        st.error(f"פורמט נתוני משתמש לא תקין: {type(user)}")
                         continue
                     
                     department = ""
@@ -1575,29 +1575,29 @@ def main():
     
     # Tab 4: Groups
     with tabs[3]:
-        st.header("Groups Management")
+        st.header("ניהול קבוצות")
     
         # שורה עליונה - טעינת קבוצות וחיפוש
         col1, col2 = st.columns([1, 2])
     
         with col1:
-            if st.button("🔄 Load Groups", key="refresh_groups_btn"):
+            if st.button("🔄 טען קבוצות", key="refresh_groups_btn"):
                 user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                 logger.log_action(st.session_state.username, "Load Groups", "",
                                 st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
-                with st.spinner("Loading groups..."):
+                with st.spinner("טוען קבוצות..."):
                     groups = api.get_groups()
                     if groups:
                         st.session_state.available_groups_list = groups
-                        st.success(f"Loaded {len(groups)} groups")
+                        st.success(f"נטענו {len(groups)} קבוצות")
                     else:
-                        st.warning("No groups found")
+                        st.warning("לא נמצאו קבוצות")
         
         with col2:
             # חיפוש בקבוצות
             search_term = ""
             if 'available_groups_list' in st.session_state:
-                search_term = st.text_input("🔍 Search Groups", placeholder="Type to search groups...", key="group_search")
+                search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
         
         # הצגת רשימת קבוצות מסוננת
         if 'available_groups_list' in st.session_state:
@@ -1611,7 +1611,7 @@ def main():
                 ]
             
             if groups_to_show:
-                st.subheader(f"📋 Groups ({len(groups_to_show)} found)")
+                st.subheader(f"📋 קבוצות (נמצאו {len(groups_to_show)})")
                 
                 # הצגה בעמודות מרובות לחסכון במקום
                 num_columns = min(3, len(groups_to_show))
@@ -1622,10 +1622,10 @@ def main():
                     col_index = i % num_columns
                     
                     with columns[col_index]:
-                        if st.button(f"📁 {group_name}", key=f"select_group_{i}", 
-                                    help="Click to select this group", use_container_width=True):
+                        if st.button(f"📁 {group_name}", key=f"select_group_{i}",
+                                    help="לחץ לבחירת קבוצה זו", use_container_width=True):
                             st.session_state.selected_group_name = group_name
-                            st.success(f"Selected: {group_name}")
+                            st.success(f"נבחרה: {group_name}")
                             st.rerun()
                 
                 # כפתור Show Members מרכזי
@@ -1634,23 +1634,23 @@ def main():
                 # בדיקה אם יש קבוצה נבחרת
                 selected_group = st.session_state.get('selected_group_name', '')
                 button_disabled = not selected_group
-                
+
                 if selected_group:
-                    st.info(f"Selected Group: **{selected_group}**")
+                    st.info(f"קבוצה נבחרת: **{selected_group}**")
                 else:
-                    st.warning("Please select a group above")
+                    st.warning("אנא בחר קבוצה למעלה")
                 
                 col_center = st.columns([1, 2, 1])[1]
                 with col_center:
-                    if st.button("👥 Show Members", key="show_members_btn", 
+                    if st.button("👥 הצג חברים", key="show_members_btn",
                                disabled=button_disabled, use_container_width=True):
                         target_group = st.session_state.selected_group_name
-                        
+
                         user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                         logger.log_action(st.session_state.username, "View Group Members", f"Group: {target_group}",
                                         st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
-                        
-                        with st.spinner("Loading group members..."):
+
+                        with st.spinner("טוען חברי קבוצה..."):
                             members = api.get_group_members(target_group)
                             if members:
                                 st.session_state.group_members_data = {
@@ -1658,23 +1658,23 @@ def main():
                                     'members': members,
                                     'count': len(members)
                                 }
-                                st.success(f"Found {len(members)} members in '{target_group}'")
+                                st.success(f"נמצאו {len(members)} חברים בקבוצה '{target_group}'")
                                 # השבת הכפתור (grayed out) אחרי לחיצה
                                 st.session_state.members_loaded = True
                             else:
-                                st.warning("Group is empty or not found")
+                                st.warning("הקבוצה ריקה או לא נמצאה")
                                 if 'group_members_data' in st.session_state:
                                     del st.session_state.group_members_data
             else:
-                st.info("No groups match your search criteria")
+                st.info("לא נמצאו קבוצות התואמות את קריטריוני החיפוש")
         else:
-            st.info("Click 'Load Groups' to see available groups")
+            st.info("לחץ על 'טען קבוצות' כדי לראות את הקבוצות הזמינות")
         
         # הצגת תוצאות חברי הקבוצה ברוחב מלא
         if 'group_members_data' in st.session_state:
             st.markdown("---")
             group_data = st.session_state.group_members_data
-            st.subheader(f"👥 Members of '{group_data['group_name']}' ({group_data['count']} members)")
+            st.subheader(f"👥 חברי הקבוצה '{group_data['group_name']}' ({group_data['count']} חברים)")
             
             df_data = []
             for member in group_data['members']:
@@ -1705,14 +1705,14 @@ def main():
                 with col_download:
                     csv = df.to_csv(index=False)
                     st.download_button(
-                        "💾 Download CSV", csv.encode('utf-8-sig'),
-                        f"group_{group_data['group_name']}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv", 
+                        "💾 הורד CSV", csv.encode('utf-8-sig'),
+                        f"group_{group_data['group_name']}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
                         "text/csv", key="download_group_members",
                         use_container_width=True
                     )
-                
+
                 with col_clear:
-                    if st.button("🗑️ Clear Results", key="clear_group_results", use_container_width=True):
+                    if st.button("🗑️ נקה תוצאות", key="clear_group_results", use_container_width=True):
                         if 'group_members_data' in st.session_state:
                             del st.session_state.group_members_data
                         if 'selected_group_name' in st.session_state:
@@ -1729,8 +1729,8 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        st.error(f"Application error: {str(e)}")
-        st.info("Please check your configuration and try again.")
+        st.error(f"שגיאת יישום: {str(e)}")
+        st.info("אנא בדוק את ההגדרות ונסה שוב.")
         
         try:
             logger = AuditLogger()
