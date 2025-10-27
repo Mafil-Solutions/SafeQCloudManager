@@ -18,6 +18,13 @@ import sys
 
 # ייבוא config
 from config import config
+# ייבוא permissions (hybrid auth)
+from permissions import (
+    initialize_user_permissions,
+    filter_users_by_departments,
+    filter_groups_by_departments,
+    get_department_options
+)
 
 def resource_path(relative_path: str) -> str:
     """
@@ -519,7 +526,10 @@ class SafeQAPI:
 def init_session_state():
     defaults = {
         'logged_in': False, 'username': None, 'user_email': None, 'user_groups': [],
-        'access_level': 'user', 'login_time': None, 'auth_method': None, 'session_id': None
+        'access_level': 'user', 'login_time': None, 'auth_method': None, 'session_id': None,
+        # Hybrid auth fields
+        'entra_username': None, 'local_username': None, 'role': None,
+        'local_groups': [], 'allowed_departments': []
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -597,29 +607,74 @@ def show_login_page():
                         )
                         
                         if entra_auth.check_group_membership(user_groups, CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']):
+                            # Initialize hybrid authentication & permissions
+                            with st.spinner("מאמת הרשאות..."):
+                                api = SafeQAPI()
+                                perm_result = initialize_user_permissions(api, user_info, user_groups, CONFIG)
+
+                            # בדיקה אם אתחול ההרשאות הצליח
+                            if not perm_result['success']:
+                                st.error("❌ אימות הרשאות נכשל")
+                                st.error(perm_result['error_message'])
+
+                                logger.log_action(
+                                    user_info['displayName'], "Permission Check Failed",
+                                    perm_result['error_message'],
+                                    user_email, ', '.join(user_groups_names), False
+                                )
+
+                                # הצג הוראות למשתמש
+                                st.info("💡 אנא וודא שקיים משתמש לוקאלי תואם במערכת SafeQ עם אותו שם משתמש.")
+
+                                # לא ממשיכים - לא מבצעים login
+                                st.stop()
+
+                            # הרשאות אושרו - עדכון session_state
                             st.session_state.logged_in = True
                             st.session_state.username = user_info['displayName']
                             st.session_state.user_email = user_email
                             st.session_state.user_groups = user_groups
-                            st.session_state.access_level = entra_auth.get_user_access_level(user_groups)
+
+                            # הוספת שדות הרשאות חדשים
+                            st.session_state.entra_username = perm_result['entra_username']
+                            st.session_state.local_username = perm_result['local_username']
+                            st.session_state.role = perm_result['role']
+                            st.session_state.local_groups = perm_result['local_groups']
+                            st.session_state.allowed_departments = perm_result['allowed_departments']
+
+                            # Backward compatibility
+                            st.session_state.access_level = perm_result['role']
+
                             st.session_state.login_time = datetime.now()
                             st.session_state.auth_method = 'entra_id'
+
                             # Clean up auth session data
                             for key in ['auth_flow', 'auth_state', 'code_verifier']:
                                 if key in st.session_state:
                                     del st.session_state[key]
-                            
+
+                            # הצגת מידע על ההרשאות שהתקבלו
+                            role_display = {
+                                'viewer': 'צופה',
+                                'support': 'תמיכה',
+                                'admin': 'מנהל',
+                                'superadmin': 'מנהל על'
+                            }.get(perm_result['role'], perm_result['role'])
+
+                            dept_display = "כל המחלקות" if perm_result['allowed_departments'] == ["ALL"] else f"{len(perm_result['allowed_departments'])} מחלקות"
+
                             logger.log_action(
                                 st.session_state.username, "Login Success",
-                                f"Entra ID - Access level: {st.session_state.access_level}",
+                                f"Entra ID - Role: {role_display}, Local User: {perm_result['local_username']}, Departments: {dept_display}",
                                 st.session_state.user_email, ', '.join(user_groups_names),
                                 True, st.session_state.access_level
                             )
-                            
+
                             # Clear the URL parameters
                             st.query_params.clear()
-                            
+
                             st.success(f"ברוך הבא, {st.session_state.username}!")
+                            st.info(f"🔐 רמת הרשאה: {role_display} | 📁 הרשאות: {dept_display}")
                             st.balloons()
                             st.rerun()
                         else:
@@ -1247,14 +1302,44 @@ def main():
         # הזזת שם המשתמש מהheader לכאן
         auth_text = "🌐 Entra ID" if st.session_state.auth_method == 'entra_id' else "🔑 מקומי"
         st.info(f"🔐 אימות: {auth_text}")
-        
+
         # שם המשתמש
-        access_icon = "👑" if st.session_state.access_level == 'admin' else "👤"
+        role = st.session_state.get('role', st.session_state.access_level)
+        role_icons = {
+            'viewer': '👁️',
+            'support': '🛠️',
+            'admin': '👑',
+            'superadmin': '⭐'
+        }
+        access_icon = role_icons.get(role, '👤')
+
         st.info(f"{access_icon} {st.session_state.username}")
         st.info(f"📧 אימייל: {st.session_state.user_email}")
-        
-        level_text = "👑 מנהל" if st.session_state.access_level == 'admin' else "👤 משתמש"
+
+        # הצגת Role
+        role_names = {
+            'viewer': '👁️ צופה',
+            'support': '🛠️ תמיכה',
+            'admin': '👑 מנהל',
+            'superadmin': '⭐ מנהל על'
+        }
+        level_text = role_names.get(role, "👤 משתמש")
         st.info(f"רמה: {level_text}")
+
+        # הצגת משתמש לוקאלי (אם קיים)
+        if st.session_state.get('local_username'):
+            st.info(f"🏠 משתמש לוקאלי: {st.session_state.local_username}")
+
+        # הצגת הרשאות מחלקות
+        if st.session_state.get('allowed_departments'):
+            if st.session_state.allowed_departments == ["ALL"]:
+                st.success("📁 הרשאות: כל המחלקות")
+            else:
+                dept_count = len(st.session_state.allowed_departments)
+                st.info(f"📁 מחלקות מורשות: {dept_count}")
+                with st.expander("הצג מחלקות"):
+                    for dept in st.session_state.allowed_departments:
+                        st.write(f"• {dept}")
         
         if st.button("🔍 בדיקת חיבור", key="sidebar_test_connection"):
             with st.spinner("בודק..."):
@@ -1275,7 +1360,10 @@ def main():
                     st.text(f"{status} {log_entry['action']}")
     
     # Main tabs
-    if st.session_state.access_level == 'admin':
+    role = st.session_state.get('role', st.session_state.access_level)
+
+    # כולם רואים את אותם tabs, בדיקות הרשאות בתוך כל tab
+    if role in ['admin', 'superadmin']:
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 ביקורת מלאה"])
     else:
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 הפעילות שלי"])
@@ -1328,49 +1416,66 @@ def main():
                     all_users.extend(entra_users)
 
             if all_users:
-                df_data = []
-                for user in all_users:
-                    if not isinstance(user, dict):
-                        st.error(f"פורמט נתוני משתמש לא תקין: {type(user)}")
-                        continue
-                    
-                    department = ""
-                    details = user.get('details', [])
-                    if isinstance(details, list):
-                        for detail in details:
-                            if isinstance(detail, dict) and detail.get('detailType') == 11:
-                                department = detail.get('detailData', '')
-                                break
-                                
-                    pin_code = user.get('shortId', '')
-                    
-                    df_data.append({
-                        'Username': user.get('userName', user.get('username', '')),
-                        'Full Name': user.get('fullName', ''),
-                        'Email': user.get('email', ''),
-                        'PIN Code': pin_code,
-                        'Department': user.get('department', department),
-                        'Source': user.get('source', ''),
-                        'Provider ID': user.get('providerId', '')
-                    })
-                
-                df = pd.DataFrame(df_data)
-                df.rename(columns={
-                    'Username': 'שם משתמש', 'Full Name': 'שם מלא', 'Email': 'אימייל', 
-                    'PIN Code': 'קוד PIN', 'Department': 'מחלקה', 'Source': 'מקור', 
-                    'Provider ID': 'מזהה ספק'
-                }, inplace=True)
-                st.dataframe(df, use_container_width=True)
-                
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    "💾 הורד CSV", csv.encode('utf-8-sig'),
-                    f"users_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv", "text/csv"
-                )
-                
-                st.success(f"✅ נטענו {len(all_users)} משתמשים")
-                logger.log_action(st.session_state.username, "Users Loaded", f"Count: {len(all_users)}",
-                                st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
+                # סינון לפי מחלקות מורשות
+                allowed_departments = st.session_state.get('allowed_departments', [])
+                filtered_users = filter_users_by_departments(all_users, allowed_departments)
+
+                users_before_filter = len(all_users)
+                users_after_filter = len(filtered_users)
+
+                if not filtered_users:
+                    st.warning(f"לא נמצאו משתמשים במחלקות המורשות (נטענו {users_before_filter} משתמשים, 0 אחרי סינון)")
+                    st.info("💡 רק משתמשים מהמחלקות שאליהן אתה שייך יוצגו כאן")
+                else:
+                    df_data = []
+                    for user in filtered_users:
+                        if not isinstance(user, dict):
+                            st.error(f"פורמט נתוני משתמש לא תקין: {type(user)}")
+                            continue
+
+                        department = ""
+                        details = user.get('details', [])
+                        if isinstance(details, list):
+                            for detail in details:
+                                if isinstance(detail, dict) and detail.get('detailType') == 11:
+                                    department = detail.get('detailData', '')
+                                    break
+
+                        pin_code = user.get('shortId', '')
+
+                        df_data.append({
+                            'Username': user.get('userName', user.get('username', '')),
+                            'Full Name': user.get('fullName', ''),
+                            'Email': user.get('email', ''),
+                            'PIN Code': pin_code,
+                            'Department': user.get('department', department),
+                            'Source': user.get('source', ''),
+                            'Provider ID': user.get('providerId', '')
+                        })
+
+                    df = pd.DataFrame(df_data)
+                    df.rename(columns={
+                        'Username': 'שם משתמש', 'Full Name': 'שם מלא', 'Email': 'אימייל',
+                        'PIN Code': 'קוד PIN', 'Department': 'מחלקה', 'Source': 'מקור',
+                        'Provider ID': 'מזהה ספק'
+                    }, inplace=True)
+                    st.dataframe(df, use_container_width=True)
+
+                    csv = df.to_csv(index=False)
+                    st.download_button(
+                        "💾 הורד CSV", csv.encode('utf-8-sig'),
+                        f"users_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv", "text/csv"
+                    )
+
+                    # הצגת מידע על סינון
+                    if users_after_filter < users_before_filter:
+                        st.success(f"✅ מוצגים {users_after_filter} משתמשים מתוך {users_before_filter} (מסוננים לפי מחלקות מורשות)")
+                    else:
+                        st.success(f"✅ נטענו {users_after_filter} משתמשים")
+
+                    logger.log_action(st.session_state.username, "Users Loaded",
+                                    f"Count: {users_before_filter}, Filtered: {users_after_filter}",
+                                    st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
             else:
                 st.warning("לא נמצאו משתמשים")
     
@@ -1456,7 +1561,16 @@ def main():
                             matching_users.append(user)
                             if len(matching_users) >= max_results:
                                 break
-                    
+
+                    # סינון לפי מחלקות מורשות
+                    allowed_departments = st.session_state.get('allowed_departments', [])
+                    users_before_filter = len(matching_users)
+                    matching_users = filter_users_by_departments(matching_users, allowed_departments)
+                    users_after_filter = len(matching_users)
+
+                    if users_after_filter < users_before_filter:
+                        st.info(f"🔍 נמצאו {users_before_filter} משתמשים, מוצגים {users_after_filter} (מסוננים לפי מחלקות מורשות)")
+
                     st.session_state.search_results = matching_users
         
         if 'search_results' in st.session_state:
@@ -1633,51 +1747,74 @@ def main():
     with tabs[2]:
         st.header("הוספת משתמש חדש")
 
-        if st.session_state.access_level != 'admin':
-            st.info("👤 לתשומת לבך: כמשתמש, באפשרותך ליצור משתמשים חדשים אך ייתכנו הגבלות מסוימות.")
+        role = st.session_state.get('role', st.session_state.access_level)
+        if role not in ['admin', 'superadmin', 'support']:
+            st.warning("👁️ רמת ההרשאה שלך (viewer) מאפשרת רק צפייה. יצירת משתמשים חדשים זמינה רק לתמיכה/מנהלים.")
+        else:
+            # הכנת אפשרויות מחלקה לפני הטופס
+            allowed_departments = st.session_state.get('allowed_departments', [])
+            local_groups = st.session_state.get('local_groups', [])
+            department_options = get_department_options(allowed_departments, local_groups)
 
-        form_key = st.session_state.get('form_reset_key', 'default')
-        with st.form(f"add_user_form_{form_key}", clear_on_submit=True):
-            col1, col2 = st.columns(2)
+            is_superadmin = allowed_departments == ["ALL"]
+            has_single_dept = len(department_options) == 1
+            has_multiple_depts = len(department_options) > 1
 
-            # עמודה ימנית
-            with col2:
-                new_username = st.text_input("שם משתמש *", help="שם משתמש ייחודי")
-                new_first_name = st.text_input("שם פרטי")
-                new_last_name = st.text_input("שם משפחה")
-                new_email = st.text_input("אימייל")
-                new_department = st.text_input("מחלקה")
+            form_key = st.session_state.get('form_reset_key', 'default')
+            with st.form(f"add_user_form_{form_key}", clear_on_submit=True):
+                col1, col2 = st.columns(2)
 
-            # עמודה שמאלית
-            with col1:
-                new_password = st.text_input("סיסמה", type="password")
-                new_pin = st.text_input("קוד PIN")
-                new_cardid = st.text_input("מזהה כרטיס")
-            
-            if st.form_submit_button("➕ צור משתמש", type="primary"):
-                if not new_username:
-                    st.error("שם משתמש הוא שדה חובה")
-                else:
-                    provider_id = CONFIG['PROVIDERS']['LOCAL']
-                    details = {
-                        'fullname': f"{new_first_name} {new_last_name}".strip(), 'email': new_email,
-                        'password': new_password, 'department': new_department,
-                        'shortid': new_pin, 'cardid': new_cardid
-                    }
-                    
-                    user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
-                    logger.log_action(st.session_state.username, "Create User Attempt", f"Username: {new_username}, Provider: Local",
-                                    st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
-                    
-                    with st.spinner("יוצר משתמש..."):
-                        success = api.create_user(new_username, provider_id, details)
-                        if success:
-                            st.success("המשתמש נוצר בהצלחה!")
-                            st.balloons()
-                        else:
-                            st.error("❌ יצירת המשתמש נכשלה")
-                            logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
-                                            st.session_state.user_email, user_groups_str, False, st.session_state.access_level)
+                # עמודה ימנית
+                with col2:
+                    new_username = st.text_input("שם משתמש *", help="שם משתמש ייחודי")
+                    new_first_name = st.text_input("שם פרטי")
+                    new_last_name = st.text_input("שם משפחה")
+                    new_email = st.text_input("אימייל")
+
+                    # שדה Department דינמי
+                    if is_superadmin:
+                        new_department = st.text_input("מחלקה", help="הזן מחלקה בפורמט: עיר - מספר (למשל: צפת - 240234)")
+                    elif has_single_dept:
+                        new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
+                                                      help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
+                    elif has_multiple_depts:
+                        new_department = st.selectbox("מחלקה *", options=department_options,
+                                                     help="בחר מחלקה מהרשימה המורשות")
+                    else:
+                        new_department = st.text_input("מחלקה", disabled=True,
+                                                      help="לא נמצאו מחלקות זמינות")
+                        st.error("⚠️ לא ניתן ליצור משתמש - אין מחלקות מורשות")
+
+                # עמודה שמאלית
+                with col1:
+                    new_password = st.text_input("סיסמה", type="password")
+                    new_pin = st.text_input("קוד PIN")
+                    new_cardid = st.text_input("מזהה כרטיס")
+
+                if st.form_submit_button("➕ צור משתמש", type="primary"):
+                    if not new_username:
+                        st.error("שם משתמש הוא שדה חובה")
+                    else:
+                        provider_id = CONFIG['PROVIDERS']['LOCAL']
+                        details = {
+                            'fullname': f"{new_first_name} {new_last_name}".strip(), 'email': new_email,
+                            'password': new_password, 'department': new_department,
+                            'shortid': new_pin, 'cardid': new_cardid
+                        }
+
+                        user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
+                        logger.log_action(st.session_state.username, "Create User Attempt", f"Username: {new_username}, Provider: Local",
+                                        st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
+
+                        with st.spinner("יוצר משתמש..."):
+                            success = api.create_user(new_username, provider_id, details)
+                            if success:
+                                st.success("המשתמש נוצר בהצלחה!")
+                                st.balloons()
+                            else:
+                                st.error("❌ יצירת המשתמש נכשלה")
+                                logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
+                                                st.session_state.user_email, user_groups_str, False, st.session_state.access_level)
     
     # Tab 4: Groups
     with tabs[3]:
@@ -1704,8 +1841,18 @@ def main():
                 with st.spinner("טוען קבוצות..."):
                     groups = api.get_groups()
                     if groups:
-                        st.session_state.available_groups_list = groups
-                        st.success(f"נטענו {len(groups)} קבוצות")
+                        # סינון לפי מחלקות מורשות
+                        allowed_departments = st.session_state.get('allowed_departments', [])
+                        groups_before_filter = len(groups)
+                        filtered_groups = filter_groups_by_departments(groups, allowed_departments)
+                        groups_after_filter = len(filtered_groups)
+
+                        st.session_state.available_groups_list = filtered_groups
+
+                        if groups_after_filter < groups_before_filter:
+                            st.success(f"נטענו {groups_after_filter} קבוצות מתוך {groups_before_filter} (מסוננות לפי הרשאות)")
+                        else:
+                            st.success(f"נטענו {groups_after_filter} קבוצות")
                     else:
                         st.warning("לא נמצאו קבוצות")
         
