@@ -1379,7 +1379,7 @@ def main():
                 "Username": "שם משתמש", "Full Name": "שם מלא",
                 "Department": "מחלקה", "Email": "אימייל"
             }
-        with col1
+        with col1:
             search_type_he_options = list(search_type_map_en_to_he.values())
             search_type_he = st.selectbox("חיפוש לפי", search_type_he_options)
 
