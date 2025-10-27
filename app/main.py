@@ -1285,7 +1285,7 @@ def main():
         st.header("רשימת משתמשים")
 
         # שורה ראשונה: צ'קבוקס מקומיים
-        col_check1,  = st.column([1])
+        col_check1,  = st.columns([1])
         with col_check1:
             show_local = st.checkbox("משתמשים מקומיים", value=True)
             
