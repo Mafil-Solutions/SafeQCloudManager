@@ -1374,7 +1374,7 @@ def main():
 
         # שורה שנייה: חיפוש לפי ושדות נוספים
         col1, col2 = st.columns([2, 1])
-        with col1:
+        with col2:
             search_type_map_en_to_he = {
                 "Username": "שם משתמש", "Full Name": "שם מלא",
                 "Department": "מחלקה", "Email": "אימייל"
@@ -1388,7 +1388,7 @@ def main():
             search_term = st.text_input(f"הזן {search_type_he} לחיפוש")
             partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
                                        help="מצא את כל המשתמשים המכילים את ערך החיפוש")
-        with col2:
+        with col1:
             max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=20)
         
         if st.button("חפש", key="search_users_btn"):
