@@ -856,6 +856,11 @@ def apply_modern_styling(rtl=False):
             margin-left: auto;
             margin-right: 0;
         }
+         /* יישור פלטים של טפסים */
+        input, textarea, select {
+            text-align: right !important;
+            direction: rtl;
+        }
         /* Make sure text aligns to the right */
         div, p, span, h1, h2, h3, h4, h5, h6, label, .stDataFrame {
             text-align: right !important;
