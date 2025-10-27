@@ -1384,7 +1384,7 @@ def main():
             search_provider = st.selectbox("מקור *", ["", "מקומי (12348)", "Entra (12351)"])
 
         # שורה שנייה: חיפוש לפי ושדות נוספים
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns([1, 1])
         with col1:
             search_type_map_en_to_he = {
                 "Username": "שם משתמש", "Full Name": "שם מלא",
