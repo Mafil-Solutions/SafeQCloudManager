@@ -1284,12 +1284,12 @@ def main():
     with tabs[0]:
         st.header("רשימת משתמשים")
 
-        # שורה ראשונה: צ'קבוקסים
-        col_check1, col_check2 = st.columns([1, 1])
-
+        # שורה ראשונה: צ'קבוקס מקומיים
+        col_check1  = st.columns([1])
         with col_check1:
             show_local = st.checkbox("משתמשים מקומיים", value=True)
-
+            
+        col_check2 = st.columns([1]) 
         with col_check2:
             show_entra = st.checkbox("משתמשי Entra", value=True)
 
