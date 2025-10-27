@@ -874,6 +874,32 @@ def apply_modern_styling(rtl=False):
         [data-testid="stHorizontalBlock"] {
             flex-direction: row-reverse;
         }
+
+        /* תיקון סיידבר - צריך להיות בצד ימין ולהיסגר ימינה */
+        [data-testid="stSidebar"] {
+            right: 0 !important;
+            left: auto !important;
+        }
+
+        [data-testid="stSidebar"][aria-expanded="true"] {
+            transform: translateX(0) !important;
+        }
+
+        [data-testid="stSidebar"][aria-expanded="false"] {
+            transform: translateX(100%) !important;
+        }
+
+        /* תיקון כפתור הסגירה של הסיידבר */
+        [data-testid="collapsedControl"] {
+            right: 0 !important;
+            left: auto !important;
+        }
+
+        /* תיקון הודעות להיות מיושרות לימין */
+        .stAlert, .stSuccess, .stError, .stWarning, .stInfo {
+            text-align: right !important;
+            direction: rtl !important;
+        }
         """
 
     st.markdown(f"""
@@ -1634,10 +1660,10 @@ def main():
     with tabs[3]:
         st.header("ניהול קבוצות")
 
-        # שורה עליונה - טעינת קבוצות וחיפוש (מותאם לRTL)
-        col1, col2, col3 = st.columns([1.5, 2, 1])
+        # שורה עליונה - כפתור בצד ימין וחיפוש בצד שמאל
+        col_btn, col_search = st.columns([1, 3])
 
-        with col1:
+        with col_btn:
             if st.button("🔄 טען קבוצות", key="refresh_groups_btn", use_container_width=True):
                 user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                 logger.log_action(st.session_state.username, "Load Groups", "",
@@ -1650,14 +1676,11 @@ def main():
                     else:
                         st.warning("לא נמצאו קבוצות")
 
-        with col2:
+        with col_search:
             # חיפוש בקבוצות
             search_term = ""
             if 'available_groups_list' in st.session_state:
                 search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
-
-        with col3:
-            st.write("")  # ריווח
         
         # הצגת רשימת קבוצות מסוננת
         if 'available_groups_list' in st.session_state:
