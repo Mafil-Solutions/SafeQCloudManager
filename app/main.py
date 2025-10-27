@@ -1273,14 +1273,17 @@ def main():
     with tabs[0]:
         st.header("רשימת משתמשים")
 
-        # שורה ראשונה: צ'קבוקסים והגדרות בשורה אחת
-        col_check1, col_check2, col_num, col_btn = st.columns([1, 1, 1.5, 1.5])
+        # שורה ראשונה: צ'קבוקסים
+        col_check1, col_check2, col_spacer = st.columns([1, 1, 2])
 
         with col_check1:
             show_local = st.checkbox("משתמשים מקומיים", value=True)
 
         with col_check2:
             show_entra = st.checkbox("משתמשי Entra", value=True)
+
+        # שורה שנייה: משתמשים להצגה וכפתור
+        col_num, col_btn = st.columns([2, 2])
 
         with col_num:
             max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=50)
@@ -1363,7 +1366,13 @@ def main():
     # Tab 2: Search & Edit
     with tabs[1]:
         st.header("חיפוש משתמש")
-        
+
+        # שורה ראשונה: מקור (למעלה)
+        col_provider, col_spacer = st.columns([2, 2])
+        with col_provider:
+            search_provider = st.selectbox("מקור *", ["", "מקומי (12348)", "Entra (12351)"])
+
+        # שורה שנייה: חיפוש לפי ושדות נוספים
         col1, col2 = st.columns([2, 1])
         with col1:
             search_type_map_en_to_he = {
@@ -1372,15 +1381,14 @@ def main():
             }
             search_type_he_options = list(search_type_map_en_to_he.values())
             search_type_he = st.selectbox("חיפוש לפי", search_type_he_options)
-            
+
             search_type_map_he_to_en = {v: k for k, v in search_type_map_en_to_he.items()}
             search_type = search_type_map_he_to_en[search_type_he]
 
             search_term = st.text_input(f"הזן {search_type_he} לחיפוש")
-            partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True, 
+            partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
                                        help="מצא את כל המשתמשים המכילים את ערך החיפוש")
         with col2:
-            search_provider = st.selectbox("מקור *", ["", "מקומי (12348)", "Entra (12351)"])
             max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=20)
         
         if st.button("חפש", key="search_users_btn"):
@@ -1617,19 +1625,18 @@ def main():
 
         form_key = st.session_state.get('form_reset_key', 'default')
         with st.form(f"add_user_form_{form_key}", clear_on_submit=True):
-            # סדר העמודות מותאם ל-RTL: ימין לפני שמאל
-            col_right, col_left = st.columns(2)
+            col1, col2 = st.columns(2)
 
-            # עמודה ימנית - תהיה ראשונה בסדר TAB
-            with col_right:
+            # עמודה ימנית
+            with col2:
                 new_username = st.text_input("שם משתמש *", help="שם משתמש ייחודי")
                 new_first_name = st.text_input("שם פרטי")
                 new_last_name = st.text_input("שם משפחה")
                 new_email = st.text_input("אימייל")
                 new_department = st.text_input("מחלקה")
 
-            # עמודה שמאלית - תהיה שנייה בסדר TAB
-            with col_left:
+            # עמודה שמאלית
+            with col1:
                 new_password = st.text_input("סיסמה", type="password")
                 new_pin = st.text_input("קוד PIN")
                 new_cardid = st.text_input("מזהה כרטיס")
@@ -1663,10 +1670,20 @@ def main():
     with tabs[3]:
         st.header("ניהול קבוצות")
 
-        # שורה עליונה - בשתי עמודות, כפתור בצד ימין
-        col_groups = st.columns([1.5, 3])
+        # שורה עליונה - חיפוש (שמאל) וכפתור (ימין)
+        col_search, col_btn = st.columns([2, 1])
 
-        with col_groups[0]:
+        with col_search:
+            # חיפוש בקבוצות
+            search_term = ""
+            if 'available_groups_list' in st.session_state:
+                search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
+            else:
+                # שדה disabled כשאין קבוצות
+                st.text_input("🔍 חיפוש קבוצות", placeholder="לחץ על 'טען קבוצות' תחילה", key="group_search_disabled", disabled=True)
+
+        with col_btn:
+            st.write("")  # ריווח
             if st.button("🔄 טען קבוצות", key="refresh_groups_btn", use_container_width=True):
                 user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                 logger.log_action(st.session_state.username, "Load Groups", "",
@@ -1678,12 +1695,6 @@ def main():
                         st.success(f"נטענו {len(groups)} קבוצות")
                     else:
                         st.warning("לא נמצאו קבוצות")
-
-        with col_groups[1]:
-            # חיפוש בקבוצות
-            search_term = ""
-            if 'available_groups_list' in st.session_state:
-                search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
         
         # הצגת רשימת קבוצות מסוננת
         if 'available_groups_list' in st.session_state:
