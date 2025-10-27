@@ -1385,12 +1385,12 @@ def main():
 
         # שורה שנייה: חיפוש לפי ושדות נוספים
         col1, col2 = st.columns([2, 1])
-        with col2:
+        with col1:
             search_type_map_en_to_he = {
                 "Username": "שם משתמש", "Full Name": "שם מלא",
                 "Department": "מחלקה", "Email": "אימייל"
             }
-        with col1:
+        with col2:
             search_type_he_options = list(search_type_map_en_to_he.values())
             search_type_he = st.selectbox("חיפוש לפי", search_type_he_options)
 
