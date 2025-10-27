@@ -853,6 +853,8 @@ def apply_modern_styling(rtl=False):
         /* יישור כללי לימין */
         .block-container {
             text-align: right;
+            margin-left: auto;
+            margin-right: 0;
         }
         /* Make sure text aligns to the right */
         div, p, span, h1, h2, h3, h4, h5, h6, label, .stDataFrame {
