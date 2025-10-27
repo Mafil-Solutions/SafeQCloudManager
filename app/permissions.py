@@ -83,20 +83,20 @@ def fetch_local_user_groups(api, username: str) -> list:
 
 def extract_departments_from_groups(groups_list: list) -> list:
     """
-    חילוץ מספרי בתי ספר/מחלקות מרשימת קבוצות
+    חילוץ שמות מחלקות מלאים מרשימת קבוצות
 
     פורמט קבוצות: "צפת - 240234", "עלי זהב - 234768", וכו'
     (עם רווחים סביב המקף)
-    חילוץ: המספר אחרי המקף והרווח
+    מחזיר: שמות מלאים של מחלקות בפורמט הנכון
 
     Args:
         groups_list: רשימת קבוצות (dict או string)
 
     Returns:
-        list: רשימת מספרי מחלקות ייחודיים (["240234", "234768"])
+        list: רשימת שמות מחלקות מלאים ייחודיים (["צפת - 240234", "עלי זהב - 234768"])
     """
     departments = []
-    # Pattern: מספר אחרי מקף (עם או בלי רווחים) בסוף השם
+    # Pattern: כל קבוצה שמסתיימת במקף ומספר (בפורמט המחלקה)
     # תומך ב: "צפת - 240234" או "צפת-240234" או "צפת -240234"
     pattern = re.compile(r'-\s*(\d+)$')
 
@@ -107,11 +107,10 @@ def extract_departments_from_groups(groups_list: list) -> list:
         else:
             group_name = str(group)
 
+        # בדוק אם הקבוצה בפורמט הנכון (מסתיימת במספר)
         match = pattern.search(group_name)
-        if match:
-            dept_num = match.group(1)
-            if dept_num not in departments:
-                departments.append(dept_num)
+        if match and group_name not in departments:
+            departments.append(group_name)
 
     return departments
 
@@ -222,7 +221,7 @@ def filter_users_by_departments(users: list, allowed_departments: list) -> list:
 
     Args:
         users: רשימת משתמשים
-        allowed_departments: רשימת מספרי מחלקות מורשים או ["ALL"]
+        allowed_departments: רשימת שמות מחלקות מלאים (["צפת - 240234", ...]) או ["ALL"]
 
     Returns:
         list: רשימה מסוננת של משתמשים
@@ -235,7 +234,6 @@ def filter_users_by_departments(users: list, allowed_departments: list) -> list:
         return users
 
     filtered_users = []
-    pattern = re.compile(r'-\s*(\d+)$')
 
     for user in users:
         # חילוץ department מהמשתמש
@@ -252,12 +250,9 @@ def filter_users_by_departments(users: list, allowed_departments: list) -> list:
         if not user_dept:
             continue
 
-        # חלץ את המספר מה-department
-        match = pattern.search(user_dept)
-        if match:
-            dept_number = match.group(1)
-            if dept_number in allowed_departments:
-                filtered_users.append(user)
+        # השוואה ישירה של שמות מחלקות
+        if user_dept in allowed_departments:
+            filtered_users.append(user)
 
     return filtered_users
 
@@ -269,7 +264,7 @@ def filter_groups_by_departments(groups: list, allowed_departments: list) -> lis
 
     Args:
         groups: רשימת קבוצות
-        allowed_departments: רשימת מספרי מחלקות מורשים או ["ALL"]
+        allowed_departments: רשימת שמות מחלקות מלאים (["צפת - 240234", ...]) או ["ALL"]
 
     Returns:
         list: רשימה מסוננת של קבוצות
@@ -279,7 +274,6 @@ def filter_groups_by_departments(groups: list, allowed_departments: list) -> lis
 
     is_superadmin = allowed_departments == ["ALL"]
     filtered_groups = []
-    pattern = re.compile(r'-\s*(\d+)$')
 
     for group in groups:
         group_name = group.get('groupName') or group.get('name') or str(group)
@@ -293,12 +287,9 @@ def filter_groups_by_departments(groups: list, allowed_departments: list) -> lis
             filtered_groups.append(group)
             continue
 
-        # עבור משתמשים רגילים: רק קבוצות בפורמט הנכון
-        match = pattern.search(group_name)
-        if match:
-            dept_number = match.group(1)
-            if dept_number in allowed_departments:
-                filtered_groups.append(group)
+        # עבור משתמשים רגילים: השוואה ישירה של שמות קבוצות
+        if group_name in allowed_departments:
+            filtered_groups.append(group)
 
     return filtered_groups
 
@@ -309,7 +300,7 @@ def get_department_options(allowed_departments: list, local_groups: list) -> lis
     מחזיר שמות מלאים בפורמט: "צפת - 240234"
 
     Args:
-        allowed_departments: רשימת מספרי מחלקות מורשים או ["ALL"]
+        allowed_departments: רשימת שמות מחלקות מלאים (["צפת - 240234", ...]) או ["ALL"]
         local_groups: קבוצות לוקאליות של המשתמש
 
     Returns:
@@ -318,17 +309,5 @@ def get_department_options(allowed_departments: list, local_groups: list) -> lis
     if allowed_departments == ["ALL"]:
         return []  # SuperAdmin יכול להזין כל מחלקה
 
-    department_names = []
-    pattern = re.compile(r'-\s*(\d+)$')
-
-    for group in local_groups:
-        group_name = group.get('groupName') or group.get('name') or str(group)
-
-        # בדוק אם הקבוצה בפורמט הנכון
-        match = pattern.search(group_name)
-        if match:
-            dept_number = match.group(1)
-            if dept_number in allowed_departments:
-                department_names.append(group_name)
-
-    return department_names
+    # פשוט מחזיר את allowed_departments (שהם כבר השמות המלאים מהקבוצות)
+    return allowed_departments
