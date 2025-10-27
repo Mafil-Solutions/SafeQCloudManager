@@ -1368,7 +1368,7 @@ def main():
         st.header("חיפוש משתמש")
 
         # שורה ראשונה: מקור (למעלה)
-        col_spacer, col_provider = st.columns([2, 2])
+        col_spacer, col_provider = st.columns([3, 2])
         with col_provider:
             search_provider = st.selectbox("מקור *", ["", "מקומי (12348)", "Entra (12351)"])
 
