@@ -1402,7 +1402,7 @@ def main():
                                        help="מצא את כל המשתמשים המכילים את ערך החיפוש")
         col_spacer, col_provider = st.columns([4, 2])
         with col_provider:
-            max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=20)
+            max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=200)
         
         if st.button("חפש", key="search_users_btn"):
             if not search_term:
