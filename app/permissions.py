@@ -214,3 +214,121 @@ def initialize_user_permissions(api, user_info: dict, entra_groups: list, config
     except Exception as e:
         result['error_message'] = f"שגיאה באתחול הרשאות: {str(e)}"
         return result
+
+
+def filter_users_by_departments(users: list, allowed_departments: list) -> list:
+    """
+    סינון רשימת משתמשים לפי מחלקות מורשות
+
+    Args:
+        users: רשימת משתמשים
+        allowed_departments: רשימת מספרי מחלקות מורשים או ["ALL"]
+
+    Returns:
+        list: רשימה מסוננת של משתמשים
+    """
+    if not users:
+        return []
+
+    # SuperAdmin רואה הכל
+    if allowed_departments == ["ALL"]:
+        return users
+
+    filtered_users = []
+    pattern = re.compile(r'-\s*(\d+)$')
+
+    for user in users:
+        # חילוץ department מהמשתמש
+        user_dept = user.get('department', '')
+
+        # אם אין department בשדה הראשי, נסה לחלץ מ-details
+        if not user_dept:
+            for detail in user.get('details', []):
+                if isinstance(detail, dict) and detail.get('detailType') == 11:
+                    user_dept = detail.get('detailData', '')
+                    break
+
+        # אם עדיין אין department, דלג על המשתמש
+        if not user_dept:
+            continue
+
+        # חלץ את המספר מה-department
+        match = pattern.search(user_dept)
+        if match:
+            dept_number = match.group(1)
+            if dept_number in allowed_departments:
+                filtered_users.append(user)
+
+    return filtered_users
+
+
+def filter_groups_by_departments(groups: list, allowed_departments: list) -> list:
+    """
+    סינון רשימת קבוצות לפי מחלקות מורשות
+    מסנן גם את "Local Users" (אלא אם SuperAdmin)
+
+    Args:
+        groups: רשימת קבוצות
+        allowed_departments: רשימת מספרי מחלקות מורשים או ["ALL"]
+
+    Returns:
+        list: רשימה מסוננת של קבוצות
+    """
+    if not groups:
+        return []
+
+    is_superadmin = allowed_departments == ["ALL"]
+    filtered_groups = []
+    pattern = re.compile(r'-\s*(\d+)$')
+
+    for group in groups:
+        group_name = group.get('groupName') or group.get('name') or str(group)
+
+        # סינון "Local Users" (אלא אם SuperAdmin)
+        if not is_superadmin and group_name == "Local Users":
+            continue
+
+        # SuperAdmin רואה הכל
+        if is_superadmin:
+            filtered_groups.append(group)
+            continue
+
+        # עבור משתמשים רגילים: רק קבוצות בפורמט הנכון
+        match = pattern.search(group_name)
+        if match:
+            dept_number = match.group(1)
+            if dept_number in allowed_departments:
+                filtered_groups.append(group)
+
+    return filtered_groups
+
+
+def get_department_options(allowed_departments: list, local_groups: list) -> list:
+    """
+    קבלת רשימת אפשרויות מחלקה לשדה department בטופס יצירת משתמש
+    מחזיר שמות מלאים בפורמט: "צפת - 240234"
+
+    Args:
+        allowed_departments: רשימת מספרי מחלקות מורשים או ["ALL"]
+        local_groups: קבוצות לוקאליות של המשתמש
+
+    Returns:
+        list: רשימת שמות מחלקות מלאים ["צפת - 240234", "עלי זהב - 234768"]
+    """
+    if allowed_departments == ["ALL"]:
+        return []  # SuperAdmin יכול להזין כל מחלקה
+
+    department_names = []
+    pattern = re.compile(r'-\s*(\d+)$')
+
+    for group in local_groups:
+        group_name = group.get('groupName') or group.get('name') or str(group)
+
+        # בדוק אם הקבוצה בפורמט הנכון
+        match = pattern.search(group_name)
+        if match:
+            dept_number = match.group(1)
+            if dept_number in allowed_departments:
+                department_names.append(group_name)
+
+    return department_names
