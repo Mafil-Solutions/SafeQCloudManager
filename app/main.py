@@ -1389,7 +1389,7 @@ def main():
             search_term = st.text_input(f"הזן {search_type_he} לחיפוש")
             partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
                                        help="מצא את כל המשתמשים המכילים את ערך החיפוש")
-       col_spacer, col_provider = st.columns([4, 2])
+        col_spacer, col_provider = st.columns([4, 2])
         with col_provider:
             max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=20)
         
