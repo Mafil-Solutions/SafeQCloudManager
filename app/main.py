@@ -1273,44 +1273,46 @@ def main():
     with tabs[0]:
         st.header("רשימת משתמשים")
 
-        # שורה ראשונה: צ'קבוקסים בצד ימין
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col1:
-            show_local = st.checkbox("משתמשים מקומיים", value=True)
-        with col2:
-            show_entra = st.checkbox("משתמשי Entra", value=True)
-        with col3:
-            st.write("")  # ריווח
+        # שורה ראשונה: צ'קבוקסים והגדרות בשורה אחת
+        col_check1, col_check2, col_num, col_btn = st.columns([1, 1, 1.5, 1.5])
 
-        # שורה שנייה: משתמשים להצגה
-        col_users = st.columns([1, 2])
-        with col_users[0]:
+        with col_check1:
+            show_local = st.checkbox("משתמשים מקומיים", value=True)
+
+        with col_check2:
+            show_entra = st.checkbox("משתמשי Entra", value=True)
+
+        with col_num:
             max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=50)
-        
-        if st.button("🔄 טען משתמשים", type="primary", key="load_users_main"):
+
+        with col_btn:
+            st.write("")  # ריווח לגובה
+            load_button = st.button("🔄 טען משתמשים", type="primary", key="load_users_main", use_container_width=True)
+
+        if load_button:
             user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
             logger.log_action(
                 st.session_state.username, "Load Users",
                 f"Local: {show_local}, Entra: {show_entra}, Max: {max_users}",
                 st.session_state.user_email, user_groups_str, True, st.session_state.access_level
             )
-            
+
             all_users = []
-            
+
             if show_local:
                 with st.spinner("טוען משתמשים מקומיים..."):
                     local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_users)
                     for user in local_users:
                         user['source'] = 'מקומי'
                     all_users.extend(local_users)
-            
+
             if show_entra:
                 with st.spinner("טוען משתמשי Entra..."):
                     entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_users)
                     for user in entra_users:
                         user['source'] = 'Entra'
                     all_users.extend(entra_users)
-            
+
             if all_users:
                 df_data = []
                 for user in all_users:
@@ -1609,24 +1611,25 @@ def main():
     # Tab 3: Add User
     with tabs[2]:
         st.header("הוספת משתמש חדש")
-        
+
         if st.session_state.access_level != 'admin':
             st.info("👤 לתשומת לבך: כמשתמש, באפשרותך ליצור משתמשים חדשים אך ייתכנו הגבלות מסוימות.")
-        
+
         form_key = st.session_state.get('form_reset_key', 'default')
         with st.form(f"add_user_form_{form_key}", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            
-            # עמודה ימנית
-            with col2:
+            # סדר העמודות מותאם ל-RTL: ימין לפני שמאל
+            col_right, col_left = st.columns(2)
+
+            # עמודה ימנית - תהיה ראשונה בסדר TAB
+            with col_right:
                 new_username = st.text_input("שם משתמש *", help="שם משתמש ייחודי")
                 new_first_name = st.text_input("שם פרטי")
                 new_last_name = st.text_input("שם משפחה")
                 new_email = st.text_input("אימייל")
                 new_department = st.text_input("מחלקה")
 
-            # עמודה שמאלית
-            with col1:
+            # עמודה שמאלית - תהיה שנייה בסדר TAB
+            with col_left:
                 new_password = st.text_input("סיסמה", type="password")
                 new_pin = st.text_input("קוד PIN")
                 new_cardid = st.text_input("מזהה כרטיס")
@@ -1660,10 +1663,10 @@ def main():
     with tabs[3]:
         st.header("ניהול קבוצות")
 
-        # שורה עליונה - כפתור בצד ימין וחיפוש בצד שמאל
-        col_btn, col_search = st.columns([1, 3])
+        # שורה עליונה - בשתי עמודות, כפתור בצד ימין
+        col_groups = st.columns([1.5, 3])
 
-        with col_btn:
+        with col_groups[0]:
             if st.button("🔄 טען קבוצות", key="refresh_groups_btn", use_container_width=True):
                 user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                 logger.log_action(st.session_state.username, "Load Groups", "",
@@ -1676,7 +1679,7 @@ def main():
                     else:
                         st.warning("לא נמצאו קבוצות")
 
-        with col_search:
+        with col_groups[1]:
             # חיפוש בקבוצות
             search_term = ""
             if 'available_groups_list' in st.session_state:
