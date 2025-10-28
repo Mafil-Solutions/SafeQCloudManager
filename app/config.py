@@ -95,7 +95,10 @@ class Config:
             'LOG_TO_FILE': self._get_secret('LOG_TO_FILE', True),
             'LOG_TO_DATABASE': self._get_secret('LOG_TO_DATABASE', True),
             'AUDIT_LOG_PATH': self._get_secret('AUDIT_LOG_PATH', 'safeq_audit.log'),
-            'DATABASE_PATH': self._get_secret('DATABASE_PATH', 'safeq_audit.db')
+            'DATABASE_PATH': self._get_secret('DATABASE_PATH', 'safeq_audit.db'),
+
+            # Emergency Local Users (from secrets.toml)
+            'LOCAL_USERS': self._parse_emergency_users()
         }
     
     def _parse_list(self, value: str) -> list:
@@ -105,6 +108,30 @@ class Config:
         if isinstance(value, list):
             return value
         return [item.strip() for item in value.split(',') if item.strip()]
+
+    def _parse_emergency_users(self) -> dict:
+        """
+        טוען משתמשי חירום מ-secrets
+        פורמט ב-secrets.toml:
+        [EMERGENCY_USERS]
+        admin = "hashed_password"
+        backup = "hashed_password"
+        """
+        try:
+            if hasattr(st, 'secrets') and 'EMERGENCY_USERS' in st.secrets:
+                # Streamlit secrets - מחזיר dict
+                return dict(st.secrets['EMERGENCY_USERS'])
+
+            # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
+            emergency_users = {}
+            for key, value in os.environ.items():
+                if key.startswith('EMERGENCY_USER_'):
+                    username = key.replace('EMERGENCY_USER_', '')
+                    emergency_users[username] = value
+
+            return emergency_users if emergency_users else {}
+        except:
+            return {}
     
     def get(self, key: str = None) -> Any:
         """מחזיר הגדרה או את כל ההגדרות"""
