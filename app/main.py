@@ -774,7 +774,9 @@ def show_header():
         # כפתור ניקוי נתונים
         if st.button("🔄 ניקוי נתונים", key="refresh_page"):
             keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level',
-                            'login_time', 'auth_method', 'session_id']
+                            'login_time', 'auth_method', 'session_id',
+                            # Hybrid auth fields
+                            'entra_username', 'local_username', 'role', 'local_groups', 'allowed_departments']
 
             for key in list(st.session_state.keys()):
                 if key not in keys_to_keep:
@@ -1668,9 +1670,14 @@ def main():
                             with st.spinner("טוען קבוצות..."):
                                 available_groups = api.get_groups()
                                 if available_groups:
-                                    group_names = [g.get('groupName') or g.get('name') or str(g) for g in available_groups if not (g.get('groupName') == "Local Admins" and st.session_state.auth_method != 'local')]
+                                    # סינון לפי מחלקות מורשות
+                                    allowed_departments = st.session_state.get('allowed_departments', [])
+                                    filtered_groups = filter_groups_by_departments(available_groups, allowed_departments)
+
+                                    # הסרת "Local Admins" למשתמשים שלא התחברו מקומי
+                                    group_names = [g.get('groupName') or g.get('name') or str(g) for g in filtered_groups if not (g.get('groupName') == "Local Admins" and st.session_state.auth_method != 'local')]
                                     st.session_state.available_groups = group_names
-                                    st.success(f"נטענו {len(group_names)} קבוצות")
+                                    st.success(f"נטענו {len(group_names)} קבוצות מורשות")
                                 else:
                                     st.warning("לא נמצאו קבוצות")
 
@@ -1691,20 +1698,45 @@ def main():
                 if 'user_to_edit' in st.session_state and st.session_state.user_to_edit:
                     st.markdown("---")
                     st.subheader(f"📝 עריכת משתמש: {st.session_state.edit_username}")
-                    
+
                     user_data = st.session_state.user_to_edit
                     current_full_name = user_data.get('fullName', '')
                     current_email = user_data.get('email', '')
                     current_department = user_data.get('department', '')
                     current_pin = user_data.get('shortId', '')
                     current_card_id = next((d.get('detailData', '') for d in user_data.get('details', []) if isinstance(d, dict) and d.get('detailType') == 4), "")
-                    
+
+                    # הכנת אפשרויות מחלקה
+                    allowed_departments = st.session_state.get('allowed_departments', [])
+                    is_superadmin = allowed_departments == ["ALL"]
+
                     with st.form(f"edit_user_form_{st.session_state.edit_username}"):
                         col1, col2 = st.columns(2)
                         with col1:
                             new_full_name = st.text_input("שם מלא", value=current_full_name)
                             new_email = st.text_input("אימייל", value=current_email)
-                            new_department = st.text_input("מחלקה", value=current_department)
+
+                            # שדה Department דינמי - כמו בטאב הוספת משתמש
+                            if is_superadmin:
+                                new_department = st.text_input("מחלקה", value=current_department,
+                                                              help="הזן מחלקה בפורמט: עיר - מספר")
+                            elif len(allowed_departments) == 1:
+                                # מחלקה אחת - disabled
+                                new_department = st.text_input("מחלקה", value=allowed_departments[0], disabled=True,
+                                                              help="מחלקה קבועה לפי הרשאות")
+                            elif len(allowed_departments) > 1:
+                                # מספר מחלקות - selectbox
+                                # אם המחלקה הנוכחית במורשות, היא תהיה ברירת מחדל
+                                default_idx = 0
+                                if current_department in allowed_departments:
+                                    default_idx = allowed_departments.index(current_department)
+                                new_department = st.selectbox("מחלקה", options=allowed_departments,
+                                                             index=default_idx,
+                                                             help="בחר מחלקה מהרשימה המורשות")
+                            else:
+                                # אין מחלקות - disabled
+                                new_department = st.text_input("מחלקה", value=current_department, disabled=True,
+                                                              help="אין הרשאות מחלקה")
                         with col2:
                             new_pin = st.text_input("קוד PIN", value=current_pin)
                             new_card_id = st.text_input("מזהה כרטיס", value=current_card_id)
