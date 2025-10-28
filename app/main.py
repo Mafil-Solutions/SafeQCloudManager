@@ -12,6 +12,7 @@ from typing import Dict, List, Optional
 import json
 import os
 import sqlite3
+import re
 from datetime import datetime, timedelta
 import msal
 import sys
@@ -752,11 +753,10 @@ def show_login_page():
                 if not username or not password:
                     st.error("❌ אנא הזן שם משתמש וסיסמה")
                 else:
-                    import hashlib
-                    password_hash = hashlib.sha256(password.encode()).hexdigest()
                     logger = AuditLogger()
-                    
-                    if username in CONFIG['LOCAL_USERS'] and CONFIG['LOCAL_USERS'][username] == password_hash:
+
+                    # השוואה ישירה - הסיסמאות ב-secrets הן plain text (Streamlit מצפין את secrets.toml)
+                    if username in CONFIG['LOCAL_USERS'] and CONFIG['LOCAL_USERS'][username] == password:
                         st.session_state.logged_in = True
                         st.session_state.username = username
                         st.session_state.user_email = f"{username}@local"
