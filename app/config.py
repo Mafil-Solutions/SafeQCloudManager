@@ -114,12 +114,15 @@ class Config:
         טוען משתמשי חירום מ-secrets
         פורמט ב-secrets.toml:
         [EMERGENCY_USERS]
-        admin = "hashed_password"
-        backup = "hashed_password"
+        admin = "plain_text_password"
+        backup = "plain_text_password"
+
+        הערה: הסיסמאות מאוחסנות בטקסט רגיל ב-secrets (שהוא מוצפן ע"י Streamlit)
+        ומומרות ל-hash בזמן ההתחברות
         """
         try:
             if hasattr(st, 'secrets') and 'EMERGENCY_USERS' in st.secrets:
-                # Streamlit secrets - מחזיר dict
+                # Streamlit secrets - מחזיר dict עם סיסמאות plain text
                 return dict(st.secrets['EMERGENCY_USERS'])
 
             # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
