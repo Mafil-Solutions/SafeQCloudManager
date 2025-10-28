@@ -359,11 +359,11 @@ class SafeQAPI:
             params = {'username': username}
             if provider_id:
                 params['providerid'] = provider_id
-            
+
             response = requests.get(url, headers=self.headers, params=params, verify=False, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                
+
                 # אם התגובה היא dictionary עם 'items', קח את הפריט הראשון
                 if isinstance(data, dict) and 'items' in data and data['items']:
                     return data['items'][0]
@@ -374,6 +374,40 @@ class SafeQAPI:
         except Exception as e:
             st.error(f"שגיאת חיפוש: {str(e)}")
             return None
+
+    def check_pin_exists(self, pin_code, exclude_username=None):
+        """
+        בודק אם PIN code כבר קיים במערכת
+
+        Args:
+            pin_code: קוד PIN לבדיקה
+            exclude_username: שם משתמש להחרגה (לעריכת משתמש קיים)
+
+        Returns:
+            tuple: (exists: bool, username: str or None)
+        """
+        if not pin_code or not pin_code.strip():
+            return False, None
+
+        try:
+            # חיפוש בכל המשתמשים (Local + Entra)
+            for provider_id in [CONFIG['PROVIDERS']['LOCAL'], CONFIG['PROVIDERS']['ENTRA']]:
+                users = self.get_users(provider_id, max_users=1000)
+
+                for user in users:
+                    user_pin = user.get('shortId', '')
+                    user_name = user.get('userName') or user.get('username', '')
+
+                    # אם מצאנו PIN זהה
+                    if user_pin == pin_code.strip():
+                        # אם זה לא המשתמש שאנחנו עורכים
+                        if exclude_username is None or user_name != exclude_username:
+                            return True, user_name
+
+            return False, None
+        except Exception as e:
+            st.warning(f"שגיאה בבדיקת PIN: {str(e)}")
+            return False, None
     
     def create_user(self, username, provider_id, details):
         try:
@@ -1753,27 +1787,47 @@ def main():
                             st.rerun()
                         
                         if submit_edit:
-                            updates_made = 0
-                            provider_id = user_data.get('providerId')
-                            
-                            if new_full_name != current_full_name and api.update_user_detail(st.session_state.edit_username, 0, new_full_name, provider_id): updates_made += 1
-                            if new_email != current_email and api.update_user_detail(st.session_state.edit_username, 1, new_email, provider_id): updates_made += 1
-                            if new_department != current_department and api.update_user_detail(st.session_state.edit_username, 11, new_department, provider_id): updates_made += 1
-                            if new_pin != current_pin and api.update_user_detail(st.session_state.edit_username, 5, new_pin, provider_id): updates_made += 1
-                            if new_card_id != current_card_id and api.update_user_detail(st.session_state.edit_username, 4, new_card_id, provider_id): updates_made += 1
-                            
-                            if updates_made > 0:
-                                st.success(f"עודכנו בהצלחה {updates_made} שדות עבור {st.session_state.edit_username}")
-                                st.balloons()
-                                with st.spinner("העדכון הושלם! רענון בעוד 2 שניות..."):
-                                    import time
-                                    time.sleep(2)
-                                
-                                del st.session_state.user_to_edit
-                                del st.session_state.edit_username
-                                if 'search_results' in st.session_state:
-                                    del st.session_state.search_results
-                                st.rerun()
+                            # בדיקות validation
+                            validation_errors = []
+
+                            # בדיקת אימייל
+                            if new_email and new_email != current_email:
+                                if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_email):
+                                    validation_errors.append("❌ כתובת אימייל לא תקינה")
+
+                            # בדיקת PIN כפול
+                            if new_pin and new_pin != current_pin:
+                                pin_exists, existing_user = api.check_pin_exists(new_pin, exclude_username=st.session_state.edit_username)
+                                if pin_exists:
+                                    validation_errors.append(f"❌ קוד PIN '{new_pin}' כבר קיים אצל משתמש: {existing_user}")
+
+                            # אם יש שגיאות validation
+                            if validation_errors:
+                                for error in validation_errors:
+                                    st.error(error)
+                            else:
+                                # אין שגיאות - עדכן משתמש
+                                updates_made = 0
+                                provider_id = user_data.get('providerId')
+
+                                if new_full_name != current_full_name and api.update_user_detail(st.session_state.edit_username, 0, new_full_name, provider_id): updates_made += 1
+                                if new_email != current_email and api.update_user_detail(st.session_state.edit_username, 1, new_email, provider_id): updates_made += 1
+                                if new_department != current_department and api.update_user_detail(st.session_state.edit_username, 11, new_department, provider_id): updates_made += 1
+                                if new_pin != current_pin and api.update_user_detail(st.session_state.edit_username, 5, new_pin, provider_id): updates_made += 1
+                                if new_card_id != current_card_id and api.update_user_detail(st.session_state.edit_username, 4, new_card_id, provider_id): updates_made += 1
+
+                                if updates_made > 0:
+                                    st.success(f"עודכנו בהצלחה {updates_made} שדות עבור {st.session_state.edit_username}")
+                                    st.balloons()
+                                    with st.spinner("העדכון הושלם! רענון בעוד 2 שניות..."):
+                                        import time
+                                        time.sleep(2)
+
+                                    del st.session_state.user_to_edit
+                                    del st.session_state.edit_username
+                                    if 'search_results' in st.session_state:
+                                        del st.session_state.search_results
+                                    st.rerun()
 
     # Tab 3: Add User
     with tabs[2]:
@@ -1819,7 +1873,8 @@ def main():
 
                 # עמודה שמאלית
                 with col1:
-                    new_password = st.text_input("סיסמה", type="password")
+                    new_password = st.text_input("סיסמה", type="password", placeholder="Aa123456",
+                                                help="אם לא מוזן - סיסמה ברירת מחדל: Aa123456")
                     new_pin = st.text_input("קוד PIN")
                     new_cardid = st.text_input("מזהה כרטיס")
 
@@ -1827,26 +1882,45 @@ def main():
                     if not new_username:
                         st.error("שם משתמש הוא שדה חובה")
                     else:
-                        provider_id = CONFIG['PROVIDERS']['LOCAL']
-                        details = {
-                            'fullname': f"{new_first_name} {new_last_name}".strip(), 'email': new_email,
-                            'password': new_password, 'department': new_department,
-                            'shortid': new_pin, 'cardid': new_cardid
-                        }
+                        # בדיקות תקינות
+                        validation_errors = []
 
-                        user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
-                        logger.log_action(st.session_state.username, "Create User Attempt", f"Username: {new_username}, Provider: Local",
-                                        st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
+                        # בדיקת אימייל
+                        if new_email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_email):
+                            validation_errors.append("❌ כתובת אימייל לא תקינה")
 
-                        with st.spinner("יוצר משתמש..."):
-                            success = api.create_user(new_username, provider_id, details)
-                            if success:
-                                st.success("המשתמש נוצר בהצלחה!")
-                                st.balloons()
-                            else:
-                                st.error("❌ יצירת המשתמש נכשלה")
-                                logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
-                                                st.session_state.user_email, user_groups_str, False, st.session_state.access_level)
+                        # בדיקת PIN כפול
+                        if new_pin:
+                            pin_exists, existing_user = api.check_pin_exists(new_pin)
+                            if pin_exists:
+                                validation_errors.append(f"❌ קוד PIN '{new_pin}' כבר קיים אצל משתמש: {existing_user}")
+
+                        # אם יש שגיאות validation
+                        if validation_errors:
+                            for error in validation_errors:
+                                st.error(error)
+                        else:
+                            # אין שגיאות - צור משתמש
+                            provider_id = CONFIG['PROVIDERS']['LOCAL']
+                            details = {
+                                'fullname': f"{new_first_name} {new_last_name}".strip(), 'email': new_email,
+                                'password': new_password or 'Aa123456', 'department': new_department,
+                                'shortid': new_pin, 'cardid': new_cardid
+                            }
+
+                            user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
+                            logger.log_action(st.session_state.username, "Create User Attempt", f"Username: {new_username}, Provider: Local",
+                                            st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
+
+                            with st.spinner("יוצר משתמש..."):
+                                success = api.create_user(new_username, provider_id, details)
+                                if success:
+                                    st.success("המשתמש נוצר בהצלחה!")
+                                    st.balloons()
+                                else:
+                                    st.error("❌ יצירת המשתמש נכשלה")
+                                    logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
+                                                    st.session_state.user_email, user_groups_str, False, st.session_state.access_level)
     
     # Tab 4: Groups
     with tabs[3]:
