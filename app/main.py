@@ -393,7 +393,7 @@ class SafeQAPI:
         try:
             # חיפוש בכל המשתמשים (Local + Entra)
             for provider_id in [CONFIG['PROVIDERS']['LOCAL'], CONFIG['PROVIDERS']['ENTRA']]:
-                users = self.get_users(provider_id, max_users=1000)
+                users = self.get_users(provider_id, max_records=1000)
 
                 for user in users:
                     user_pin = user.get('shortId', '')
@@ -754,6 +754,12 @@ def show_login_page():
                     st.error("❌ אנא הזן שם משתמש וסיסמה")
                 else:
                     logger = AuditLogger()
+
+                    # בדיקה אם יש משתמשי חירום מוגדרים
+                    if not CONFIG.get('LOCAL_USERS'):
+                        st.error("❌ אין משתמשי חירום מוגדרים במערכת")
+                        st.info("💡 הוסף משתמשי חירום ב-Settings → Secrets → [EMERGENCY_USERS]")
+                        st.stop()
 
                     # השוואה ישירה - הסיסמאות ב-secrets הן plain text (Streamlit מצפין את secrets.toml)
                     if username in CONFIG['LOCAL_USERS'] and CONFIG['LOCAL_USERS'][username] == password:
@@ -1656,15 +1662,47 @@ def main():
                 st.markdown("---")
                 st.subheader("👤 בחר משתמש לביצוע פעולות")
 
-                selected_user_for_actions = st.selectbox(
-                    "בחר משתמש מתוצאות החיפוש:", 
-                    options=[user['שם משתמש'] for user in df.to_dict('records') if user['שם משתמש']],
-                    key="selected_user_main",
-                    help="המשתמש שייבחר ישמש לכל הפעולות מטה"
-                )
+                # יצירת אפשרויות בחירה עם מידע מלא
+                user_options = []
+                user_mapping = {}  # מיפוי בין תווית לבין username
+
+                for user_dict in df.to_dict('records'):
+                    username = user_dict.get('שם משתמש', '')
+                    if not username:
+                        continue
+
+                    full_name = user_dict.get('שם מלא', '')
+                    department = user_dict.get('מחלקה', '')
+                    pin = user_dict.get('קוד PIN', '')
+
+                    # יצירת תווית מפורטת
+                    label_parts = [username]
+                    if full_name:
+                        label_parts.append(f"({full_name})")
+                    if department:
+                        label_parts.append(f"[{department}]")
+                    if pin:
+                        label_parts.append(f"PIN: {pin}")
+
+                    label = " • ".join(label_parts)
+                    user_options.append(label)
+                    user_mapping[label] = username
+
+                if user_options:
+                    # שימוש ב-radio buttons במקום selectbox
+                    selected_label = st.radio(
+                        "בחר משתמש:",
+                        options=user_options,
+                        key="selected_user_radio",
+                        help="בחר משתמש מהרשימה - המשתמש שייבחר ישמש לכל הפעולות מטה"
+                    )
+
+                    selected_user_for_actions = user_mapping.get(selected_label)
+                else:
+                    selected_user_for_actions = None
 
                 if selected_user_for_actions:
-                    st.info(f"משתמש נבחר: **{selected_user_for_actions}**")
+                    st.success(f"✅ משתמש נבחר: **{selected_user_for_actions}**")
                     
                     selected_user_data = None
                     for user in matching_users:
@@ -1805,6 +1843,7 @@ def main():
                             if validation_errors:
                                 for error in validation_errors:
                                     st.error(error)
+                                st.stop()  # עצור את הביצוע - אל תמשיך לעדכן
                             else:
                                 # אין שגיאות - עדכן משתמש
                                 updates_made = 0
@@ -1899,6 +1938,7 @@ def main():
                         if validation_errors:
                             for error in validation_errors:
                                 st.error(error)
+                            st.stop()  # עצור את הביצוע - אל תמשיך ליצירת המשתמש
                         else:
                             # אין שגיאות - צור משתמש
                             provider_id = CONFIG['PROVIDERS']['LOCAL']
