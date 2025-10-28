@@ -409,7 +409,36 @@ class SafeQAPI:
         except Exception as e:
             st.warning(f"שגיאה בבדיקת PIN: {str(e)}")
             return False, None
-    
+
+    def check_username_exists(self, username, exclude_username=None):
+        """
+        בדיקה האם שם משתמש כבר קיים במערכת
+        exclude_username: שם משתמש להחרגה (למשל בעריכה)
+        מחזיר: (קיים, provider_id) או (False, None)
+        """
+        if not username or not username.strip():
+            return False, None
+
+        try:
+            # חיפוש בכל המשתמשים (Local + Entra)
+            for provider_id in [CONFIG['PROVIDERS']['LOCAL'], CONFIG['PROVIDERS']['ENTRA']]:
+                users = self.get_users(provider_id, max_records=1000)
+
+                for user in users:
+                    user_name = user.get('userName') or user.get('username', '')
+
+                    # אם מצאנו username זהה
+                    if user_name and user_name.strip().lower() == username.strip().lower():
+                        # אם זה לא המשתמש שאנחנו עורכים
+                        if exclude_username is None or user_name != exclude_username:
+                            provider_name = "מקומי" if provider_id == CONFIG['PROVIDERS']['LOCAL'] else "Entra"
+                            return True, provider_name
+
+            return False, None
+        except Exception as e:
+            st.warning(f"שגיאה בבדיקת שם משתמש: {str(e)}")
+            return False, None
+
     def create_user(self, username, provider_id, details):
         try:
             url = f"{self.server_url}/api/v1/users"
@@ -1450,10 +1479,15 @@ def main():
         col_check1,  = st.columns([1])
         with col_check1:
             show_local = st.checkbox("משתמשים מקומיים", value=True)
-            
-        col_check2, = st.columns([1]) 
-        with col_check2:
-            show_entra = st.checkbox("משתמשי Entra", value=True)
+
+        # רק superadmin יכול לראות משתמשי Entra
+        role = st.session_state.get('role', st.session_state.access_level)
+        if role == 'superadmin':
+            col_check2, = st.columns([1])
+            with col_check2:
+                show_entra = st.checkbox("משתמשי Entra", value=True)
+        else:
+            show_entra = False  # אחרים לא רואים Entra בכלל
 
         # שורה שנייה: משתמשים להצגה וכפתור
         col_num, col_btn = st.columns([2, 2])
@@ -1501,6 +1535,12 @@ def main():
                     st.warning(f"לא נמצאו משתמשים במחלקות המורשות (נטענו {users_before_filter} משתמשים, 0 אחרי סינון)")
                     st.info("💡 רק משתמשים מהמחלקות שאליהן אתה שייך יוצגו כאן")
                 else:
+                    # הצגת מידע על סינון - למעלה מהטבלה
+                    if users_after_filter < users_before_filter:
+                        st.success(f"✅ מוצגים {users_after_filter} משתמשים מתוך {users_before_filter} (מסוננים לפי מחלקות מורשות)")
+                    else:
+                        st.success(f"✅ נטענו {users_after_filter} משתמשים")
+
                     df_data = []
                     for user in filtered_users:
                         if not isinstance(user, dict):
@@ -1540,12 +1580,6 @@ def main():
                         "💾 הורד CSV", csv.encode('utf-8-sig'),
                         f"users_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv", "text/csv"
                     )
-
-                    # הצגת מידע על סינון
-                    if users_after_filter < users_before_filter:
-                        st.success(f"✅ מוצגים {users_after_filter} משתמשים מתוך {users_before_filter} (מסוננים לפי מחלקות מורשות)")
-                    else:
-                        st.success(f"✅ נטענו {users_after_filter} משתמשים")
 
                     logger.log_action(st.session_state.username, "Users Loaded",
                                     f"Count: {users_before_filter}, Filtered: {users_after_filter}",
@@ -2065,6 +2099,11 @@ def main():
                     else:
                         # בדיקות תקינות
                         validation_errors = []
+
+                        # בדיקת username קיים
+                        username_exists, provider_name = api.check_username_exists(new_username)
+                        if username_exists:
+                            validation_errors.append(f"❌ שם המשתמש '{new_username}' כבר קיים במערכת ({provider_name})")
 
                         # בדיקת אימייל
                         if new_email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_email):
