@@ -466,6 +466,31 @@ class SafeQAPI:
             st.error(f"שגיאה בעדכון משתמש: {str(e)}")
             return False
 
+    def delete_user(self, username, provider_id):
+        """
+        מחיקת משתמש מהמערכת
+        """
+        try:
+            url = f"{self.server_url}/api/v1/users/{username}"
+            params = {'providerid': provider_id}
+
+            response = requests.delete(url, headers=self.headers, params=params, verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל במחיקת משתמש: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה במחיקת משתמש: {str(e)}")
+            return False
+
     def get_single_user(self, username, provider_id=None):
         """קבלת נתוני משתמש בודד"""
         try:
@@ -767,12 +792,19 @@ def show_login_page():
                         st.session_state.username = username
                         st.session_state.user_email = f"{username}@local"
                         st.session_state.user_groups = []
-                        st.session_state.access_level = 'admin'
+                        st.session_state.access_level = 'superadmin'  # משתמשי חירום מקבלים הרשאות מלאות
                         st.session_state.login_time = datetime.now()
                         st.session_state.auth_method = 'local'
-                        
+
+                        # הוספת שדות hybrid auth - משתמשי חירום מקבלים גישה לכל
+                        st.session_state.role = 'superadmin'
+                        st.session_state.allowed_departments = ["ALL"]
+                        st.session_state.local_username = username
+                        st.session_state.entra_username = None
+                        st.session_state.local_groups = []
+
                         logger.log_action(username, "Login Success", "Local emergency auth",
-                                        st.session_state.user_email, "Emergency Admin", True, 'admin')
+                                        st.session_state.user_email, "Emergency SuperAdmin", True, 'superadmin')
                         st.success(f"✅ ברוך הבא, {username}!")
                         st.rerun()
                     else:
@@ -1528,7 +1560,17 @@ def main():
         # שורה ראשונה: מקור (למעלה)
         col_spacer, col_provider = st.columns([4, 2])
         with col_provider:
-            search_provider = st.selectbox("מקור *", ["", "מקומי (12348)", "Entra (12351)"])
+            # בדיקת הרשאות - רק superadmin יכול לבחור Entra
+            role = st.session_state.get('role', st.session_state.access_level)
+            if role == 'superadmin':
+                provider_options = ["מקומי (12348)", "Entra (12351)"]
+                default_index = 0  # ברירת מחדל: מקומי
+            else:
+                provider_options = ["מקומי (12348)"]
+                default_index = 0
+
+            search_provider = st.selectbox("מקור *", provider_options, index=default_index,
+                                         help="רק superadmin יכול לבחור Entra" if role != 'superadmin' else None)
 
         # שורה שנייה: חיפוש לפי ושדות נוספים
         col1, col2 = st.columns([1, 1])
@@ -1713,15 +1755,22 @@ def main():
                     st.markdown("---")
                     st.subheader("🔧 פעולות על משתמש")
 
+                    # בדיקת הרשאות למשתמש
+                    role = st.session_state.get('role', st.session_state.access_level)
+
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
                         st.markdown("**📝 עריכת פרטי משתמש**")
-                        if st.button("📝 טען פרטי משתמש", key="load_user_for_edit", disabled=not selected_user_for_actions):
-                            if selected_user_data:
-                                st.session_state.user_to_edit = selected_user_data
-                                st.session_state.edit_username = selected_user_for_actions
-                                st.success(f"נטענו הפרטים עבור {selected_user_for_actions}")
+                        # רק support/admin/superadmin יכולים לערוך
+                        if role == 'viewer':
+                            st.info("👁️ צפייה בלבד - אין הרשאת עריכה")
+                        else:
+                            if st.button("📝 טען פרטי משתמש", key="load_user_for_edit", disabled=not selected_user_for_actions):
+                                if selected_user_data:
+                                    st.session_state.user_to_edit = selected_user_data
+                                    st.session_state.edit_username = selected_user_for_actions
+                                    st.success(f"נטענו הפרטים עבור {selected_user_for_actions}")
 
                     with col2:
                         st.markdown("**👥 הצגת קבוצות משתמש**")
@@ -1738,34 +1787,89 @@ def main():
 
                     with col3:
                         st.markdown("**➕ הוספה לקבוצה**")
-                        if st.button("📋 טען קבוצות", key="load_groups_for_add_new", help="טען את רשימת הקבוצות הזמינות", disabled=not selected_user_for_actions):
-                            with st.spinner("טוען קבוצות..."):
-                                available_groups = api.get_groups()
-                                if available_groups:
-                                    # סינון לפי מחלקות מורשות
-                                    allowed_departments = st.session_state.get('allowed_departments', [])
-                                    filtered_groups = filter_groups_by_departments(available_groups, allowed_departments)
-
-                                    # הסרת "Local Admins" למשתמשים שלא התחברו מקומי
-                                    group_names = [g.get('groupName') or g.get('name') or str(g) for g in filtered_groups if not (g.get('groupName') == "Local Admins" and st.session_state.auth_method != 'local')]
-                                    st.session_state.available_groups = group_names
-                                    st.success(f"נטענו {len(group_names)} קבוצות מורשות")
-                                else:
-                                    st.warning("לא נמצאו קבוצות")
-
-                        if 'available_groups' in st.session_state and st.session_state.available_groups:
-                            target_group = st.selectbox("בחר קבוצה", options=st.session_state.available_groups, key="select_target_group_new")
+                        # רק support/admin/superadmin יכולים להוסיף לקבוצה
+                        if role == 'viewer':
+                            st.info("👁️ צפייה בלבד - אין הרשאת הוספה")
                         else:
-                            target_group = None
-                            st.text_input("שם/מזהה קבוצה", key="target_group_input_new", disabled=True, placeholder="לחץ על 'טען קבוצות' תחילה")
-                        
-                        if st.button("➕ הוסף לקבוצה", key="add_user_to_group_new", disabled=not selected_user_for_actions or not target_group):
-                            with st.spinner(f"מוסיף את {selected_user_for_actions} לקבוצה {target_group}..."):
-                                success = api.add_user_to_group(selected_user_for_actions, target_group)
-                                if success:
-                                    st.success(f"המשתמש {selected_user_for_actions} נוסף בהצלחה לקבוצה {target_group}")
-                                else:
-                                    st.error("ההוספה לקבוצה נכשלה")
+                            if st.button("📋 טען קבוצות", key="load_groups_for_add_new", help="טען את רשימת הקבוצות הזמינות", disabled=not selected_user_for_actions):
+                                with st.spinner("טוען קבוצות..."):
+                                    available_groups = api.get_groups()
+                                    if available_groups:
+                                        # סינון לפי מחלקות מורשות
+                                        allowed_departments = st.session_state.get('allowed_departments', [])
+                                        filtered_groups = filter_groups_by_departments(available_groups, allowed_departments)
+
+                                        # הסרת "Local Admins" למשתמשים שלא התחברו מקומי
+                                        group_names = [g.get('groupName') or g.get('name') or str(g) for g in filtered_groups if not (g.get('groupName') == "Local Admins" and st.session_state.auth_method != 'local')]
+                                        st.session_state.available_groups = group_names
+                                        st.success(f"נטענו {len(group_names)} קבוצות מורשות")
+                                    else:
+                                        st.warning("לא נמצאו קבוצות")
+
+                            if 'available_groups' in st.session_state and st.session_state.available_groups:
+                                target_group = st.selectbox("בחר קבוצה", options=st.session_state.available_groups, key="select_target_group_new")
+                            else:
+                                target_group = None
+                                st.text_input("שם/מזהה קבוצה", key="target_group_input_new", disabled=True, placeholder="לחץ על 'טען קבוצות' תחילה")
+
+                            if st.button("➕ הוסף לקבוצה", key="add_user_to_group_new", disabled=not selected_user_for_actions or not target_group):
+                                with st.spinner(f"מוסיף את {selected_user_for_actions} לקבוצה {target_group}..."):
+                                    success = api.add_user_to_group(selected_user_for_actions, target_group)
+                                    if success:
+                                        st.success(f"המשתמש {selected_user_for_actions} נוסף בהצלחה לקבוצה {target_group}")
+                                    else:
+                                        st.error("ההוספה לקבוצה נכשלה")
+
+                    # כפתור מחיקת משתמש - רק ל-admin ו-superadmin
+                    role = st.session_state.get('role', st.session_state.access_level)
+                    if role in ['admin', 'superadmin']:
+                        st.markdown("---")
+                        st.markdown("**🗑️ מחיקת משתמש**")
+
+                        if st.button("🗑️ מחק משתמש", key="init_delete_user", type="secondary", disabled=not selected_user_for_actions):
+                            st.session_state.delete_user_confirmation = selected_user_for_actions
+
+                        # אזור אימות מחיקה
+                        if st.session_state.get('delete_user_confirmation') == selected_user_for_actions:
+                            st.warning(f"⚠️ האם אתה בטוח שברצונך למחוק את המשתמש **{selected_user_for_actions}**?")
+                            st.error("⚠️ פעולה זו בלתי הפיכה!")
+
+                            col_confirm, col_cancel = st.columns(2)
+                            with col_confirm:
+                                if st.button("✅ אשר מחיקה", key="confirm_delete_user", type="primary"):
+                                    if selected_user_data:
+                                        provider_id = selected_user_data.get('providerId')
+                                        with st.spinner(f"מוחק את {selected_user_for_actions}..."):
+                                            success = api.delete_user(selected_user_for_actions, provider_id)
+                                            if success:
+                                                st.success(f"✅ המשתמש {selected_user_for_actions} נמחק בהצלחה")
+
+                                                user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
+                                                logger.log_action(st.session_state.username, "Delete User",
+                                                                f"Deleted: {selected_user_for_actions}, Provider: {provider_id}",
+                                                                st.session_state.user_email, user_groups_str, True, st.session_state.access_level)
+
+                                                # ניקוי session state
+                                                if 'delete_user_confirmation' in st.session_state:
+                                                    del st.session_state.delete_user_confirmation
+                                                if 'search_results' in st.session_state:
+                                                    del st.session_state.search_results
+
+                                                st.balloons()
+                                                import time
+                                                time.sleep(2)
+                                                st.rerun()
+                                            else:
+                                                st.error("❌ מחיקת המשתמש נכשלה")
+                                                logger.log_action(st.session_state.username, "Delete User Failed",
+                                                                f"Failed to delete: {selected_user_for_actions}",
+                                                                st.session_state.user_email, user_groups_str, False, st.session_state.access_level)
+
+                            with col_cancel:
+                                if st.button("❌ ביטול", key="cancel_delete_user"):
+                                    if 'delete_user_confirmation' in st.session_state:
+                                        del st.session_state.delete_user_confirmation
+                                    st.rerun()
 
                 if 'user_to_edit' in st.session_state and st.session_state.user_to_edit:
                     st.markdown("---")
@@ -1782,15 +1886,19 @@ def main():
                     allowed_departments = st.session_state.get('allowed_departments', [])
                     is_superadmin = allowed_departments == ["ALL"]
 
+                    # ניהול מצב הטופס - שמירת ערכים בעת שגיאת ולידציה
+                    edit_form_key = f"edit_form_{st.session_state.edit_username}"
+                    edit_form_state = st.session_state.get(edit_form_key, {})
+
                     with st.form(f"edit_user_form_{st.session_state.edit_username}"):
                         col1, col2 = st.columns(2)
                         with col1:
-                            new_full_name = st.text_input("שם מלא", value=current_full_name)
-                            new_email = st.text_input("אימייל", value=current_email)
+                            new_full_name = st.text_input("שם מלא", value=edit_form_state.get('full_name', current_full_name))
+                            new_email = st.text_input("אימייל", value=edit_form_state.get('email', current_email))
 
                             # שדה Department דינמי - כמו בטאב הוספת משתמש
                             if is_superadmin:
-                                new_department = st.text_input("מחלקה", value=current_department,
+                                new_department = st.text_input("מחלקה", value=edit_form_state.get('department', current_department),
                                                               help="הזן מחלקה בפורמט: עיר - מספר")
                             elif len(allowed_departments) == 1:
                                 # מחלקה אחת - disabled
@@ -1800,7 +1908,10 @@ def main():
                                 # מספר מחלקות - selectbox
                                 # אם המחלקה הנוכחית במורשות, היא תהיה ברירת מחדל
                                 default_idx = 0
-                                if current_department in allowed_departments:
+                                saved_dept = edit_form_state.get('department', current_department)
+                                if saved_dept in allowed_departments:
+                                    default_idx = allowed_departments.index(saved_dept)
+                                elif current_department in allowed_departments:
                                     default_idx = allowed_departments.index(current_department)
                                 new_department = st.selectbox("מחלקה", options=allowed_departments,
                                                              index=default_idx,
@@ -1810,8 +1921,8 @@ def main():
                                 new_department = st.text_input("מחלקה", value=current_department, disabled=True,
                                                               help="אין הרשאות מחלקה")
                         with col2:
-                            new_pin = st.text_input("קוד PIN", value=current_pin)
-                            new_card_id = st.text_input("מזהה כרטיס", value=current_card_id)
+                            new_pin = st.text_input("קוד PIN", value=edit_form_state.get('pin', current_pin))
+                            new_card_id = st.text_input("מזהה כרטיס", value=edit_form_state.get('card_id', current_card_id))
                         
                         col_submit, col_cancel = st.columns(2)
                         with col_submit:
@@ -1825,6 +1936,15 @@ def main():
                             st.rerun()
                         
                         if submit_edit:
+                            # שמירת כל הערכים מהטופס ב-session_state
+                            st.session_state[edit_form_key] = {
+                                'full_name': new_full_name,
+                                'email': new_email,
+                                'department': new_department,
+                                'pin': new_pin,
+                                'card_id': new_card_id
+                            }
+
                             # בדיקות validation
                             validation_errors = []
 
@@ -1843,7 +1963,7 @@ def main():
                             if validation_errors:
                                 for error in validation_errors:
                                     st.error(error)
-                                st.stop()  # עצור את הביצוע - אל תמשיך לעדכן
+                                st.stop()  # עצור את הביצוע - הערכים כבר נשמרו למעלה
                             else:
                                 # אין שגיאות - עדכן משתמש
                                 updates_made = 0
@@ -1862,6 +1982,9 @@ def main():
                                         import time
                                         time.sleep(2)
 
+                                    # ניקוי הטופס והנתונים לאחר הצלחה
+                                    if edit_form_key in st.session_state:
+                                        del st.session_state[edit_form_key]
                                     del st.session_state.user_to_edit
                                     del st.session_state.edit_username
                                     if 'search_results' in st.session_state:
@@ -1885,25 +2008,31 @@ def main():
             has_single_dept = len(department_options) == 1
             has_multiple_depts = len(department_options) > 1
 
+            # ניהול מצב הטופס - שמירת ערכים בעת שגיאת ולידציה
+            form_state = st.session_state.get('add_user_form_state', {})
+
             form_key = st.session_state.get('form_reset_key', 'default')
-            with st.form(f"add_user_form_{form_key}", clear_on_submit=True):
+            with st.form(f"add_user_form_{form_key}", clear_on_submit=False):
                 col1, col2 = st.columns(2)
 
                 # עמודה ימנית
                 with col2:
-                    new_username = st.text_input("שם משתמש *", help="שם משתמש ייחודי")
-                    new_first_name = st.text_input("שם פרטי")
-                    new_last_name = st.text_input("שם משפחה")
-                    new_email = st.text_input("אימייל")
+                    new_username = st.text_input("שם משתמש *", value=form_state.get('username', ''), help="שם משתמש ייחודי")
+                    new_first_name = st.text_input("שם פרטי", value=form_state.get('first_name', ''))
+                    new_last_name = st.text_input("שם משפחה", value=form_state.get('last_name', ''))
+                    new_email = st.text_input("אימייל", value=form_state.get('email', ''))
 
                     # שדה Department דינמי
                     if is_superadmin:
-                        new_department = st.text_input("מחלקה", help="הזן מחלקה בפורמט: עיר - מספר (למשל: צפת - 240234)")
+                        new_department = st.text_input("מחלקה", value=form_state.get('department', ''), help="הזן מחלקה בפורמט: עיר - מספר (למשל: צפת - 240234)")
                     elif has_single_dept:
                         new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
                                                       help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
                     elif has_multiple_depts:
-                        new_department = st.selectbox("מחלקה *", options=department_options,
+                        default_dept_idx = 0
+                        if form_state.get('department') in department_options:
+                            default_dept_idx = department_options.index(form_state.get('department'))
+                        new_department = st.selectbox("מחלקה *", options=department_options, index=default_dept_idx,
                                                      help="בחר מחלקה מהרשימה המורשות")
                     else:
                         new_department = st.text_input("מחלקה", disabled=True,
@@ -1912,14 +2041,27 @@ def main():
 
                 # עמודה שמאלית
                 with col1:
-                    new_password = st.text_input("סיסמה", type="password", placeholder="Aa123456",
+                    new_password = st.text_input("סיסמה", type="password", value=form_state.get('password', ''), placeholder="Aa123456",
                                                 help="אם לא מוזן - סיסמה ברירת מחדל: Aa123456")
-                    new_pin = st.text_input("קוד PIN")
-                    new_cardid = st.text_input("מזהה כרטיס")
+                    new_pin = st.text_input("קוד PIN", value=form_state.get('pin', ''))
+                    new_cardid = st.text_input("מזהה כרטיס", value=form_state.get('cardid', ''))
 
                 if st.form_submit_button("➕ צור משתמש", type="primary"):
+                    # שמירת כל הערכים מהטופס ב-session_state
+                    st.session_state.add_user_form_state = {
+                        'username': new_username,
+                        'first_name': new_first_name,
+                        'last_name': new_last_name,
+                        'email': new_email,
+                        'department': new_department,
+                        'password': new_password,
+                        'pin': new_pin,
+                        'cardid': new_cardid
+                    }
+
                     if not new_username:
                         st.error("שם משתמש הוא שדה חובה")
+                        st.stop()
                     else:
                         # בדיקות תקינות
                         validation_errors = []
@@ -1938,7 +2080,7 @@ def main():
                         if validation_errors:
                             for error in validation_errors:
                                 st.error(error)
-                            st.stop()  # עצור את הביצוע - אל תמשיך ליצירת המשתמש
+                            st.stop()  # עצור את הביצוע - הערכים כבר נשמרו למעלה
                         else:
                             # אין שגיאות - צור משתמש
                             provider_id = CONFIG['PROVIDERS']['LOCAL']
@@ -1957,6 +2099,9 @@ def main():
                                 if success:
                                     st.success("המשתמש נוצר בהצלחה!")
                                     st.balloons()
+                                    # ניקוי הטופס לאחר הצלחה
+                                    if 'add_user_form_state' in st.session_state:
+                                        del st.session_state.add_user_form_state
                                 else:
                                     st.error("❌ יצירת המשתמש נכשלה")
                                     logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
