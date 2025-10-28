@@ -393,7 +393,7 @@ class SafeQAPI:
         try:
             # חיפוש בכל המשתמשים (Local + Entra)
             for provider_id in [CONFIG['PROVIDERS']['LOCAL'], CONFIG['PROVIDERS']['ENTRA']]:
-                users = self.get_users(provider_id, max_users=1000)
+                users = self.get_users(provider_id, max_records=1000)
 
                 for user in users:
                     user_pin = user.get('shortId', '')
@@ -754,6 +754,12 @@ def show_login_page():
                     st.error("❌ אנא הזן שם משתמש וסיסמה")
                 else:
                     logger = AuditLogger()
+
+                    # בדיקה אם יש משתמשי חירום מוגדרים
+                    if not CONFIG.get('LOCAL_USERS'):
+                        st.error("❌ אין משתמשי חירום מוגדרים במערכת")
+                        st.info("💡 הוסף משתמשי חירום ב-Settings → Secrets → [EMERGENCY_USERS]")
+                        st.stop()
 
                     # השוואה ישירה - הסיסמאות ב-secrets הן plain text (Streamlit מצפין את secrets.toml)
                     if username in CONFIG['LOCAL_USERS'] and CONFIG['LOCAL_USERS'][username] == password:
@@ -1805,6 +1811,7 @@ def main():
                             if validation_errors:
                                 for error in validation_errors:
                                     st.error(error)
+                                st.stop()  # עצור את הביצוע - אל תמשיך לעדכן
                             else:
                                 # אין שגיאות - עדכן משתמש
                                 updates_made = 0
@@ -1899,6 +1906,7 @@ def main():
                         if validation_errors:
                             for error in validation_errors:
                                 st.error(error)
+                            st.stop()  # עצור את הביצוע - אל תמשיך ליצירת המשתמש
                         else:
                             # אין שגיאות - צור משתמש
                             provider_id = CONFIG['PROVIDERS']['LOCAL']
