@@ -2081,18 +2081,6 @@ def main():
                     new_cardid = st.text_input("מזהה כרטיס", value=form_state.get('cardid', ''))
 
                 if st.form_submit_button("➕ צור משתמש", type="primary"):
-                    # שמירת כל הערכים מהטופס ב-session_state
-                    st.session_state.add_user_form_state = {
-                        'username': new_username,
-                        'first_name': new_first_name,
-                        'last_name': new_last_name,
-                        'email': new_email,
-                        'department': new_department,
-                        'password': new_password,
-                        'pin': new_pin,
-                        'cardid': new_cardid
-                    }
-
                     if not new_username:
                         st.error("שם משתמש הוא שדה חובה")
                         st.stop()
@@ -2115,11 +2103,22 @@ def main():
                             if pin_exists:
                                 validation_errors.append(f"❌ קוד PIN '{new_pin}' כבר קיים אצל משתמש: {existing_user}")
 
-                        # אם יש שגיאות validation
+                        # אם יש שגיאות validation - שמור ערכים ועצור
                         if validation_errors:
+                            # שמירת הערכים רק אחרי שהולידציה נכשלה
+                            st.session_state.add_user_form_state = {
+                                'username': new_username,
+                                'first_name': new_first_name,
+                                'last_name': new_last_name,
+                                'email': new_email,
+                                'department': new_department,
+                                'password': new_password,
+                                'pin': new_pin,
+                                'cardid': new_cardid
+                            }
                             for error in validation_errors:
                                 st.error(error)
-                            st.stop()  # עצור את הביצוע - הערכים כבר נשמרו למעלה
+                            st.stop()
                         else:
                             # אין שגיאות - צור משתמש
                             provider_id = CONFIG['PROVIDERS']['LOCAL']
@@ -2141,6 +2140,10 @@ def main():
                                     # ניקוי הטופס לאחר הצלחה
                                     if 'add_user_form_state' in st.session_state:
                                         del st.session_state.add_user_form_state
+                                    # המתנה קצרה כדי לראות את הבלונים והודעת ההצלחה
+                                    import time
+                                    time.sleep(1.5)
+                                    st.rerun()  # רענון הטופס - ינקה את כל השדות
                                 else:
                                     st.error("❌ יצירת המשתמש נכשלה")
                                     logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
