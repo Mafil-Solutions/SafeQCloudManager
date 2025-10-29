@@ -589,7 +589,35 @@ class SafeQAPI:
         except Exception as e:
             st.error(f"שגיאה בהוספת משתמש לקבוצה: {str(e)}")
             return False
-                
+
+    def remove_user_from_group(self, username, group_id):
+        """
+        הסרת משתמש מקבוצה
+        """
+        try:
+            # על פי התיעוד: DELETE /users/USERNAME/groups עם groupid בתור parameter
+            url = f"{self.server_url}/api/v1/users/{username}/groups"
+
+            # שליחת group_id כ-parameter
+            params = {'groupid': group_id}
+
+            response = requests.delete(url, headers=self.headers, params=params, verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל בהסרת משתמש מקבוצה: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה בהסרת משתמש מקבוצה: {str(e)}")
+            return False
+
     def get_user_groups(self, username):
             try:
                 url = f"{self.server_url}/api/v1/users/{username}/groups"
@@ -1591,33 +1619,6 @@ def main():
     with tabs[1]:
         st.header("חיפוש משתמש")
 
-        # הצגת תוצאות bulk add אם קיימות
-        if 'bulk_add_results' in st.session_state:
-            results = st.session_state.bulk_add_results
-            st.markdown("---")
-            st.subheader("📊 סיכום פעולה קבוצתית אחרונה")
-
-            col_success, col_fail = st.columns(2)
-            with col_success:
-                st.metric("✅ הצלחות", results['success_count'])
-            with col_fail:
-                st.metric("❌ כשלונות", results['fail_count'])
-
-            if results['success_count'] > 0:
-                st.success(f"✅ {results['success_count']} משתמשים נוספו בהצלחה לקבוצה '{results['target_group']}'")
-
-            if results['failed_users']:
-                st.error(f"❌ {results['fail_count']} משתמשים נכשלו:")
-                for user in results['failed_users']:
-                    st.write(f"  • {user}")
-
-            # כפתור לניקוי ההודעה
-            if st.button("✓ אישור והמשך", key="clear_bulk_results"):
-                del st.session_state.bulk_add_results
-                st.rerun()
-
-            st.markdown("---")
-
         # שורה ראשונה: מקור (למעלה)
         col_spacer, col_provider = st.columns([4, 2])
         with col_provider:
@@ -1815,16 +1816,25 @@ def main():
 
                     # הצגת checkboxes לכל משתמש
                     st.markdown("**בחר משתמשים:**")
+
+                    # תיקון: בנייה מחדש של רשימת בחירה מהצ'קבוקסים
+                    temp_selections = []
+
                     for label in user_options:
                         username = user_mapping[label]
                         is_checked = username in st.session_state.selected_users
 
-                        if st.checkbox(label, value=is_checked, key=f"user_checkbox_{username}"):
-                            if username not in st.session_state.selected_users:
-                                st.session_state.selected_users.append(username)
-                        else:
-                            if username in st.session_state.selected_users:
-                                st.session_state.selected_users.remove(username)
+                        # תיקון: checkbox פשוט עם value בלבד
+                        checkbox_result = st.checkbox(label, value=is_checked, key=f"user_checkbox_{username}")
+
+                        # אוסף את כל הבחירות
+                        if checkbox_result:
+                            temp_selections.append(username)
+
+                    # עדכון הסטייט רק אם השתנה משהו
+                    if temp_selections != st.session_state.selected_users:
+                        st.session_state.selected_users = temp_selections
+                        st.rerun()
 
                     # קביעת משתמש לפעולות בודדות (רק אם נבחר אחד)
                     if len(st.session_state.selected_users) == 1:
@@ -1896,6 +1906,24 @@ def main():
                                     fail_count += 1
                                     failed_users.append(username)
 
+                            # הצגת תוצאות מיד
+                            st.markdown("---")
+                            st.subheader("📊 סיכום פעולה קבוצתית")
+
+                            col_success, col_fail = st.columns(2)
+                            with col_success:
+                                st.metric("✅ הצלחות", success_count)
+                            with col_fail:
+                                st.metric("❌ כשלונות", fail_count)
+
+                            if success_count > 0:
+                                st.success(f"✅ {success_count} משתמשים נוספו בהצלחה לקבוצה '{target_group}'")
+
+                            if failed_users:
+                                st.error(f"❌ {fail_count} משתמשים נכשלו:")
+                                for user in failed_users:
+                                    st.write(f"  • {user}")
+
                             # לוג
                             user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                             logger.log_action(st.session_state.username, "Bulk Add to Group",
@@ -1903,18 +1931,10 @@ def main():
                                             st.session_state.user_email, user_groups_str,
                                             success_count > 0, st.session_state.access_level)
 
-                            # שמירת תוצאות ב-session_state להצגה אחרי rerun
-                            st.session_state.bulk_add_results = {
-                                'success_count': success_count,
-                                'fail_count': fail_count,
-                                'failed_users': failed_users,
-                                'target_group': target_group,
-                                'total': total
-                            }
-
-                            # ניקוי בחירה
-                            st.session_state.selected_users = []
-                            st.rerun()
+                            # ניקוי בחירה לאחר הצגת התוצאות
+                            if st.button("✓ אישור וניקוי בחירה", key="clear_selection_after_bulk", type="primary"):
+                                st.session_state.selected_users = []
+                                st.rerun()
 
                 # מציאת נתוני משתמש נבחר (לפעולות בודדות)
                 elif selected_user_for_actions:
