@@ -1499,31 +1499,6 @@ def main():
     else:
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 הפעילות שלי"])
 
-    # פונקציה לניקוי session state של טאב
-    def clean_tab_state(tab_name):
-        """ניקוי נתוני session state של טאב מסוים"""
-        if tab_name == "search":
-            # ניקוי טאב חיפוש ועריכה
-            keys_to_remove = [
-                'search_results', 'search_query', 'selected_users', 'selected_user_for_actions',
-                'user_to_edit', 'edit_username', 'available_groups', 'user_groups_display',
-                'remove_from_group_request', 'delete_user_confirmation', 'user_checkbox_counter'
-            ]
-            for key in keys_to_remove:
-                if key in st.session_state:
-                    del st.session_state[key]
-
-        elif tab_name == "groups":
-            # ניקוי טאב קבוצות
-            keys_to_remove = [
-                'available_groups_list', 'selected_group_name', 'group_members_data',
-                'selected_group_members', 'confirm_bulk_remove', 'bulk_remove_in_progress',
-                'bulk_remove_results', 'group_checkbox_counter'
-            ]
-            for key in keys_to_remove:
-                if key in st.session_state:
-                    del st.session_state[key]
-
     # Tab 1: Users
     with tabs[0]:
         st.header("רשימת משתמשים")
@@ -1642,12 +1617,6 @@ def main():
     
     # Tab 2: Search & Edit
     with tabs[1]:
-        # ניקוי session state אם עברנו מטאב אחר
-        if st.session_state.get('active_tab') != 'search':
-            if st.session_state.get('active_tab') in ['groups']:
-                clean_tab_state(st.session_state.get('active_tab'))
-            st.session_state['active_tab'] = 'search'
-
         st.header("חיפוש משתמש")
 
         # שורה ראשונה: מקור (למעלה)
@@ -2472,12 +2441,6 @@ def main():
     
     # Tab 4: Groups
     with tabs[3]:
-        # ניקוי session state אם עברנו מטאב אחר
-        if st.session_state.get('active_tab') != 'groups':
-            if st.session_state.get('active_tab') in ['search']:
-                clean_tab_state(st.session_state.get('active_tab'))
-            st.session_state['active_tab'] = 'groups'
-
         st.header("ניהול קבוצות")
 
         # שורה עליונה - חיפוש (שמאל) וכפתור (ימין)
