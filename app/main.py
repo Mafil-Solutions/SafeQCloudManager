@@ -2077,12 +2077,20 @@ def main():
                                 st.text_input("שם/מזהה קבוצה", key="target_group_input_new", disabled=True, placeholder="לחץ על 'טען קבוצות' תחילה")
 
                             if st.button("➕ הוסף לקבוצה", key="add_user_to_group_new", disabled=not selected_user_for_actions or not target_group):
-                                with st.spinner(f"מוסיף את {selected_user_for_actions} לקבוצה {target_group}..."):
-                                    success = api.add_user_to_group(selected_user_for_actions, target_group)
-                                    if success:
-                                        st.success(f"המשתמש {selected_user_for_actions} נוסף בהצלחה לקבוצה {target_group}")
+                                # בדיקה אם המשתמש כבר שייך לקבוצה
+                                with st.spinner(f"בודק אם {selected_user_for_actions} כבר שייך לקבוצה..."):
+                                    user_groups = api.get_user_groups(selected_user_for_actions)
+                                    user_group_names = [g.get('groupName') or g.get('name') or str(g) for g in user_groups]
+
+                                    if target_group in user_group_names:
+                                        st.warning(f"⚠️ שים לב: המשתמש **{selected_user_for_actions}** כבר שייך לקבוצה **{target_group}**")
                                     else:
-                                        st.error("ההוספה לקבוצה נכשלה")
+                                        with st.spinner(f"מוסיף את {selected_user_for_actions} לקבוצה {target_group}..."):
+                                            success = api.add_user_to_group(selected_user_for_actions, target_group)
+                                            if success:
+                                                st.success(f"✅ המשתמש {selected_user_for_actions} נוסף בהצלחה לקבוצה {target_group}")
+                                            else:
+                                                st.error("❌ ההוספה לקבוצה נכשלה")
 
                     # כפתור מחיקת משתמש - רק ל-admin ו-superadmin
                     role = st.session_state.get('role', st.session_state.access_level)
@@ -2416,6 +2424,7 @@ def main():
                             st.success(f"נטענו {groups_after_filter} קבוצות מתוך {groups_before_filter} (מסוננות לפי הרשאות)")
                         else:
                             st.success(f"נטענו {groups_after_filter} קבוצות")
+                        st.rerun()  # רענון כדי להפעיל את שדה החיפוש
                     else:
                         st.warning("לא נמצאו קבוצות")
         
@@ -2502,30 +2511,18 @@ def main():
                 # כפתור "בחר הכל" / "נקה בחירה"
                 role = st.session_state.get('role', st.session_state.access_level)
 
-                col_select, col_count, col_remove = st.columns([1, 1, 1])
+                # כפתור "בחר הכל" למעלה
+                if role not in ['viewer']:  # רק למי שמורשה להסיר
+                    all_usernames = [m.get('userName', m.get('username', '')) for m in group_data['members']]
 
-                with col_select:
-                    if role not in ['viewer']:  # רק למי שמורשה להסיר
-                        all_usernames = [m.get('userName', m.get('username', '')) for m in group_data['members']]
-
-                        if st.session_state.selected_group_members and len(st.session_state.selected_group_members) == len(all_usernames):
-                            if st.button("❌ נקה בחירה", key="clear_all_members"):
-                                st.session_state.selected_group_members = []
-                                st.rerun()
-                        else:
-                            if st.button("✅ בחר הכל", key="select_all_members"):
-                                st.session_state.selected_group_members = all_usernames.copy()
-                                st.rerun()
-
-                with col_count:
-                    num_selected = len(st.session_state.selected_group_members)
-                    if num_selected >= 1:  # תיקון: מראה גם עבור 1 משתמש
-                        st.info(f"✓ נבחרו {num_selected} משתמשים")
-
-                with col_remove:
-                    if role in ['admin', 'superadmin'] and num_selected >= 1:  # תיקון: גם עבור 1 משתמש
-                        if st.button(f"🗑️ הסר {num_selected} מהקבוצה", key="remove_bulk_from_group", type="secondary"):
-                            st.session_state.confirm_bulk_remove = True
+                    if st.session_state.selected_group_members and len(st.session_state.selected_group_members) == len(all_usernames):
+                        if st.button("❌ נקה בחירה", key="clear_all_members"):
+                            st.session_state.selected_group_members = []
+                            st.rerun()
+                    else:
+                        if st.button("✅ בחר הכל", key="select_all_members"):
+                            st.session_state.selected_group_members = all_usernames.copy()
+                            st.rerun()
 
                 # טבלה עם checkboxes
                 st.markdown("**בחר משתמשים להסרה:**")
@@ -2567,6 +2564,19 @@ def main():
                 if role not in ['viewer'] and temp_selections != st.session_state.selected_group_members:
                     st.session_state.selected_group_members = temp_selections
                     st.rerun()
+
+                # מונה וכפתור הסרה למטה
+                num_selected = len(st.session_state.selected_group_members)
+                if num_selected >= 1:
+                    col_count, col_remove = st.columns([1, 1])
+
+                    with col_count:
+                        st.info(f"✓ נבחרו {num_selected} משתמשים")
+
+                    with col_remove:
+                        if role in ['admin', 'superadmin']:
+                            if st.button(f"🗑️ הסר {num_selected} מהקבוצה", key="remove_bulk_from_group", type="secondary"):
+                                st.session_state.confirm_bulk_remove = True
 
                 # אימות הסרה
                 if st.session_state.get('confirm_bulk_remove', False):
@@ -2621,20 +2631,19 @@ def main():
                                             st.session_state.user_email, user_groups_str,
                                             success_count > 0, st.session_state.access_level)
 
-                            # ניקוי
-                            import time
-                            time.sleep(2)
-                            st.session_state.selected_group_members = []
-                            st.session_state.confirm_bulk_remove = False
-                            # רענון נתוני הקבוצה
-                            members = api.get_group_members(group_data['group_name'])
-                            if members:
-                                st.session_state.group_members_data = {
-                                    'group_name': group_data['group_name'],
-                                    'members': members,
-                                    'count': len(members)
-                                }
-                            st.rerun()
+                            # כפתור אישור ורענון
+                            if st.button("✓ אישור והמשך", key="confirm_bulk_remove_results", type="primary"):
+                                st.session_state.selected_group_members = []
+                                st.session_state.confirm_bulk_remove = False
+                                # רענון נתוני הקבוצה
+                                members = api.get_group_members(group_data['group_name'])
+                                if members:
+                                    st.session_state.group_members_data = {
+                                        'group_name': group_data['group_name'],
+                                        'members': members,
+                                        'count': len(members)
+                                    }
+                                st.rerun()
 
                     with col_no:
                         if st.button("❌ ביטול", key="confirm_remove_no"):
