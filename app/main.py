@@ -1498,7 +1498,32 @@ def main():
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 ביקורת מלאה"])
     else:
         tabs = st.tabs(["👥 משתמשים", "✏️ חיפוש ועריכה", "➕ הוספת משתמש", "👨‍👩‍👧‍👦 קבוצות", "📊 הפעילות שלי"])
-    
+
+    # פונקציה לניקוי session state של טאב
+    def clean_tab_state(tab_name):
+        """ניקוי נתוני session state של טאב מסוים"""
+        if tab_name == "search":
+            # ניקוי טאב חיפוש ועריכה
+            keys_to_remove = [
+                'search_results', 'search_query', 'selected_users', 'selected_user_for_actions',
+                'user_to_edit', 'edit_username', 'available_groups', 'user_groups_display',
+                'remove_from_group_request', 'delete_user_confirmation', 'user_checkbox_counter'
+            ]
+            for key in keys_to_remove:
+                if key in st.session_state:
+                    del st.session_state[key]
+
+        elif tab_name == "groups":
+            # ניקוי טאב קבוצות
+            keys_to_remove = [
+                'available_groups_list', 'selected_group_name', 'group_members_data',
+                'selected_group_members', 'confirm_bulk_remove', 'bulk_remove_in_progress',
+                'bulk_remove_results', 'group_checkbox_counter'
+            ]
+            for key in keys_to_remove:
+                if key in st.session_state:
+                    del st.session_state[key]
+
     # Tab 1: Users
     with tabs[0]:
         st.header("רשימת משתמשים")
@@ -1617,6 +1642,12 @@ def main():
     
     # Tab 2: Search & Edit
     with tabs[1]:
+        # ניקוי session state אם עברנו מטאב אחר
+        if st.session_state.get('active_tab') != 'search':
+            if st.session_state.get('active_tab') in ['groups']:
+                clean_tab_state(st.session_state.get('active_tab'))
+            st.session_state['active_tab'] = 'search'
+
         st.header("חיפוש משתמש")
 
         # שורה ראשונה: מקור (למעלה)
@@ -1894,38 +1925,67 @@ def main():
                                    key="bulk_add_to_group",
                                    type="primary",
                                    disabled=not target_group):
-                            progress_bar = st.progress(0)
-                            status_text = st.empty()
 
-                            success_count = 0
-                            fail_count = 0
-                            failed_users = []
+                            # בדיקה מוקדמת - איזה משתמשים כבר בקבוצה
+                            with st.spinner("בודק משתמשים קיימים בקבוצה..."):
+                                group_members = api.get_group_members(target_group)
+                                existing_usernames = []
+                                if group_members:
+                                    existing_usernames = [m.get('userName', m.get('username', '')) for m in group_members]
 
-                            total = len(st.session_state.selected_users)
+                                # משתמשים שכבר בקבוצה
+                                already_in_group = [u for u in st.session_state.selected_users if u in existing_usernames]
+                                # משתמשים שצריך להוסיף
+                                users_to_add = [u for u in st.session_state.selected_users if u not in existing_usernames]
 
-                            for idx, username in enumerate(st.session_state.selected_users):
-                                status_text.text(f"מוסיף {idx + 1}/{total}: {username}...")
-                                progress_bar.progress((idx + 1) / total)
+                            # הצגת אזהרה אם יש משתמשים שכבר בקבוצה
+                            if already_in_group:
+                                st.warning(f"⚠️ שים לב: {len(already_in_group)} משתמשים כבר שייכים לקבוצה **{target_group}** ולא יתווספו:")
+                                for u in already_in_group:
+                                    st.write(f"  • {u}")
 
-                                success = api.add_user_to_group(username, target_group)
-                                if success:
-                                    success_count += 1
-                                else:
-                                    fail_count += 1
-                                    failed_users.append(username)
+                            if not users_to_add:
+                                st.info("כל המשתמשים שנבחרו כבר שייכים לקבוצה זו.")
+                            else:
+                                st.info(f"מוסיף {len(users_to_add)} משתמשים לקבוצה...")
+
+                                progress_bar = st.progress(0)
+                                status_text = st.empty()
+
+                                success_count = 0
+                                fail_count = 0
+                                failed_users = []
+
+                                total = len(users_to_add)
+
+                                for idx, username in enumerate(users_to_add):
+                                    status_text.text(f"מוסיף {idx + 1}/{total}: {username}...")
+                                    progress_bar.progress((idx + 1) / total)
+
+                                    success = api.add_user_to_group(username, target_group)
+                                    if success:
+                                        success_count += 1
+                                    else:
+                                        fail_count += 1
+                                        failed_users.append(username)
 
                             # הצגת תוצאות מיד
                             st.markdown("---")
                             st.subheader("📊 סיכום פעולה קבוצתית")
 
-                            col_success, col_fail = st.columns(2)
+                            col_success, col_fail, col_skip = st.columns(3)
                             with col_success:
-                                st.metric("✅ הצלחות", success_count)
+                                st.metric("✅ הצלחות", success_count if users_to_add else 0)
                             with col_fail:
-                                st.metric("❌ כשלונות", fail_count)
+                                st.metric("❌ כשלונות", fail_count if users_to_add else 0)
+                            with col_skip:
+                                st.metric("⏭️ כבר בקבוצה", len(already_in_group))
 
-                            if success_count > 0:
+                            if users_to_add and success_count > 0:
                                 st.success(f"✅ {success_count} משתמשים נוספו בהצלחה לקבוצה '{target_group}'")
+
+                            if already_in_group:
+                                st.info(f"ℹ️ {len(already_in_group)} משתמשים כבר שייכים לקבוצה ולא התווספו")
 
                             if failed_users:
                                 st.error(f"❌ {fail_count} משתמשים נכשלו:")
@@ -1935,9 +1995,9 @@ def main():
                             # לוג
                             user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
                             logger.log_action(st.session_state.username, "Bulk Add to Group",
-                                            f"Added {success_count}/{total} users to {target_group}",
+                                            f"Added {success_count if users_to_add else 0}/{len(st.session_state.selected_users)} users to {target_group} ({len(already_in_group)} already in group)",
                                             st.session_state.user_email, user_groups_str,
-                                            success_count > 0, st.session_state.access_level)
+                                            success_count > 0 if users_to_add else False, st.session_state.access_level)
 
                             # ניקוי בחירה לאחר הצגת התוצאות
                             if st.button("✓ אישור וניקוי בחירה", key="clear_selection_after_bulk", type="primary"):
@@ -2412,6 +2472,12 @@ def main():
     
     # Tab 4: Groups
     with tabs[3]:
+        # ניקוי session state אם עברנו מטאב אחר
+        if st.session_state.get('active_tab') != 'groups':
+            if st.session_state.get('active_tab') in ['search']:
+                clean_tab_state(st.session_state.get('active_tab'))
+            st.session_state['active_tab'] = 'groups'
+
         st.header("ניהול קבוצות")
 
         # שורה עליונה - חיפוש (שמאל) וכפתור (ימין)
@@ -2651,23 +2717,17 @@ def main():
                             fail_count += 1
                             failed_users.append(username)
 
-                    # סיכום
-                    st.markdown("---")
-                    st.subheader("📊 סיכום הסרה קבוצתית")
+                    # שמירת התוצאות ב-session state
+                    st.session_state.bulk_remove_results = {
+                        'success_count': success_count,
+                        'fail_count': fail_count,
+                        'failed_users': failed_users,
+                        'total': total,
+                        'group_name': group_data['group_name']
+                    }
 
-                    col_s, col_f = st.columns(2)
-                    with col_s:
-                        st.metric("✅ הוסרו בהצלחה", success_count)
-                    with col_f:
-                        st.metric("❌ כשלונות", fail_count)
-
-                    if success_count > 0:
-                        st.success(f"✅ {success_count} משתמשים הוסרו בהצלחה מהקבוצה '{group_data['group_name']}'")
-
-                    if failed_users:
-                        st.error(f"❌ {fail_count} משתמשים נכשלו:")
-                        for user in failed_users:
-                            st.write(f"  • {user}")
+                    # ניקוי הפלאג מיד אחרי הפעולה
+                    st.session_state.bulk_remove_in_progress = False
 
                     # לוג
                     user_groups_str = ', '.join([g['displayName'] for g in st.session_state.user_groups]) if st.session_state.user_groups else ""
@@ -2676,13 +2736,37 @@ def main():
                                     st.session_state.user_email, user_groups_str,
                                     success_count > 0, st.session_state.access_level)
 
+                    st.rerun()
+
+                # הצגת סיכום (אחרי שהפעולה הסתיימה)
+                if st.session_state.get('bulk_remove_results'):
+                    results = st.session_state.bulk_remove_results
+
+                    st.markdown("---")
+                    st.subheader("📊 סיכום הסרה קבוצתית")
+
+                    col_s, col_f = st.columns(2)
+                    with col_s:
+                        st.metric("✅ הוסרו בהצלחה", results['success_count'])
+                    with col_f:
+                        st.metric("❌ כשלונות", results['fail_count'])
+
+                    if results['success_count'] > 0:
+                        st.success(f"✅ {results['success_count']} משתמשים הוסרו בהצלחה מהקבוצה '{results['group_name']}'")
+
+                    if results['failed_users']:
+                        st.error(f"❌ {results['fail_count']} משתמשים נכשלו:")
+                        for user in results['failed_users']:
+                            st.write(f"  • {user}")
+
                     # כפתור אישור ורענון
                     if st.button("✓ אישור והמשך", key="confirm_bulk_remove_results", type="primary"):
                         # ניקוי מלא של session state
                         st.session_state.selected_group_members = []
                         st.session_state.confirm_bulk_remove = False
-                        st.session_state.bulk_remove_in_progress = False
                         st.session_state.group_checkbox_counter = 0
+                        if 'bulk_remove_results' in st.session_state:
+                            del st.session_state.bulk_remove_results
                         # רענון נתוני הקבוצה
                         members = api.get_group_members(group_data['group_name'])
                         if members:
