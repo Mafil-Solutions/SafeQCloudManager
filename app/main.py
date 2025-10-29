@@ -1797,6 +1797,10 @@ def main():
                     if 'selected_users' not in st.session_state:
                         st.session_state.selected_users = []
 
+                    # אתחול counter לרענון widgets
+                    if 'user_checkbox_counter' not in st.session_state:
+                        st.session_state.user_checkbox_counter = 0
+
                     # כפתור "בחר הכל" / "נקה בחירה"
                     col_select_all, col_count = st.columns([1, 2])
                     with col_select_all:
@@ -1804,12 +1808,12 @@ def main():
                         if st.session_state.selected_users and len(st.session_state.selected_users) == len(user_options):
                             if st.button("❌ נקה בחירה", key="clear_all_users"):
                                 st.session_state.selected_users = []
-                                st.session_state.skip_user_checkbox_collection = True
+                                st.session_state.user_checkbox_counter += 1
                                 st.rerun()
                         else:
                             if st.button("✅ בחר הכל", key="select_all_users"):
                                 st.session_state.selected_users = all_usernames.copy()
-                                st.session_state.skip_user_checkbox_collection = True
+                                st.session_state.user_checkbox_counter += 1
                                 st.rerun()
 
                     with col_count:
@@ -1827,18 +1831,16 @@ def main():
                         username = user_mapping[label]
                         is_checked = username in st.session_state.selected_users
 
-                        # תיקון: checkbox פשוט עם value בלבד
-                        checkbox_result = st.checkbox(label, value=is_checked, key=f"user_checkbox_{username}")
+                        # תיקון: checkbox עם key דינמי שכולל counter
+                        checkbox_result = st.checkbox(label, value=is_checked,
+                                                     key=f"user_checkbox_{username}_{st.session_state.user_checkbox_counter}")
 
                         # אוסף את כל הבחירות
                         if checkbox_result:
                             temp_selections.append(username)
 
-                    # עדכון הסטייט רק אם השתנה משהו (אבל לא אם זה מ"בחר הכל")
-                    # אם יש דגל לדלג על איסוף - נקה אותו ואל תעדכן
-                    if st.session_state.get('skip_user_checkbox_collection', False):
-                        st.session_state.skip_user_checkbox_collection = False
-                    elif temp_selections != st.session_state.selected_users:
+                    # עדכון הסטייט רק אם השתנה משהו
+                    if temp_selections != st.session_state.selected_users:
                         st.session_state.selected_users = temp_selections
                         st.rerun()
 
@@ -1961,48 +1963,6 @@ def main():
                     col1, col2 = st.columns(2)
 
                     with col1:
-                        st.markdown("**👥 הצגת קבוצות משתמש**")
-                        if st.button("🔍 הצג קבוצות", key="get_selected_user_groups_new", disabled=not selected_user_for_actions):
-                            with st.spinner(f"טוען קבוצות עבור {selected_user_for_actions}..."):
-                                user_groups = api.get_user_groups(selected_user_for_actions)
-                                if user_groups:
-                                    # שמירה ב-session_state להצגה עם X
-                                    st.session_state.user_groups_display = {
-                                        'username': selected_user_for_actions,
-                                        'groups': user_groups
-                                    }
-                                    st.rerun()
-                                else:
-                                    st.warning("לא נמצאו קבוצות עבור משתמש זה")
-
-                        # הצגת קבוצות עם אפשרות הסרה
-                        if 'user_groups_display' in st.session_state:
-                            display_data = st.session_state.user_groups_display
-                            if display_data['username'] == selected_user_for_actions:
-                                st.success(f"קבוצות עבור {selected_user_for_actions}:")
-
-                                for group in display_data['groups']:
-                                    group_name = group.get('groupName') or group.get('name') or str(group)
-
-                                    # שורה עם X אדום - רק ל-admin ו-superadmin
-                                    role = st.session_state.get('role', st.session_state.access_level)
-                                    if role in ['admin', 'superadmin']:
-                                        col_group, col_remove_btn = st.columns([4, 1])
-                                        with col_group:
-                                            st.write(f"• {group_name}")
-                                        with col_remove_btn:
-                                            if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
-                                                       help=f"הסר מקבוצה {group_name}"):
-                                                # שמירת בקשת הסרה לאימות
-                                                st.session_state.remove_from_group_request = {
-                                                    'username': selected_user_for_actions,
-                                                    'group': group_name
-                                                }
-                                                st.rerun()
-                                    else:
-                                        st.write(f"• {group_name}")
-
-                    with col2:
                         st.markdown("**➕ הוספה לקבוצה**")
                         # רק support/admin/superadmin יכולים להוסיף לקבוצה
                         if role == 'viewer':
@@ -2051,6 +2011,48 @@ def main():
                                                     }
                                             else:
                                                 st.error("❌ ההוספה לקבוצה נכשלה")
+
+                    with col2:
+                        st.markdown("**👥 הצגת קבוצות משתמש**")
+                        if st.button("🔍 הצג קבוצות", key="get_selected_user_groups_new", disabled=not selected_user_for_actions):
+                            with st.spinner(f"טוען קבוצות עבור {selected_user_for_actions}..."):
+                                user_groups = api.get_user_groups(selected_user_for_actions)
+                                if user_groups:
+                                    # שמירה ב-session_state להצגה עם X
+                                    st.session_state.user_groups_display = {
+                                        'username': selected_user_for_actions,
+                                        'groups': user_groups
+                                    }
+                                    st.rerun()
+                                else:
+                                    st.warning("לא נמצאו קבוצות עבור משתמש זה")
+
+                        # הצגת קבוצות עם אפשרות הסרה
+                        if 'user_groups_display' in st.session_state:
+                            display_data = st.session_state.user_groups_display
+                            if display_data['username'] == selected_user_for_actions:
+                                st.success(f"קבוצות עבור {selected_user_for_actions}:")
+
+                                for group in display_data['groups']:
+                                    group_name = group.get('groupName') or group.get('name') or str(group)
+
+                                    # שורה עם X אדום - רק ל-admin ו-superadmin
+                                    role = st.session_state.get('role', st.session_state.access_level)
+                                    if role in ['admin', 'superadmin']:
+                                        col_group, col_remove_btn = st.columns([4, 1])
+                                        with col_group:
+                                            st.write(f"• {group_name}")
+                                        with col_remove_btn:
+                                            if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
+                                                       help=f"הסר מקבוצה {group_name}"):
+                                                # שמירת בקשת הסרה לאימות
+                                                st.session_state.remove_from_group_request = {
+                                                    'username': selected_user_for_actions,
+                                                    'group': group_name
+                                                }
+                                                st.rerun()
+                                    else:
+                                        st.write(f"• {group_name}")
 
                     # אימות הסרה מקבוצה (מחוץ לעמודות, בשורה נפרדת)
                     if 'remove_from_group_request' in st.session_state:
@@ -2102,6 +2104,16 @@ def main():
                     col3, col4 = st.columns(2)
 
                     with col3:
+                        st.markdown("**🗑️ מחיקת משתמש**")
+                        # רק admin/superadmin יכולים למחוק
+                        if role in ['admin', 'superadmin']:
+                            if st.button("🗑️ מחק משתמש", key="init_delete_user", type="secondary", disabled=not selected_user_for_actions):
+                                st.session_state.delete_user_confirmation = selected_user_for_actions
+                                st.rerun()
+                        else:
+                            st.info("👁️ מוגבל ל-Admin")
+
+                    with col4:
                         st.markdown("**📝 עריכת פרטי משתמש**")
                         # רק support/admin/superadmin יכולים לערוך
                         if role == 'viewer':
@@ -2112,16 +2124,6 @@ def main():
                                     st.session_state.user_to_edit = selected_user_data
                                     st.session_state.edit_username = selected_user_for_actions
                                     st.success(f"נטענו הפרטים עבור {selected_user_for_actions}")
-
-                    with col4:
-                        st.markdown("**🗑️ מחיקת משתמש**")
-                        # רק admin/superadmin יכולים למחוק
-                        if role in ['admin', 'superadmin']:
-                            if st.button("🗑️ מחק משתמש", key="init_delete_user", type="secondary", disabled=not selected_user_for_actions):
-                                st.session_state.delete_user_confirmation = selected_user_for_actions
-                                st.rerun()
-                        else:
-                            st.info("👁️ מוגבל ל-Admin")
 
                     # אזור אימות מחיקה (מחוץ לעמודות, בשורה נפרדת)
                     if st.session_state.get('delete_user_confirmation') == selected_user_for_actions:
@@ -2484,7 +2486,7 @@ def main():
                         group_name = group.get('groupName', group.get('groupId', 'Unknown Group'))
 
                         # לחיצה על קבוצה טוענת את החברים אוטומטית
-                        if st.button(f"📁 {group_name}", key=f"group_btn_{group_name}", use_container_width=True):
+                        if st.button(f"👥 {group_name}", key=f"group_btn_{group_name}", use_container_width=True):
                             st.session_state.selected_group_name = group_name
 
                             # טעינה אוטומטית של חברי הקבוצה
@@ -2529,6 +2531,10 @@ def main():
                 if 'selected_group_members' not in st.session_state:
                     st.session_state.selected_group_members = []
 
+                # אתחול counter לרענון widgets
+                if 'group_checkbox_counter' not in st.session_state:
+                    st.session_state.group_checkbox_counter = 0
+
                 # כפתור "בחר הכל" / "נקה בחירה"
                 role = st.session_state.get('role', st.session_state.access_level)
 
@@ -2539,12 +2545,12 @@ def main():
                     if st.session_state.selected_group_members and len(st.session_state.selected_group_members) == len(all_usernames):
                         if st.button("❌ נקה בחירה", key="clear_all_members"):
                             st.session_state.selected_group_members = []
-                            st.session_state.skip_checkbox_collection = True
+                            st.session_state.group_checkbox_counter += 1
                             st.rerun()
                     else:
                         if st.button("✅ בחר הכל", key="select_all_members"):
                             st.session_state.selected_group_members = all_usernames.copy()
-                            st.session_state.skip_checkbox_collection = True
+                            st.session_state.group_checkbox_counter += 1
                             st.rerun()
 
                 # טבלה עם checkboxes
@@ -2574,8 +2580,9 @@ def main():
                     if role not in ['viewer']:  # רק למי שמורשה
                         is_checked = username in st.session_state.selected_group_members
 
-                        # תיקון: checkbox פשוט עם value בלבד
-                        checkbox_result = st.checkbox(label, value=is_checked, key=f"member_checkbox_{username}_{group_data['group_name']}")
+                        # תיקון: checkbox עם key דינמי שכולל counter
+                        checkbox_result = st.checkbox(label, value=is_checked,
+                                                     key=f"member_checkbox_{username}_{group_data['group_name']}_{st.session_state.group_checkbox_counter}")
 
                         # אוסף את כל הבחירות
                         if checkbox_result:
@@ -2583,12 +2590,9 @@ def main():
                     else:
                         st.text(f"👁️ {label}")
 
-                # עדכון הסטייט רק אם השתנה משהו (אבל לא אם זה מ"בחר הכל")
+                # עדכון הסטייט רק אם השתנה משהו
                 if role not in ['viewer']:
-                    # אם יש דגל לדלג על איסוף - נקה אותו ואל תעדכן
-                    if st.session_state.get('skip_checkbox_collection', False):
-                        st.session_state.skip_checkbox_collection = False
-                    elif temp_selections != st.session_state.selected_group_members:
+                    if temp_selections != st.session_state.selected_group_members:
                         st.session_state.selected_group_members = temp_selections
                         st.rerun()
 
@@ -2678,8 +2682,7 @@ def main():
                         st.session_state.selected_group_members = []
                         st.session_state.confirm_bulk_remove = False
                         st.session_state.bulk_remove_in_progress = False
-                        if 'skip_checkbox_collection' in st.session_state:
-                            del st.session_state.skip_checkbox_collection
+                        st.session_state.group_checkbox_counter = 0
                         # רענון נתוני הקבוצה
                         members = api.get_group_members(group_data['group_name'])
                         if members:
@@ -2704,8 +2707,8 @@ def main():
                         del st.session_state.confirm_bulk_remove
                     if 'bulk_remove_in_progress' in st.session_state:
                         del st.session_state.bulk_remove_in_progress
-                    if 'skip_checkbox_collection' in st.session_state:
-                        del st.session_state.skip_checkbox_collection
+                    if 'group_checkbox_counter' in st.session_state:
+                        del st.session_state.group_checkbox_counter
                     st.rerun()
     
     # Tab 5: Audit
