@@ -1907,6 +1907,11 @@ def main():
                                 # משתמשים שצריך להוסיף
                                 users_to_add = [u for u in st.session_state.selected_users if u not in existing_usernames]
 
+                            # אתחול משתנים
+                            success_count = 0
+                            fail_count = 0
+                            failed_users = []
+
                             # הצגת אזהרה אם יש משתמשים שכבר בקבוצה
                             if already_in_group:
                                 st.warning(f"⚠️ שים לב: {len(already_in_group)} משתמשים כבר שייכים לקבוצה **{target_group}** ולא יתווספו:")
@@ -1920,10 +1925,6 @@ def main():
 
                                 progress_bar = st.progress(0)
                                 status_text = st.empty()
-
-                                success_count = 0
-                                fail_count = 0
-                                failed_users = []
 
                                 total = len(users_to_add)
 
@@ -1954,7 +1955,7 @@ def main():
                                 st.success(f"✅ {success_count} משתמשים נוספו בהצלחה לקבוצה '{target_group}'")
 
                             if already_in_group:
-                                st.info(f"ℹ️ {len(already_in_group)} משתמשים כבר שייכים לקבוצה ולא התווספו")
+                                st.info(f"{len(already_in_group)} משתמשים כבר שייכים לקבוצה ולא התווספו ℹ️")
 
                             if failed_users:
                                 st.error(f"❌ {fail_count} משתמשים נכשלו:")
@@ -2638,8 +2639,8 @@ def main():
                             if st.button(f"🗑️ הסר {num_selected} מהקבוצה", key="remove_bulk_from_group", type="secondary"):
                                 st.session_state.confirm_bulk_remove = True
 
-                # אימות הסרה
-                if st.session_state.get('confirm_bulk_remove', False) and not st.session_state.get('bulk_remove_in_progress', False):
+                # אימות הסרה - רק אם עדיין לא התחלנו ולא סיימנו
+                if st.session_state.get('confirm_bulk_remove', False) and not st.session_state.get('bulk_remove_in_progress', False) and not st.session_state.get('bulk_remove_results'):
                     st.warning(f"⚠️ האם אתה בטוח שברצונך להסיר {num_selected} משתמשים מהקבוצה '{group_data['group_name']}'?")
                     st.error("⚠️ פעולה זו תסיר את המשתמשים מהקבוצה!")
 
@@ -2648,6 +2649,7 @@ def main():
                     with col_yes:
                         if st.button("✅ אשר הסרה", key="confirm_remove_yes", type="primary", use_container_width=True):
                             st.session_state.bulk_remove_in_progress = True
+                            st.session_state.confirm_bulk_remove = False  # ניקוי מיד
                             st.rerun()
 
                     with col_no:
@@ -2655,7 +2657,7 @@ def main():
                             st.session_state.confirm_bulk_remove = False
                             st.rerun()
 
-                # ביצוע ההסרה (אחרי שהכפתורים נעלמו)
+                # ביצוע ההסרה
                 if st.session_state.get('bulk_remove_in_progress', False):
                     # יישור לימין עבור עברית
                     col_spacer, col_progress = st.columns([1, 3])
@@ -2724,20 +2726,25 @@ def main():
 
                     # כפתור אישור ורענון
                     if st.button("✓ אישור והמשך", key="confirm_bulk_remove_results", type="primary"):
+                        # רענון נתוני הקבוצה תחילה
+                        with st.spinner("מרענן את נתוני הקבוצה..."):
+                            members = api.get_group_members(results['group_name'])
+                            if members is not None:
+                                st.session_state.group_members_data = {
+                                    'group_name': results['group_name'],
+                                    'members': members,
+                                    'count': len(members)
+                                }
+
                         # ניקוי מלא של session state
                         st.session_state.selected_group_members = []
                         st.session_state.confirm_bulk_remove = False
-                        st.session_state.group_checkbox_counter = 0
+                        st.session_state.group_checkbox_counter += 1  # עדכון counter כדי לרענן checkboxes
                         if 'bulk_remove_results' in st.session_state:
                             del st.session_state.bulk_remove_results
-                        # רענון נתוני הקבוצה
-                        members = api.get_group_members(group_data['group_name'])
-                        if members:
-                            st.session_state.group_members_data = {
-                                'group_name': group_data['group_name'],
-                                'members': members,
-                                'count': len(members)
-                            }
+                        if 'bulk_remove_in_progress' in st.session_state:
+                            del st.session_state.bulk_remove_in_progress
+
                         st.rerun()
 
                 # כפתור נקה תוצאות
@@ -2754,6 +2761,8 @@ def main():
                         del st.session_state.confirm_bulk_remove
                     if 'bulk_remove_in_progress' in st.session_state:
                         del st.session_state.bulk_remove_in_progress
+                    if 'bulk_remove_results' in st.session_state:
+                        del st.session_state.bulk_remove_results
                     if 'group_checkbox_counter' in st.session_state:
                         del st.session_state.group_checkbox_counter
                     st.rerun()
