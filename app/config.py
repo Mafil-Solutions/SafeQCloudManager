@@ -71,19 +71,17 @@ class Config:
                 'REDIRECT_URI': self._get_secret('REDIRECT_URI', 'http://localhost:8501'),
             },
             
-            # Access Control
+            # Access Control - Role-based permissions
             'ACCESS_CONTROL': {
                 'ENABLE_GROUP_RESTRICTION': self._get_secret('ENABLE_GROUP_RESTRICTION', True),
-                'AUTHORIZED_GROUPS': self._parse_list(self._get_secret('AUTHORIZED_GROUPS', '')),
-                'ADMIN_GROUPS': self._parse_list(self._get_secret('ADMIN_GROUPS', '')),
-                'SUPERADMIN_GROUP': self._get_secret('SUPERADMIN_GROUP', 'SafeQ-SuperAdmin'),
-                'DENY_MESSAGE': 'Access denied. You must be a member of SafeQ authorized groups.',
-                # Role mapping from Entra groups (4 levels)
+                'DENY_MESSAGE': 'גישה נדחתה. נדרשת שייכות לקבוצת SafeQ.',
+                # Role mapping from Entra ID groups (4 permission levels)
+                # Group names are configurable via secrets/environment variables
                 'ROLE_MAPPING': {
-                    'SafeQ-View': 'viewer',
-                    'SafeQ-Support': 'support',
-                    'SafeQ-Admin': 'admin',
-                    'SafeQ-SuperAdmin': 'superadmin'
+                    self._get_secret('ROLE_VIEW_GROUP', 'SafeQ-View'): 'viewer',
+                    self._get_secret('ROLE_SUPPORT_GROUP', 'SafeQ-Support'): 'support',
+                    self._get_secret('ROLE_ADMIN_GROUP', 'SafeQ-Admin'): 'admin',
+                    self._get_secret('ROLE_SUPERADMIN_GROUP', 'SafeQ-SuperAdmin'): 'superadmin'
                 }
             },
             
@@ -162,10 +160,10 @@ class Config:
         # בדיקות אזהרה
         if 'localhost' in self._config['SERVER_URL']:
             warnings.append("ℹ️ SERVER_URL points to localhost")
-        
-        if not self._config['ACCESS_CONTROL']['AUTHORIZED_GROUPS']:
-            warnings.append("ℹ️ No AUTHORIZED_GROUPS configured - all users will have access")
-        
+
+        if not self._config['ACCESS_CONTROL']['ROLE_MAPPING']:
+            warnings.append("ℹ️ No ROLE_MAPPING configured - access control may not work properly")
+
         return len(errors) == 0, errors, warnings
 
 # יצירת instance גלובלי

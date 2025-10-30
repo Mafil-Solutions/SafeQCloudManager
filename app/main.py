@@ -302,12 +302,6 @@ class EntraIDAuth:
                 return True
         return False
     
-    def get_user_access_level(self, user_groups):
-        admin_groups = CONFIG['ACCESS_CONTROL']['ADMIN_GROUPS']
-        if self.check_group_membership(user_groups, admin_groups):
-            return 'admin'
-        return 'user'
-
 class SafeQAPI:
     def __init__(self):
         self.server_url = CONFIG['SERVER_URL'].rstrip('/')
@@ -665,9 +659,9 @@ def is_session_valid():
 def show_access_denied_page():
     st.title("🚫 הגישה נדחתה")
     st.error(CONFIG['ACCESS_CONTROL']['DENY_MESSAGE'])
-    st.info("**קבוצות נדרשות:**")
-    for group in CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']:
-        st.write(f"• {group}")
+    st.info("**קבוצות SafeQ נדרשות (אחת לפחות):**")
+    for group_name, role in CONFIG['ACCESS_CONTROL']['ROLE_MAPPING'].items():
+        st.write(f"• {group_name} ({role})")
     st.markdown("---")
     st.write("אם לדעתך זו טעות, פנה למנהל ה-IT שלך.")
     if st.button("🔄 נסה שוב"):
@@ -722,8 +716,10 @@ def show_login_page():
                             f"Entra ID - Groups: {', '.join(user_groups_names)}",
                             user_email, ', '.join(user_groups_names), True
                         )
-                        
-                        if entra_auth.check_group_membership(user_groups, CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']):
+
+                        # בדיקת שייכות לאחת מקבוצות SafeQ (ROLE_MAPPING)
+                        required_groups = list(CONFIG['ACCESS_CONTROL']['ROLE_MAPPING'].keys())
+                        if entra_auth.check_group_membership(user_groups, required_groups):
                             # Initialize hybrid authentication & permissions
                             with st.spinner("מאמת הרשאות..."):
                                 api = SafeQAPI()
@@ -871,9 +867,9 @@ def show_login_page():
         # Access info
         with st.expander("ℹ️ מידע על הרשאות"):
             if CONFIG['ACCESS_CONTROL']['ENABLE_GROUP_RESTRICTION']:
-                st.info("**קבוצות נדרשות:**")
-                for group in CONFIG['ACCESS_CONTROL']['AUTHORIZED_GROUPS']:
-                    st.write(f"• {group}")
+                st.info("**קבוצות SafeQ נדרשות (אחת לפחות):**")
+                for group_name, role in CONFIG['ACCESS_CONTROL']['ROLE_MAPPING'].items():
+                    st.write(f"• {group_name} ({role})")
             else:
                 st.info("כל משתמשי הארגון יכולים לגשת לאפליקציה זו")
 
