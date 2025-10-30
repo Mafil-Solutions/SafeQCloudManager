@@ -421,10 +421,57 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # Header קומפקטי
-    col_title, col_user = st.columns([3, 2])
-    with col_title:
-        st.title("🔐 SafeQ Cloud Manager")
+    # Header קומפקטי עם לוגו
+    st.markdown("""
+    <style>
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.2rem;
+            font-weight: 400;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col_logo, col_user = st.columns([3, 2])
+    with col_logo:
+        st.markdown("""
+        <div class="header-logo">
+            <div class="logo-icon">🔐</div>
+            <div>
+                <div class="logo-text">SafeQ Cloud Manager</div>
+                <div class="logo-subtitle">Print Management Platform</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     with col_user:
         show_compact_user_info()
 
