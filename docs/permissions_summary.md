@@ -11,6 +11,8 @@
 
 ## 📊 4 רמות הרשאה
 
+**💡 הערה:** שמות הקבוצות ניתנים להתאמה אישית דרך secrets/environment variables. ברירת המחדל:
+
 ### 🔵 SafeQ-View (צופה)
 - רק צפייה
 - לא יכול לשנות כלום

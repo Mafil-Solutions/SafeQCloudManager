@@ -76,11 +76,12 @@ class Config:
                 'ENABLE_GROUP_RESTRICTION': self._get_secret('ENABLE_GROUP_RESTRICTION', True),
                 'DENY_MESSAGE': 'גישה נדחתה. נדרשת שייכות לקבוצת SafeQ.',
                 # Role mapping from Entra ID groups (4 permission levels)
+                # Group names are configurable via secrets/environment variables
                 'ROLE_MAPPING': {
-                    'SafeQ-View': 'viewer',
-                    'SafeQ-Support': 'support',
-                    'SafeQ-Admin': 'admin',
-                    'SafeQ-SuperAdmin': 'superadmin'
+                    self._get_secret('ROLE_VIEW_GROUP', 'SafeQ-View'): 'viewer',
+                    self._get_secret('ROLE_SUPPORT_GROUP', 'SafeQ-Support'): 'support',
+                    self._get_secret('ROLE_ADMIN_GROUP', 'SafeQ-Admin'): 'admin',
+                    self._get_secret('ROLE_SUPERADMIN_GROUP', 'SafeQ-SuperAdmin'): 'superadmin'
                 }
             },
             

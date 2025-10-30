@@ -122,6 +122,21 @@
 
 ## הגדרת קבוצות ב-Entra ID
 
+### 💡 התאמה אישית של שמות קבוצות
+**שמות הקבוצות ניתנים להתאמה אישית!**
+
+אם ארגונך משתמש בשמות קבוצות שונים, ניתן לשנות אותם ב-secrets (Streamlit Cloud) או ב-`.env` (פיתוח מקומי):
+
+```toml
+# דוגמה להתאמה אישית:
+ROLE_VIEW_GROUP = "MyOrg-Viewer"
+ROLE_SUPPORT_GROUP = "MyOrg-HelpDesk"
+ROLE_ADMIN_GROUP = "MyOrg-Manager"
+ROLE_SUPERADMIN_GROUP = "MyOrg-ITAdmin"
+```
+
+**ברירת מחדל** (אם לא מוגדר אחרת):
+
 ### שלב 1: יצירת קבוצות הרשאה
 ב-Microsoft Entra ID Admin Center, צור **4 Security Groups**:
 
@@ -133,6 +148,8 @@ SafeQ-Support      הרשאות תמיכה ועריכה במערכת
 SafeQ-Admin        הרשאות ניהול מלא במחלקות ספציפיות
 SafeQ-SuperAdmin   הרשאות מנהל על - גישה לכל המערכת
 ```
+
+**📝 הערה:** ניתן להשתמש בכל שם שתרצה - פשוט הגדר את המשתנים בהתאם.
 
 ### שלב 2: הוספת משתמשים לקבוצות
 הוסף כל משתמש **לקבוצה אחת** בלבד (הקבוצה עם רמת ההרשאה הגבוהה ביותר שנדרשת עבורו).
