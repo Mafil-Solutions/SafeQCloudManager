@@ -12,9 +12,8 @@ CONFIG = config.get()
 
 def show():
     """הצגת דף הבית"""
-    st.header("🏠 ברוכים הבאים למנהל SafeQ Cloud")
 
-    # מידע על המשתמש
+    # ברוכים הבאים
     if 'username' in st.session_state:
         role = st.session_state.get('role', st.session_state.get('access_level', 'user'))
         role_icons = {
@@ -25,16 +24,17 @@ def show():
         }
         role_text = role_icons.get(role, '👤 משתמש')
 
-        st.success(f"שלום, {st.session_state.username}! ({role_text})")
+        st.success(f"👋 שלום, **{st.session_state.username}**! ({role_text})")
 
-        # סטטיסטיקות בסיסיות
+        st.markdown("---")
+
+        # כרטיסי מידע
         col1, col2, col3 = st.columns(3)
 
         with col1:
             st.metric(
-                label="🌐 שרת",
-                value="מחובר",
-                delta=CONFIG.get('SERVER_URL', 'N/A')
+                label="🌐 סטטוס שרת",
+                value="מחובר ✅"
             )
 
         with col2:
@@ -52,30 +52,38 @@ def show():
             else:
                 dept_text = str(dept_count)
             st.metric(
-                label="📁 מחלקות מורשות",
+                label="📁 מחלקות",
                 value=dept_text
             )
 
         st.markdown("---")
 
-        # מדריך מהיר
-        st.subheader("📚 מדריך מהיר")
+        # הדרכה מהירה
+        st.info("💡 **טיפ:** השתמש בתפריט הימני כדי לנווט בין המודולים השונים")
 
-        st.markdown("""
-        ### 👥 משתמשים
-        - **רשימת משתמשים** - צפייה בכל המשתמשים במערכת
-        - **חיפוש ועריכה** - חיפוש מתקדם ועריכת פרטי משתמשים
-        - **הוספת משתמש** - יצירת משתמש חדש
-        - **קבוצות** - ניהול קבוצות משתמשים
+        # קישורים מהירים
+        st.subheader("⚡ גישה מהירה")
 
-        ### 📋 הפעילות שלי
-        צפייה בפעולות האחרונות שביצעת במערכת
+        col_users, col_activity = st.columns(2)
 
-        ### 🔮 בקרוב
-        - 🖨️ **מדפסות** - ניהול מדפסות
-        - 📄 **תהליכי סריקה** - ניהול תהליכי סריקה
-        - 📊 **דוחות** - דוחות וסטטיסטיקות
-        """)
+        with col_users:
+            st.markdown("""
+            **👥 ניהול משתמשים**
+            - רשימת משתמשים
+            - חיפוש ועריכה
+            - הוספת משתמש חדש
+            - ניהול קבוצות
+            """)
+
+        with col_activity:
+            st.markdown("""
+            **📊 מידע ופעילות**
+            - הפעילות שלי
+            - דוחות (בקרוב)
+            - ניהול מדפסות (בקרוב)
+            - תהליכי סריקה (בקרוב)
+            """)
+
     else:
         st.warning("⚠️ לא מזוהה משתמש במערכת")
 
