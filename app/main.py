@@ -352,22 +352,22 @@ def main():
     from pages.scanning import show as scanning_show
     from pages.reports import show as reports_show
 
-    # הגדרת דפים עם st.Page()
-    home_page = st.Page(home_show, title="בית", icon="🏠", default=True)
+    # הגדרת דפים עם st.Page() - עם URL ייחודי לכל אחד
+    home_page = st.Page(home_show, title="בית", icon="🏠", url_path="home", default=True)
 
     # דפי משתמשים
-    users_list_page = st.Page(users_list_show, title="רשימת משתמשים", icon="📋")
-    users_search_page = st.Page(users_search_show, title="חיפוש ועריכה", icon="🔍")
-    users_add_page = st.Page(users_add_show, title="הוספת משתמש", icon="➕")
-    users_groups_page = st.Page(users_groups_show, title="קבוצות", icon="👨‍👩‍👧‍👦")
+    users_list_page = st.Page(users_list_show, title="רשימת משתמשים", icon="📋", url_path="users_list")
+    users_search_page = st.Page(users_search_show, title="חיפוש ועריכה", icon="🔍", url_path="users_search")
+    users_add_page = st.Page(users_add_show, title="הוספת משתמש", icon="➕", url_path="users_add")
+    users_groups_page = st.Page(users_groups_show, title="קבוצות", icon="👨‍👩‍👧‍👦", url_path="users_groups")
 
     # דפים עתידיים
-    printers_page = st.Page(printers_show, title="מדפסות", icon="🖨️")
-    scanning_page = st.Page(scanning_show, title="תהליכי סריקה", icon="📄")
-    reports_page = st.Page(reports_show, title="דוחות", icon="📊")
+    printers_page = st.Page(printers_show, title="מדפסות", icon="🖨️", url_path="printers")
+    scanning_page = st.Page(scanning_show, title="תהליכי סריקה", icon="📄", url_path="scanning")
+    reports_page = st.Page(reports_show, title="דוחות", icon="📊", url_path="reports")
 
     # דף הפעילות שלי
-    my_activity_page = st.Page(my_activity_show, title="הפעילות שלי", icon="📋")
+    my_activity_page = st.Page(my_activity_show, title="הפעילות שלי", icon="📋", url_path="my_activity")
 
     # יצירת ניווט עם קבוצות היררכיות
     nav = st.navigation({
