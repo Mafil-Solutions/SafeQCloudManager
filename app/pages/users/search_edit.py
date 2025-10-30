@@ -20,6 +20,59 @@ def show():
     """הצגת דף חיפוש ועריכת משתמשים"""
     check_authentication()
 
+    # RTL styling for search page
+    st.markdown("""
+    <style>
+        /* RTL alignment for all form elements */
+        .stSelectbox, .stTextInput, .stNumberInput {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .stSelectbox > div > div,
+        .stTextInput > div > div,
+        .stNumberInput > div > div {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Labels aligned right */
+        .stSelectbox label, .stTextInput label, .stNumberInput label, .stCheckbox label {
+            direction: rtl;
+            text-align: right !important;
+            justify-content: flex-end !important;
+        }
+
+        /* Dropdown and input fields */
+        .stSelectbox select,
+        .stTextInput input,
+        .stNumberInput input {
+            direction: rtl;
+            text-align: right !important;
+        }
+
+        /* Checkbox alignment */
+        .stCheckbox {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .stCheckbox > label {
+            flex-direction: row-reverse;
+        }
+
+        /* DataFrame RTL */
+        .stDataFrame {
+            direction: rtl;
+        }
+
+        /* Button text alignment */
+        .stButton > button {
+            direction: rtl;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     api = get_api_instance()
     logger = get_logger_instance()
 
