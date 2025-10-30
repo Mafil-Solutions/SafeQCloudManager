@@ -76,6 +76,15 @@ def apply_modern_styling_compact(rtl=False):
             background-color: transparent !important;
         }}
 
+        /* אנימציית סגירה מימין לשמאל */
+        section[data-testid="stSidebar"][aria-expanded="false"] {{
+            {'transform: translateX(100%) !important;' if rtl else 'transform: translateX(-100%) !important;'}
+        }}
+
+        section[data-testid="stSidebar"][aria-expanded="true"] {{
+            transform: translateX(0) !important;
+        }}
+
         /* תוכן הראשי יתחיל מצד שמאל כשה-sidebar בימין */
         .main {{
             {'margin-right: 21rem !important; margin-left: 0 !important;' if rtl else ''}
@@ -148,21 +157,43 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* קטגוריה ראשית */
-        [data-testid="stSidebarNav"] li {{
-            margin-bottom: 0.2rem !important;
+        /* קטגוריה ראשית - יותר ימינה */
+        [data-testid="stSidebarNav"] > ul > li > div {{
+            padding-right: 1.5rem !important;
+            font-weight: 700 !important;
+            font-size: 0.9rem !important;
+            color: {accent_color} !important;
+            margin-top: 0.8rem !important;
+            margin-bottom: 0.3rem !important;
         }}
 
-        /* כותרת קטגוריה */
-        [data-testid="stSidebarNav"] > div > div:first-child {{
-            font-weight: 700 !important;
-            font-size: 0.85rem !important;
-            color: {accent_color} !important;
-            text-transform: uppercase !important;
-            margin-top: 1rem !important;
-            margin-bottom: 0.5rem !important;
+        /* תתי תפריטים - פחות ימינה (הזחה קטנה יותר) */
+        [data-testid="stSidebarNav"] ul ul li {{
             padding-right: 0.5rem !important;
-            letter-spacing: 0.05em !important;
+        }}
+
+        /* חיצים של קטגוריות - תמיד נראים */
+        [data-testid="stSidebarNav"] details summary {{
+            list-style: none !important;
+            cursor: pointer !important;
+        }}
+
+        [data-testid="stSidebarNav"] details summary::-webkit-details-marker {{
+            display: none !important;
+        }}
+
+        /* חץ מותאם אישית - תמיד נראה */
+        [data-testid="stSidebarNav"] details summary::before {{
+            content: "◀" !important;
+            display: inline-block !important;
+            margin-left: 0.5rem !important;
+            transition: transform 0.2s !important;
+            color: {accent_color} !important;
+            font-size: 0.8rem !important;
+        }}
+
+        [data-testid="stSidebarNav"] details[open] summary::before {{
+            transform: rotate(-90deg) !important;
         }}
 
         /* Sidebar text */
@@ -232,6 +263,7 @@ def show_compact_user_info():
     }
     level_text = role_names.get(role, "משתמש")
 
+    # שורה ראשונה
     col1, col2, col3 = st.columns([2, 2, 1])
 
     with col1:
@@ -256,6 +288,31 @@ def show_compact_user_info():
                     logger.log_action(st.session_state.username, "Connection Test", "Failed",
                                     st.session_state.get('user_email', ''), "", False,
                                     st.session_state.get('access_level', 'viewer'))
+
+    # שורה שנייה - פרטים נוספים (קומפקטי)
+    with st.expander("📋 פרטים נוספים", expanded=False):
+        col_email, col_dept = st.columns(2)
+
+        with col_email:
+            st.caption("**📧 אימייל:**")
+            st.write(st.session_state.get('user_email', 'N/A'))
+
+            if st.session_state.get('local_username'):
+                st.caption("**🏠 משתמש לוקאלי:**")
+                st.write(st.session_state.local_username)
+
+        with col_dept:
+            if st.session_state.get('allowed_departments'):
+                if st.session_state.allowed_departments == ["ALL"]:
+                    st.caption("**📁 מחלקות:**")
+                    st.success("כל המחלקות")
+                else:
+                    dept_count = len(st.session_state.allowed_departments)
+                    st.caption(f"**📁 מחלקות ({dept_count}):**")
+                    for dept in st.session_state.allowed_departments[:3]:  # מציג רק 3 ראשונות
+                        st.write(f"• {dept}")
+                    if dept_count > 3:
+                        st.caption(f"ועוד {dept_count - 3}...")
 
 
 def show_sidebar_info():
@@ -344,6 +401,7 @@ def main():
     # ייבוא דפים (רק אחרי login!)
     from pages.home import show as home_show
     from pages.my_activity import show as my_activity_show
+    from pages.users.overview import show as users_overview_show
     from pages.users.user_list import show as users_list_show
     from pages.users.search_edit import show as users_search_show
     from pages.users.add_user import show as users_add_show
@@ -355,7 +413,8 @@ def main():
     # הגדרת דפים עם st.Page() - עם URL ייחודי לכל אחד
     home_page = st.Page(home_show, title="בית", icon="🏠", url_path="home", default=True)
 
-    # דפי משתמשים
+    # דפי משתמשים - עם דף סקירה
+    users_overview_page = st.Page(users_overview_show, title="סקירה", icon="👥", url_path="users_overview")
     users_list_page = st.Page(users_list_show, title="רשימת משתמשים", icon="📋", url_path="users_list")
     users_search_page = st.Page(users_search_show, title="חיפוש ועריכה", icon="🔍", url_path="users_search")
     users_add_page = st.Page(users_add_show, title="הוספת משתמש", icon="➕", url_path="users_add")
@@ -372,7 +431,7 @@ def main():
     # יצירת ניווט עם קבוצות היררכיות
     nav = st.navigation({
         "ראשי": [home_page],
-        "👥 משתמשים": [users_list_page, users_search_page, users_add_page, users_groups_page],
+        "👥 משתמשים": [users_overview_page, users_list_page, users_search_page, users_add_page, users_groups_page],
         "🖨️ מדפסות": [printers_page],
         "📄 סריקה": [scanning_page],
         "📊 דוחות": [reports_page],

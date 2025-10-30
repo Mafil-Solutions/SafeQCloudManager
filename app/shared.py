@@ -202,7 +202,7 @@ def get_logger_instance():
 
 def check_authentication():
     """בדיקת אימות משתמש"""
-    if 'authenticated' not in st.session_state or not st.session_state.authenticated:
+    if 'logged_in' not in st.session_state or not st.session_state.logged_in:
         st.error("❌ נדרש אימות")
         st.stop()
     return True
