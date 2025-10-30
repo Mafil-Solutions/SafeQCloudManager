@@ -42,16 +42,17 @@ if warnings:
 
 def apply_modern_styling_compact(rtl=False):
     """
-    סטיילינג מודרני עם sidebar בצד ימין, צבעי ברנד, ורווחים מצומצמים
+    סטיילינג מודרני עם sidebar בצד ימין, צבעי ברנד עדינים, ורווחים מצומצמים
     """
     direction = "rtl" if rtl else "ltr"
     text_align = "right" if rtl else "left"
 
-    # צבעי SafeQ (כחול-סגול)
+    # צבעי SafeQ (כחול-סגול עדינים)
     primary_color = "#1e3a8a"  # כחול כהה
     secondary_color = "#3b82f6"  # כחול בהיר
     accent_color = "#8b5cf6"  # סגול
     hover_color = "#dbeafe"  # כחול בהיר מאוד
+    sidebar_bg = "#f8fafc"  # רקע עדין אפור-לבן
 
     st.markdown(f"""
     <style>
@@ -61,12 +62,13 @@ def apply_modern_styling_compact(rtl=False):
             text-align: {text_align};
         }}
 
-        /* Sidebar בצד ימין עבור RTL */
+        /* Sidebar בצד ימין עבור RTL - עדין ונקי */
         section[data-testid="stSidebar"] {{
             {'right: 0 !important; left: auto !important;' if rtl else ''}
-            background: linear-gradient(180deg, {primary_color} 0%, {secondary_color} 100%) !important;
+            background-color: {sidebar_bg} !important;
             padding-top: 0.5rem !important;
-            border-left: 3px solid {accent_color} !important;
+            border-left: 2px solid {accent_color} !important;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05) !important;
         }}
 
         section[data-testid="stSidebar"] > div {{
@@ -111,10 +113,9 @@ def apply_modern_styling_compact(rtl=False):
             position: sticky !important;
             top: 0 !important;
             z-index: 999 !important;
-            background: rgba(30, 58, 138, 0.95) !important;
+            background-color: transparent !important;
             padding: 0.5rem !important;
-            border-radius: 0.5rem !important;
-            margin-bottom: 1rem !important;
+            margin-bottom: 0.5rem !important;
         }}
 
         /* עיצוב כפתורי ניווט */
@@ -123,54 +124,50 @@ def apply_modern_styling_compact(rtl=False):
             margin: 0.15rem 0 !important;
             border-radius: 0.5rem !important;
             transition: all 0.3s ease !important;
-            color: white !important;
+            color: #334155 !important;
             font-weight: 500 !important;
+            background-color: transparent !important;
         }}
 
         .stPageLink:hover {{
             background-color: {hover_color} !important;
             color: {primary_color} !important;
             transform: translateX({'-3px' if rtl else '3px'}) !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
         }}
 
-        /* כותרת קטגוריה בניווט */
+        /* כפתור ניווט פעיל */
+        .stPageLink[data-active="true"] {{
+            background: linear-gradient(90deg, {secondary_color}, {accent_color}) !important;
+            color: white !important;
+            font-weight: 600 !important;
+        }}
+
+        /* כותרות קטגוריות בניווט */
         [data-testid="stSidebarNav"] ul {{
             padding: 0 !important;
         }}
 
-        [data-testid="stSidebarNav"] li[role="none"]:first-child {{
+        /* קטגוריה ראשית */
+        [data-testid="stSidebarNav"] li {{
+            margin-bottom: 0.2rem !important;
+        }}
+
+        /* כותרת קטגוריה */
+        [data-testid="stSidebarNav"] > div > div:first-child {{
             font-weight: 700 !important;
-            font-size: 0.95rem !important;
-            color: {accent_color} !important;
-            margin-top: 0.8rem !important;
-            margin-bottom: 0.3rem !important;
-            padding-right: 0.5rem !important;
-            border-bottom: 2px solid {accent_color} !important;
-            padding-bottom: 0.2rem !important;
-        }}
-
-        /* Sidebar info boxes */
-        section[data-testid="stSidebar"] .stMarkdown {{
-            color: white !important;
-        }}
-
-        section[data-testid="stSidebar"] h3 {{
-            color: {accent_color} !important;
-            font-size: 0.9rem !important;
-            margin-top: 1rem !important;
-            margin-bottom: 0.3rem !important;
-            border-bottom: 1px solid {accent_color};
-            padding-bottom: 0.2rem;
-        }}
-
-        section[data-testid="stSidebar"] .stAlert {{
-            background-color: rgba(255, 255, 255, 0.15) !important;
-            color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
-            padding: 0.3rem 0.6rem !important;
             font-size: 0.85rem !important;
-            margin-bottom: 0.3rem !important;
+            color: {accent_color} !important;
+            text-transform: uppercase !important;
+            margin-top: 1rem !important;
+            margin-bottom: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            letter-spacing: 0.05em !important;
+        }}
+
+        /* Sidebar text */
+        section[data-testid="stSidebar"] .stMarkdown {{
+            color: #334155 !important;
         }}
 
         /* Buttons */
@@ -341,9 +338,6 @@ def main():
 
     if not check_config():
         st.stop()
-
-    # הצגת sidebar
-    show_sidebar_info()
 
     # ייבוא דפים
     from pages.home import show as home_show
