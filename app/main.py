@@ -303,7 +303,7 @@ def main():
         page_title="SafeQ Cloud Manager",
         page_icon="🔐",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="collapsed"  # סגור לפני login
     )
 
     init_session_state()
@@ -325,7 +325,9 @@ def main():
                     del st.session_state[key]
 
         show_login_page()
-        return
+        return  # עוצר כאן - לא מגיע לניווט!
+
+    # ===== רק אחרי login מגיעים לכאן =====
 
     # Header קומפקטי
     col_title, col_user = st.columns([3, 2])
@@ -339,7 +341,7 @@ def main():
     if not check_config():
         st.stop()
 
-    # ייבוא דפים
+    # ייבוא דפים (רק אחרי login!)
     from pages.home import show as home_show
     from pages.my_activity import show as my_activity_show
     from pages.users.user_list import show as users_list_show
