@@ -157,43 +157,70 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* קטגוריה ראשית - יותר ימינה */
-        [data-testid="stSidebarNav"] > ul > li > div {{
-            padding-right: 1.5rem !important;
-            font-weight: 700 !important;
-            font-size: 0.9rem !important;
-            color: {accent_color} !important;
+        /* קטגוריה ראשית (details/summary) - הזחה גדולה */
+        [data-testid="stSidebarNav"] > ul > li > details {{
             margin-top: 0.8rem !important;
             margin-bottom: 0.3rem !important;
         }}
 
-        /* תתי תפריטים - פחות ימינה (הזחה קטנה יותר) */
-        [data-testid="stSidebarNav"] ul ul li {{
-            padding-right: 0.5rem !important;
-        }}
-
-        /* חיצים של קטגוריות - תמיד נראים */
-        [data-testid="stSidebarNav"] details summary {{
+        [data-testid="stSidebarNav"] > ul > li > details > summary {{
+            padding-right: 2rem !important;
+            padding-left: 0.5rem !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+            color: {accent_color} !important;
             list-style: none !important;
             cursor: pointer !important;
+            background-color: rgba(139, 92, 246, 0.05) !important;
+            border-radius: 0.5rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            margin-bottom: 0.3rem !important;
         }}
 
+        /* דפים בודדים ברמה העליונה (כמו "ראשי", "פעילות") */
+        [data-testid="stSidebarNav"] > ul > li > div.stPageLink {{
+            padding-right: 2rem !important;
+        }}
+
+        /* תתי תפריטים - הזחה קטנה יותר */
+        [data-testid="stSidebarNav"] details ul li {{
+            padding-right: 0rem !important;
+        }}
+
+        [data-testid="stSidebarNav"] details ul li .stPageLink {{
+            padding-right: 3rem !important;
+            font-size: 0.9rem !important;
+            font-weight: 400 !important;
+        }}
+
+        /* הסתרת marker ברירת המחדל */
         [data-testid="stSidebarNav"] details summary::-webkit-details-marker {{
             display: none !important;
         }}
 
-        /* חץ מותאם אישית - תמיד נראה */
-        [data-testid="stSidebarNav"] details summary::before {{
+        /* חץ מותאם אישית - תמיד נראה ומודגש */
+        [data-testid="stSidebarNav"] > ul > li > details > summary::before {{
             content: "◀" !important;
             display: inline-block !important;
-            margin-left: 0.5rem !important;
-            transition: transform 0.2s !important;
+            position: absolute !important;
+            right: 0.5rem !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            transition: transform 0.3s ease !important;
             color: {accent_color} !important;
-            font-size: 0.8rem !important;
+            font-size: 1rem !important;
+            font-weight: bold !important;
+            opacity: 1 !important;
         }}
 
-        [data-testid="stSidebarNav"] details[open] summary::before {{
-            transform: rotate(-90deg) !important;
+        [data-testid="stSidebarNav"] details[open] > summary::before {{
+            transform: translateY(-50%) rotate(-90deg) !important;
+        }}
+
+        /* Hover על קטגוריה ראשית */
+        [data-testid="stSidebarNav"] > ul > li > details > summary:hover {{
+            background-color: rgba(139, 92, 246, 0.15) !important;
         }}
 
         /* Sidebar text */
@@ -245,7 +272,7 @@ def apply_modern_styling_compact(rtl=False):
 
 
 def show_compact_user_info():
-    """הצגת מידע משתמש קומפקטי בראש העמוד"""
+    """הצגת מידע משתמש קומפקטי בראש העמוד - שורה אחת"""
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
     role_icons = {
         'viewer': '👁️',
@@ -262,57 +289,55 @@ def show_compact_user_info():
         'superadmin': 'מנהל על'
     }
     level_text = role_names.get(role, "משתמש")
+    auth_text = "Entra ID" if st.session_state.get('auth_method') == 'entra_id' else "מקומי"
 
-    # שורה ראשונה
-    col1, col2, col3 = st.columns([2, 2, 1])
+    # שורה אחת - מיושרת ימינה
+    col_user, col_auth, col_details, col_logout, col_test = st.columns([3, 2, 2, 1.5, 1.5])
 
-    with col1:
+    with col_user:
         st.markdown(f"**{access_icon} {st.session_state.get('username', 'N/A')}** • {level_text}")
 
-    with col2:
-        auth_text = "Entra ID" if st.session_state.get('auth_method') == 'entra_id' else "מקומי"
+    with col_auth:
         st.markdown(f"🔐 {auth_text}")
 
-    with col3:
+    with col_details:
+        # Expander קטן לקבוצות בלבד
+        with st.expander("📁 קבוצות", expanded=False):
+            if st.session_state.get('allowed_departments'):
+                if st.session_state.allowed_departments == ["ALL"]:
+                    st.success("✅ כל המחלקות")
+                else:
+                    dept_count = len(st.session_state.allowed_departments)
+                    st.caption(f"**{dept_count} מחלקות:**")
+                    for dept in st.session_state.allowed_departments[:5]:
+                        st.write(f"• {dept}")
+                    if dept_count > 5:
+                        st.caption(f"ועוד {dept_count - 5}...")
+            else:
+                st.info("אין קבוצות מוגדרות")
+
+    with col_logout:
+        if st.button("🚪 יציאה", key="logout_btn", help="התנתק מהמערכת", use_container_width=True):
+            # Clear session
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+
+    with col_test:
         api = SafeQAPI()
-        if st.button("🔍 בדוק", key="header_test_connection", help="בדיקת חיבור לשרת"):
+        if st.button("🔍 בדוק", key="header_test_connection", help="בדיקת חיבור", use_container_width=True):
             logger = AuditLogger()
-            with st.spinner("בודק..."):
+            with st.spinner("..."):
                 if api.test_connection():
-                    st.success("✅ תקין!")
+                    st.success("✅")
                     logger.log_action(st.session_state.username, "Connection Test", "Success",
                                     st.session_state.get('user_email', ''), "", True,
                                     st.session_state.get('access_level', 'viewer'))
                 else:
-                    st.error("❌ נכשל")
+                    st.error("❌")
                     logger.log_action(st.session_state.username, "Connection Test", "Failed",
                                     st.session_state.get('user_email', ''), "", False,
                                     st.session_state.get('access_level', 'viewer'))
-
-    # שורה שנייה - פרטים נוספים (קומפקטי)
-    with st.expander("📋 פרטים נוספים", expanded=False):
-        col_email, col_dept = st.columns(2)
-
-        with col_email:
-            st.caption("**📧 אימייל:**")
-            st.write(st.session_state.get('user_email', 'N/A'))
-
-            if st.session_state.get('local_username'):
-                st.caption("**🏠 משתמש לוקאלי:**")
-                st.write(st.session_state.local_username)
-
-        with col_dept:
-            if st.session_state.get('allowed_departments'):
-                if st.session_state.allowed_departments == ["ALL"]:
-                    st.caption("**📁 מחלקות:**")
-                    st.success("כל המחלקות")
-                else:
-                    dept_count = len(st.session_state.allowed_departments)
-                    st.caption(f"**📁 מחלקות ({dept_count}):**")
-                    for dept in st.session_state.allowed_departments[:3]:  # מציג רק 3 ראשונות
-                        st.write(f"• {dept}")
-                    if dept_count > 3:
-                        st.caption(f"ועוד {dept_count - 3}...")
 
 
 def show_sidebar_info():
@@ -360,7 +385,7 @@ def main():
         page_title="SafeQ Cloud Manager",
         page_icon="🔐",
         layout="wide",
-        initial_sidebar_state="collapsed"  # סגור לפני login
+        initial_sidebar_state="expanded"  # פתוח אחרי login
     )
 
     init_session_state()
@@ -368,6 +393,16 @@ def main():
     # Apply compact styling
     is_logged_in = st.session_state.get('logged_in', False) and is_session_valid()
     apply_modern_styling_compact(rtl=is_logged_in)
+
+    # Hide sidebar before login
+    if not is_logged_in:
+        st.markdown("""
+        <style>
+            section[data-testid="stSidebar"] {
+                display: none !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
     # בדיקת אימות
     if not is_logged_in:
