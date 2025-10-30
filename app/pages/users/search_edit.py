@@ -9,6 +9,7 @@ import streamlit as st
 import pandas as pd
 import sys
 import os
+import re
 
 # הוספת תיקיית app ל-path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -110,7 +111,8 @@ def show():
         search_type_map_he_to_en = {v: k for k, v in search_type_map_en_to_he.items()}
         search_type = search_type_map_he_to_en[search_type_he]
 
-        search_term = st.text_input(f"הזן {search_type_he} לחיפוש")
+        search_term = st.text_input(f"הזן {search_type_he} לחיפוש",
+                                   help="השתמש ב-* כתו כלשהו (wildcard). לדוגמה: *admin*, test*")
         partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
                                    help="מצא את כל המשתמשים המכילים את ערך החיפוש")
     col_spacer, col_provider = st.columns([4, 2])
@@ -134,6 +136,23 @@ def show():
                 all_users = api.get_users(provider_id, 500)
                 matching_users = []
                 search_lower = search_term.lower()
+
+                # Check if wildcard is used
+                use_wildcard = '*' in search_term
+                if use_wildcard:
+                    # Convert wildcard pattern to regex
+                    # Escape special regex chars except *
+                    regex_pattern = re.escape(search_lower).replace(r'\*', '.*')
+                    # Add anchors for non-partial search
+                    if not partial_search:
+                        regex_pattern = '^' + regex_pattern + '$'
+                    try:
+                        search_regex = re.compile(regex_pattern)
+                    except re.error:
+                        st.error("תבנית חיפוש לא תקינה")
+                        search_regex = None
+                else:
+                    search_regex = None
 
                 for user in all_users:
                     if not isinstance(user, dict):
@@ -160,9 +179,15 @@ def show():
                                 user_field = detail.get('detailData', '').lower()
                                 break
 
-                    if partial_search:
+                    # Perform matching based on search mode
+                    if use_wildcard and search_regex:
+                        # Wildcard search using regex
+                        match_found = bool(search_regex.search(user_field)) if user_field else False
+                    elif partial_search:
+                        # Partial match (contains)
                         match_found = search_lower in user_field if user_field else False
                     else:
+                        # Exact match
                         match_found = search_lower == user_field
 
                     if match_found:
