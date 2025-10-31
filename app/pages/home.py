@@ -20,7 +20,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         st.markdown("""
         <style>
             /* כפתורי page_link מעוצבים כמו בדף סקירה */
-            div[data-testid="column"] .stPageLink > a {
+            .stPageLink > a {
                 background: linear-gradient(135deg, #C41E3A 0%, #4A90E2 100%) !important;
                 color: white !important;
                 padding: 0.8rem 1.2rem !important;
@@ -34,7 +34,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 display: block !important;
             }
 
-            div[data-testid="column"] .stPageLink > a:hover {
+            .stPageLink > a:hover {
                 transform: translateY(-3px) !important;
                 box-shadow: 0 6px 25px rgba(196, 30, 58, 0.5) !important;
             }

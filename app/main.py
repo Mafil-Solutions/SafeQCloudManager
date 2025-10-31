@@ -99,12 +99,24 @@ def apply_modern_styling_compact(rtl=False):
 
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
-            padding-top: 0.5rem !important;
+            padding-top: 4rem !important;
             padding-bottom: 1rem !important;
             max-width: 100% !important;
             text-align: right;
             margin-left: auto;
             margin-right: 0;
+        }}
+
+        /* Header container sticky */
+        .main > div:first-child {{
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: 21rem !important;
+            z-index: 999 !important;
+            background: white !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            padding: 0.3rem 1rem !important;
         }}
 
         /* כותרת ראשית קומפקטית */
@@ -121,11 +133,9 @@ def apply_modern_styling_compact(rtl=False):
             color: {secondary_color} !important;
         }}
 
-        /* Sticky navigation */
+        /* Sidebar navigation - NOT sticky */
         [data-testid="stSidebarNav"] {{
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 999 !important;
+            position: relative !important;
             background-color: transparent !important;
             padding: 0.5rem !important;
             margin-bottom: 0.5rem !important;
@@ -191,7 +201,7 @@ def apply_modern_styling_compact(rtl=False):
         [data-testid="stSidebarNav"] details > ul {{
             background-color: rgba(255, 255, 255, 0.6) !important;
             border-radius: 0.4rem !important;
-            padding: 0.5rem !important;
+            padding: 0.5rem 0.5rem 0.5rem 3rem !important;
             margin-top: 0.3rem !important;
             margin-bottom: 0.5rem !important;
             margin-right: 0 !important;
@@ -202,7 +212,6 @@ def apply_modern_styling_compact(rtl=False):
 
         [data-testid="stSidebarNav"] details > ul > li {{
             margin: 0.15rem 0 !important;
-            padding-right: 2rem !important;
         }}
 
         [data-testid="stSidebarNav"] details > ul > li > div {{
@@ -338,20 +347,20 @@ def show_compact_user_info():
     # CSS לכפתורים וexpander זעירים
     st.markdown("""
     <style>
-        /* כפתורים זעירים בהדר - ללא רקע */
+        /* כפתורים זעירים בהדר - עם רקע */
         div[data-testid="column"] .stButton > button {
             padding: 0.15rem 0.5rem !important;
             font-size: 0.8rem !important;
             height: 1.5rem !important;
             min-height: 1.5rem !important;
-            background: transparent !important;
+            background: #f8f9fa !important;
             color: #666 !important;
-            border: none !important;
-            border-left: 1px solid #ddd !important;
+            border: 1px solid #ddd !important;
+            border-radius: 0.3rem !important;
         }
 
         div[data-testid="column"] .stButton > button:hover {
-            background: #f5f5f5 !important;
+            background: #e9ecef !important;
             color: #C41E3A !important;
         }
 
@@ -386,7 +395,7 @@ def show_compact_user_info():
     """, unsafe_allow_html=True)
 
     # שורה עם expander משתמש ליד כפתורי פעולה
-    col_user_exp, col_divider, col_refresh, col_logout = st.columns([3, 0.1, 1, 1])
+    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([2, 0.1, 0.8, 0.1, 0.8])
 
     with col_user_exp:
         # משתמש + הרשאה בתוך expander עם בתי ספר
@@ -406,7 +415,7 @@ def show_compact_user_info():
             else:
                 st.caption("אין בתי ספר")
 
-    with col_divider:
+    with col_divider1:
         st.markdown("<div class='header-divider'></div>", unsafe_allow_html=True)
 
     with col_refresh:
@@ -418,6 +427,9 @@ def show_compact_user_info():
                 if key not in keys_to_keep:
                     del st.session_state[key]
             st.rerun()
+
+    with col_divider2:
+        st.markdown("<div class='header-divider'></div>", unsafe_allow_html=True)
 
     with col_logout:
         # אייקון יציאה - דלת
@@ -511,14 +523,14 @@ def main():
     # Header קומפקטי וקפוא (sticky)
     st.markdown("""
     <style>
-        /* מכולת Header קפואה */
-        .main > div:first-child {
+        /* Header sticky CSS */
+        .element-container:has(> div > div > div > [data-testid="column"]) {
             position: sticky !important;
             top: 0 !important;
             z-index: 999 !important;
             background: white !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            padding-bottom: 0.3rem !important;
+            padding: 0.2rem 0.5rem !important;
         }
 
         .header-row {
@@ -562,7 +574,7 @@ def main():
                 return os.path.join(os.path.abspath("."), relative_path)
 
             logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=150)
+            st.image(logo_path, width=180)
         except Exception as e:
             st.markdown("**MafilIT**")
 

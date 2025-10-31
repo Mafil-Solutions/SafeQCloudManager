@@ -21,7 +21,7 @@ def show():
     """הצגת דף חיפוש ועריכת משתמשים"""
     check_authentication()
 
-    # RTL styling - תן ל-columns לעבוד + CSS מהמשתמש
+    # RTL styling - חזק מאוד
     st.markdown("""
     <style>
         /* DataFrame RTL */
@@ -31,27 +31,33 @@ def show():
 
         /* הפוך את כל האפליקציה ל־RTL */
         .stApp {
-            direction: rtl;
+            direction: rtl !important;
         }
 
         /* מיקום בלוק התוכן הראשי לימין */
         .block-container {
             text-align: right !important;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end !important;
-            padding-right: 3rem !important;
+            direction: rtl !important;
         }
 
-        /* עמודות יופיעו מהימין לשמאל */
-        [data-testid="column"] {
-            flex-direction: row-reverse !important;
+        /* עמודות - RTL */
+        div[data-testid="column"] {
+            direction: rtl !important;
             text-align: right !important;
-            align-items: flex-end !important;
         }
 
-        /* טפסים ושדות - RTL מלא */
+        /* כל אלמנטי הטופס - RTL חזק */
+        .stTextInput, .stSelectbox, .stNumberInput {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
         .stTextInput > div, .stSelectbox > div, .stNumberInput > div {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        .stTextInput > div > div, .stSelectbox > div > div, .stNumberInput > div > div {
             direction: rtl !important;
             text-align: right !important;
         }
@@ -64,7 +70,7 @@ def show():
         .stTextInput label, .stSelectbox label, .stNumberInput label {
             direction: rtl !important;
             text-align: right !important;
-            float: right !important;
+            display: block !important;
         }
 
         /* Checkbox RTL */
@@ -75,7 +81,13 @@ def show():
 
         /* Button RTL */
         .stButton {
+            direction: rtl !important;
             text-align: right !important;
+        }
+
+        /* כל הדיווים */
+        div[data-baseweb] {
+            direction: rtl !important;
         }
     </style>
     """, unsafe_allow_html=True)
