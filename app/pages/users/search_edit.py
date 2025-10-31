@@ -24,6 +24,19 @@ def show():
     # RTL styling for search page
     st.markdown("""
     <style>
+    .block-container {
+    direction: rtl;
+    text-align: right;
+    margin-left: auto;
+    margin-right: 0;
+    padding-right: 80px;
+}
+
+[data-testid="column"] {
+    direction: rtl;
+    text-align: right;
+    justify-content: flex-end;
+}
         /* RTL alignment for all form elements */
         .stSelectbox, .stTextInput, .stNumberInput {
             direction: rtl;
