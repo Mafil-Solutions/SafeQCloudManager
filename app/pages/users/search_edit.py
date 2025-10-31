@@ -21,124 +21,39 @@ def show():
     """הצגת דף חיפוש ועריכת משתמשים"""
     check_authentication()
 
-    # RTL styling for search page
+    # RTL styling - תן ל-columns לעבוד + CSS מהמשתמש
     st.markdown("""
     <style>
-    
-        /* RTL alignment for all form elements */
-        .stSelectbox, .stTextInput, .stNumberInput {
+        /* DataFrame RTL */
+        .stDataFrame {
+            direction: rtl !important;
+        }
+
+        /* הפוך את כל האפליקציה ל־RTL */
+        .stApp {
             direction: rtl;
+        }
+
+        /* מיקום בלוק התוכן הראשי לימין */
+        .block-container {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            padding-right: 50px;
+        }
+
+        /* עמודות יופיעו מהימין לשמאל */
+        [data-testid="column"] {
+            flex-direction: row-reverse;
             text-align: right;
         }
 
-        /* RTL for all form containers */
-        .stSelectbox, .stTextInput, .stNumberInput, .stCheckbox {
-            direction: rtl !important;
-            text-align: right !important;
+        /* טפסים ושדות */
+        .stTextInput, .stSelectbox, .stNumberInput {
+            direction: rtl;
+            text-align: right;
         }
-
-        /* Nested divs */
-        .stSelectbox > div,
-        .stTextInput > div,
-        .stNumberInput > div,
-        .stCheckbox > div {
-            direction: rtl !important;
-            text-align: right !important;
-        }
-
-        /* Even deeper nesting */
-        .stSelectbox > div > div,
-        .stTextInput > div > div,
-        .stNumberInput > div > div {
-            direction: rtl !important;
-            text-align: right !important;
-        }
-
-        /* Labels - force right alignment */
-        .stSelectbox label,
-        .stTextInput label,
-        .stNumberInput label,
-        .stCheckbox label {
-            direction: rtl !important;
-            text-align: right !important;
-            justify-content: flex-end !important;
-            display: flex !important;
-            flex-direction: row-reverse !important;
-        }
-
-        /* Input fields themselves */
-        .stSelectbox select,
-        .stTextInput input,
-        .stNumberInput input {
-            direction: rtl !important;
-            text-align: right !important;
-        }
-
-        /* Selectbox dropdown content */
-        .stSelectbox div[data-baseweb="select"] > div {
-            direction: rtl !important;
-            text-align: right !important;
-        }
-
-        /* Checkbox text and box */
-        .stCheckbox {
-            direction: rtl !important;
-        }
-
-        .stCheckbox > label {
-            flex-direction: row-reverse !important;
-            direction: rtl !important;
-        }
-
-        .stCheckbox > label > div {
-            direction: rtl !important;
-            margin-right: 0 !important;
-            margin-left: 0.5rem !important;
-        }
-
-        /* DataFrame RTL */
-        .stDataFrame, .stDataFrame * {
-            direction: rtl !important;
-        }
-
-        /* Button alignment */
-        .stButton {
-            direction: rtl !important;
-        }
-
-        .stButton > button {
-            direction: rtl !important;
-        }
-
-        /* Columns RTL */
-        div[data-testid="column"] {
-            direction: rtl !important;
-        }
-        /* הפוך את כל האפליקציה ל־RTL */
-.stApp {
-    direction: rtl;
-}
-
-/* מיקום בלוק התוכן הראשי לימין */
-.block-container {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;  /* <-- זה מזיז את הכל פיזית לימין */
-    padding-right: 50px;    /* ריווח מהקצה */
-}
-
-/* עמודות יופיעו מהימין לשמאל */
-[data-testid="column"] {
-    flex-direction: row-reverse;
-    text-align: right;
-}
-
-/* טפסים ושדות */
-.stTextInput, .stSelectbox, .stNumberInput {
-    direction: rtl;
-    text-align: right;
-}
     </style>
     """, unsafe_allow_html=True)
 
@@ -150,7 +65,7 @@ def show():
     # ============ חיפוש משתמשים ============
     st.subheader("חיפוש")
 
-    # שורה ראשונה: מקור (למעלה)
+    # שורה ראשונה: מקור (בצד ימין)
     col_spacer, col_provider = st.columns([4, 2])
     with col_provider:
         # בדיקת הרשאות - רק superadmin יכול לבחור Entra
@@ -165,14 +80,14 @@ def show():
         search_provider = st.selectbox("מקור *", provider_options, index=default_index,
                                      help="רק superadmin יכול לבחור Entra" if role != 'superadmin' else None)
 
-    # שורה שנייה: חיפוש לפי ושדות נוספים
-    col1, col2 = st.columns([1, 1])
-    with col1:
+    # שורה שנייה: חיפוש לפי ושדות (עמודה ימנית מכיל הכל)
+    col_left_spacer, col_right_fields = st.columns([1, 1])
+
+    with col_right_fields:
         search_type_map_en_to_he = {
             "Username": "שם משתמש", "Full Name": "שם מלא",
             "Department": "מחלקה", "Email": "אימייל"
         }
-    with col2:
         search_type_he_options = list(search_type_map_en_to_he.values())
         search_type_he = st.selectbox("חיפוש לפי", search_type_he_options)
 
@@ -183,8 +98,10 @@ def show():
                                    help="השתמש ב-* כתו כלשהו (wildcard). לדוגמה: *admin*, test*")
         partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
                                    help="מצא את כל המשתמשים המכילים את ערך החיפוש")
-    col_spacer, col_provider = st.columns([4, 2])
-    with col_provider:
+
+    # שורה שלישית: תוצאות להצגה (בצד ימין)
+    col_spacer2, col_max_results = st.columns([4, 2])
+    with col_max_results:
         max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=200)
 
     if st.button("🔍 חפש", key="search_users_btn", type="primary", use_container_width=True):

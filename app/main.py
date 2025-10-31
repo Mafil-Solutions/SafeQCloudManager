@@ -161,18 +161,19 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* כותרות קטגוריות - סגנון ברור */
+        /* כותרות קטגוריות - ללא הזחה */
         [data-testid="stSidebarNav"] > ul > li > details {{
             margin-top: 0.8rem !important;
             margin-bottom: 0.3rem !important;
             position: relative !important;
+            margin-right: 0 !important;
         }}
 
         [data-testid="stSidebarNav"] > ul > li > details > summary {{
             padding-right: 2.5rem !important;
             padding-left: 1rem !important;
             font-weight: 700 !important;
-            font-size: 1.05rem !important;
+            font-size: 1rem !important;
             color: {accent_color} !important;
             list-style: none !important;
             cursor: pointer !important;
@@ -181,35 +182,40 @@ def apply_modern_styling_compact(rtl=False):
             padding-top: 0.6rem !important;
             padding-bottom: 0.6rem !important;
             margin-bottom: 0.3rem !important;
+            margin-right: 0 !important;
             position: relative !important;
             border: 1px solid rgba(196, 30, 58, 0.1) !important;
         }}
 
-        /* דפים בודדים ברמה העליונה (כמו "ראשי", "פעילות") */
-        [data-testid="stSidebarNav"] > ul > li > div.stPageLink {{
-            padding-right: 2rem !important;
+        /* דפים בודדים ברמה העליונה - ללא הזחה */
+        [data-testid="stSidebarNav"] > ul > li > div {{
+            margin-right: 0 !important;
             margin-bottom: 0.5rem !important;
         }}
 
-        /* תתי תפריטים - הזחה ברורה */
+        /* תתי תפריטים - הזחה ברורה עם מסגרת */
         [data-testid="stSidebarNav"] details ul {{
-            background-color: rgba(255, 255, 255, 0.3) !important;
+            background-color: rgba(255, 255, 255, 0.5) !important;
             border-radius: 0.3rem !important;
-            padding-top: 0.3rem !important;
-            padding-bottom: 0.3rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
             margin-top: 0.3rem !important;
+            margin-right: 0 !important;
+            margin-left: 1.5rem !important;
+            border-right: 3px solid {accent_color} !important;
         }}
 
         [data-testid="stSidebarNav"] details ul li {{
-            padding-right: 0rem !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
         }}
 
-        [data-testid="stSidebarNav"] details ul li .stPageLink {{
-            padding-right: 3.5rem !important;
-            padding-left: 1rem !important;
+        [data-testid="stSidebarNav"] details ul li div {{
+            padding-right: 1rem !important;
+            padding-left: 0.5rem !important;
+            margin-right: 0.5rem !important;
             font-size: 0.9rem !important;
             font-weight: 400 !important;
-            margin: 0.15rem 0.5rem !important;
         }}
 
         /* הסתרת marker ברירת המחדל */
@@ -221,7 +227,7 @@ def apply_modern_styling_compact(rtl=False):
             display: none !important;
         }}
 
-        /* חץ מותאם אישית - תמיד גלוי */
+        /* חץ מותאם אישית - תמיד גלוי וברור */
         [data-testid="stSidebarNav"] > ul > li > details > summary::after {{
             content: "◀" !important;
             position: absolute !important;
@@ -230,8 +236,8 @@ def apply_modern_styling_compact(rtl=False):
             transform: translateY(-50%) !important;
             transition: transform 0.25s ease !important;
             color: {accent_color} !important;
-            font-size: 1.1rem !important;
-            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            font-weight: 900 !important;
             opacity: 1 !important;
             z-index: 10 !important;
         }}
@@ -296,7 +302,7 @@ def apply_modern_styling_compact(rtl=False):
 
 
 def show_compact_user_info():
-    """הצגת מידע משתמש קומפקטי בראש העמוד - שורה אחת"""
+    """הצגת מידע משתמש קומפקטי בראש העמוד - שורה אחת דקה"""
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
     role_icons = {
         'viewer': '👁️',
@@ -315,55 +321,75 @@ def show_compact_user_info():
     level_text = role_names.get(role, "משתמש")
     auth_text = "Entra ID" if st.session_state.get('auth_method') == 'entra_id' else "מקומי"
 
-    # שורה אחת - מיושרת ימינה, עמודות רחבות יותר לכפתורים
-    col_user, col_auth, col_details, col_refresh, col_logout, col_test = st.columns([2.5, 1.5, 1.8, 1.3, 1.3, 1.5])
+    # CSS לכפתורים קטנים יותר
+    st.markdown("""
+    <style>
+        /* כפתורים קטנים בהדר */
+        div[data-testid="column"] .stButton > button {
+            padding: 0.25rem 0.75rem !important;
+            font-size: 0.85rem !important;
+            height: 2rem !important;
+            min-height: 2rem !important;
+        }
+
+        /* Expander קטן יותר */
+        div[data-testid="column"] .streamlit-expanderHeader {
+            font-size: 0.85rem !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+
+        /* טקסט קטן יותר */
+        div[data-testid="column"] p {
+            font-size: 0.9rem !important;
+            margin: 0.2rem 0 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # שורה קומפקטית
+    col_user, col_auth, col_groups, col_refresh, col_logout, col_test = st.columns([2, 1.2, 1.5, 0.9, 0.9, 0.9])
 
     with col_user:
-        st.markdown(f"**{access_icon} {st.session_state.get('username', 'N/A')}** • {level_text}")
+        st.markdown(f"<small>{access_icon} **{st.session_state.get('username', 'N/A')}** • {level_text}</small>", unsafe_allow_html=True)
 
     with col_auth:
-        st.markdown(f"🔐 {auth_text}")
+        st.markdown(f"<small>🔐 {auth_text}</small>", unsafe_allow_html=True)
 
-    with col_details:
-        # Expander קטן לקבוצות בלבד
-        with st.expander("📁 קבוצות", expanded=False):
+    with col_groups:
+        # Expander זעיר לקבוצות
+        with st.expander("📁", expanded=False):
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
-                    st.success("✅ כל המחלקות")
+                    st.caption("✅ הכל")
                 else:
                     dept_count = len(st.session_state.allowed_departments)
-                    st.caption(f"**{dept_count} מחלקות:**")
-                    for dept in st.session_state.allowed_departments[:5]:
-                        st.write(f"• {dept}")
-                    if dept_count > 5:
-                        st.caption(f"ועוד {dept_count - 5}...")
+                    st.caption(f"{dept_count} מחלקות")
+                    for dept in st.session_state.allowed_departments[:3]:
+                        st.caption(f"• {dept}")
+                    if dept_count > 3:
+                        st.caption(f"+{dept_count - 3}")
             else:
-                st.info("אין קבוצות מוגדרות")
+                st.caption("אין קבוצות")
 
     with col_refresh:
-        # כפתור ניקוי נתונים
-        if st.button("🔄 ניקוי", key="refresh_page", help="נקה נתונים זמניים", use_container_width=True):
+        if st.button("🔄", key="refresh_page", help="ניקוי נתונים", use_container_width=True):
             keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level',
                             'login_time', 'auth_method', 'session_id',
                             'entra_username', 'local_username', 'role', 'local_groups', 'allowed_departments']
-
             for key in list(st.session_state.keys()):
                 if key not in keys_to_keep:
                     del st.session_state[key]
-
-            st.success("נתונים נוקו!")
             st.rerun()
 
     with col_logout:
-        if st.button("🚪 יציאה", key="logout_btn", help="התנתק מהמערכת", use_container_width=True):
-            # Clear session
+        if st.button("🚪", key="logout_btn", help="יציאה", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
 
     with col_test:
         api = SafeQAPI()
-        if st.button("🔍 בדוק", key="header_test_connection", help="בדיקת חיבור", use_container_width=True):
+        if st.button("🔍", key="header_test_connection", help="בדיקה", use_container_width=True):
             logger = AuditLogger()
             with st.spinner("..."):
                 if api.test_connection():
