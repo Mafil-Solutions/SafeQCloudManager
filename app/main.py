@@ -94,7 +94,7 @@ def apply_modern_styling_compact(rtl=False):
         /* צמצום header */
         header[data-testid="stHeader"] {{
             background-color: transparent;
-            height: 2rem !important;
+            height: 1rem !important;
         }}
 
         /* צמצום padding עליון של התוכן */
@@ -191,16 +191,18 @@ def apply_modern_styling_compact(rtl=False):
         [data-testid="stSidebarNav"] details > ul {{
             background-color: rgba(255, 255, 255, 0.6) !important;
             border-radius: 0.4rem !important;
-            padding: 0.5rem 0.5rem 0.5rem 2rem !important;
-            margin-right: 2rem !important;
+            padding: 0.5rem !important;
             margin-top: 0.3rem !important;
             margin-bottom: 0.5rem !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
             border-right: 4px solid {accent_color} !important;
             box-shadow: inset 2px 0 5px rgba(0,0,0,0.05) !important;
         }}
 
         [data-testid="stSidebarNav"] details > ul > li {{
             margin: 0.15rem 0 !important;
+            padding-right: 2rem !important;
         }}
 
         [data-testid="stSidebarNav"] details > ul > li > div {{
@@ -308,11 +310,21 @@ def apply_modern_styling_compact(rtl=False):
             box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
         }}
     </style>
+
+    <script>
+        // סגירת כל הקטגוריות בסיידבר בטעינה
+        document.addEventListener('DOMContentLoaded', function() {{
+            const details = document.querySelectorAll('[data-testid="stSidebarNav"] details');
+            details.forEach(detail => {{
+                detail.removeAttribute('open');
+            }});
+        }});
+    </script>
     """, unsafe_allow_html=True)
 
 
 def show_compact_user_info():
-    """הצגת מידע משתמש קומפקטי בראש העמוד - שורה אחת זעירה"""
+    """הצגת מידע משתמש קומפקטי בראש העמוד - משתמש בתוך expander"""
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
 
     role_names = {
@@ -323,7 +335,7 @@ def show_compact_user_info():
     }
     level_text = role_names.get(role, "משתמש")
 
-    # CSS לכפתורים קטנים מאוד
+    # CSS לכפתורים וexpander זעירים
     st.markdown("""
     <style>
         /* כפתורים זעירים בהדר - ללא רקע */
@@ -345,51 +357,57 @@ def show_compact_user_info():
 
         /* Expander זעיר */
         div[data-testid="column"] .streamlit-expanderHeader {
-            font-size: 0.75rem !important;
-            padding: 0.15rem 0.4rem !important;
+            font-size: 0.8rem !important;
+            padding: 0.15rem 0.6rem !important;
             min-height: 1.5rem !important;
-            background: transparent !important;
-            border: none !important;
-            border-left: 1px solid #ddd !important;
+            background: #f8f9fa !important;
+            border: 1px solid #ddd !important;
+            border-radius: 0.3rem !important;
+        }
+
+        div[data-testid="column"] .streamlit-expanderHeader:hover {
+            background: #e9ecef !important;
         }
 
         /* טקסט זעיר */
         div[data-testid="column"] p, div[data-testid="column"] small {
-            font-size: 0.8rem !important;
+            font-size: 0.75rem !important;
             margin: 0 !important;
-            line-height: 1.5rem !important;
+            line-height: 1.3rem !important;
+        }
+
+        /* הפרדה */
+        .header-divider {
+            border-left: 1px solid #ddd;
+            height: 1.5rem;
+            margin: 0 0.3rem;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # שורה קומפקטית מאוד עם הפרדות
-    col_user, col_divider1, col_schools, col_divider2, col_refresh, col_logout = st.columns([3.5, 0.1, 2, 0.1, 1, 1])
+    # שורה עם expander משתמש ליד כפתורי פעולה
+    col_user_exp, col_divider, col_refresh, col_logout = st.columns([3, 0.1, 1, 1])
 
-    with col_user:
-        # אייקון משתמש + שם + רמה
-        st.markdown(f"<div style='padding: 0; line-height: 1.5rem; font-size: 0.8rem;'>👤 <b>{st.session_state.get('username', 'N/A')}</b> · {level_text}</div>", unsafe_allow_html=True)
-
-    with col_divider1:
-        st.markdown("<div style='border-left: 1px solid #ddd; height: 1.5rem;'></div>", unsafe_allow_html=True)
-
-    with col_schools:
-        # בתי ספר זמינים עם חץ למטה
-        with st.expander("🏫 בתי ספר זמינים ▼", expanded=False):
+    with col_user_exp:
+        # משתמש + הרשאה בתוך expander עם בתי ספר
+        username = st.session_state.get('username', 'N/A')
+        with st.expander(f"👤 {username} · {level_text} ▼", expanded=False):
+            st.markdown("**🏫 בתי ספר זמינים:**")
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
                     st.caption("✅ כל בתי הספר")
                 else:
                     dept_count = len(st.session_state.allowed_departments)
-                    st.caption(f"**{dept_count} בתי ספר:**")
-                    for dept in st.session_state.allowed_departments[:5]:
+                    st.caption(f"**{dept_count} בתי ספר זמינים**")
+                    for dept in st.session_state.allowed_departments[:10]:
                         st.caption(f"• {dept}")
-                    if dept_count > 5:
-                        st.caption(f"+{dept_count - 5} נוספים")
+                    if dept_count > 10:
+                        st.caption(f"+{dept_count - 10} נוספים")
             else:
                 st.caption("אין בתי ספר")
 
-    with col_divider2:
-        st.markdown("<div style='border-left: 1px solid #ddd; height: 1.5rem;'></div>", unsafe_allow_html=True)
+    with col_divider:
+        st.markdown("<div class='header-divider'></div>", unsafe_allow_html=True)
 
     with col_refresh:
         if st.button("🔄 ניקוי", key="refresh_page", help="ניקוי נתונים זמניים", use_container_width=True):
@@ -490,9 +508,19 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # Header קומפקטי מאוד עם לוגו
+    # Header קומפקטי וקפוא (sticky)
     st.markdown("""
     <style>
+        /* מכולת Header קפואה */
+        .main > div:first-child {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 999 !important;
+            background: white !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            padding-bottom: 0.3rem !important;
+        }
+
         .header-row {
             display: flex;
             align-items: center;
@@ -500,13 +528,21 @@ def main():
             margin-bottom: 0;
             padding: 0;
         }
+
         .title-text {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            color: #C41E3A;
             margin: 0;
             padding: 0;
-            line-height: 2rem;
+            line-height: 2.2rem;
+        }
+
+        .title-mafil {
+            color: #C41E3A;
+        }
+
+        .title-services {
+            color: #4A90E2;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -514,7 +550,7 @@ def main():
     col_logo, col_title, col_user = st.columns([1, 2.5, 6.5])
 
     with col_logo:
-        # לוגו של החברה - קטן
+        # לוגו של החברה - מוגדל
         try:
             import sys
             import os
@@ -526,12 +562,12 @@ def main():
                 return os.path.join(os.path.abspath("."), relative_path)
 
             logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=120)
+            st.image(logo_path, width=150)
         except Exception as e:
             st.markdown("**MafilIT**")
 
     with col_title:
-        st.markdown('<div class="title-text">Mafil Cloud Services</div>', unsafe_allow_html=True)
+        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Services</span></div>', unsafe_allow_html=True)
 
     with col_user:
         show_compact_user_info()
