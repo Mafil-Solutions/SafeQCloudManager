@@ -44,8 +44,8 @@ def apply_modern_styling_compact(rtl=False):
     """
     סטיילינג מודרני עם sidebar בצד ימין, צבעי ברנד עדינים, ורווחים מצומצמים
     """
-    direction = ltr
-    text_align = ltr
+    direction = "rtl" if rtl else "ltr"
+    text_align = "right" if rtl else "left"
 
     # צבעי SafeQ (כחול-סגול עדינים)
     primary_color = "#1e3a8a"  # כחול כהה
