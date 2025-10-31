@@ -180,7 +180,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* דפים בודדים ברמה העליונה (כמו "ראשי", "פעילות") */
         [data-testid="stSidebarNav"] > ul > li > div.stPageLink {{
-            padding-right: 2rem !important;
+            padding-right: 10rem !important;
         }}
 
         /* תתי תפריטים - הזחה קטנה יותר */
