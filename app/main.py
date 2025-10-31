@@ -42,16 +42,16 @@ if warnings:
 
 def apply_modern_styling_compact(rtl=False):
     """
-    סטיילינג מודרני עם sidebar בצד ימין, צבעי ברנד עדינים, ורווחים מצומצמים
+    סטיילינג מודרני עם sidebar בצד ימין, צבעי Mafil, ורווחים מצומצמים
     """
     direction = "rtl" if rtl else "ltr"
     text_align = "right" if rtl else "left"
 
-    # צבעי SafeQ (כחול-סגול עדינים)
-    primary_color = "#1e3a8a"  # כחול כהה
-    secondary_color = "#3b82f6"  # כחול בהיר
-    accent_color = "#8b5cf6"  # סגול
-    hover_color = "#dbeafe"  # כחול בהיר מאוד
+    # צבעי Mafil (אדום-כחול)
+    primary_color = "#C41E3A"  # אדום Mafil
+    secondary_color = "#4A90E2"  # כחול Mafil
+    accent_color = "#C41E3A"  # אדום לנקודות הדגשה
+    hover_color = "#ffe4e9"  # אדום בהיר מאוד
     sidebar_bg = "#f8fafc"  # רקע עדין אפור-לבן
 
     st.markdown(f"""
@@ -60,6 +60,7 @@ def apply_modern_styling_compact(rtl=False):
         .stApp {{
             direction: {direction};
             text-align: {text_align};
+            background: #F5F6FF !important;
         }}
 
         /* Sidebar בצד ימין עבור RTL - עדין ונקי */
@@ -160,41 +161,55 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* קטגוריה ראשית (details/summary) - הזחה גדולה */
+        /* כותרות קטגוריות - סגנון ברור */
         [data-testid="stSidebarNav"] > ul > li > details {{
             margin-top: 0.8rem !important;
             margin-bottom: 0.3rem !important;
+            position: relative !important;
         }}
 
         [data-testid="stSidebarNav"] > ul > li > details > summary {{
-            padding-right: 2rem !important;
-            padding-left: 0.5rem !important;
+            padding-right: 2.5rem !important;
+            padding-left: 1rem !important;
             font-weight: 700 !important;
-            font-size: 1rem !important;
+            font-size: 1.05rem !important;
             color: {accent_color} !important;
             list-style: none !important;
             cursor: pointer !important;
-            background-color: rgba(139, 92, 246, 0.05) !important;
+            background-color: rgba(196, 30, 58, 0.08) !important;
             border-radius: 0.5rem !important;
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
+            padding-top: 0.6rem !important;
+            padding-bottom: 0.6rem !important;
             margin-bottom: 0.3rem !important;
+            position: relative !important;
+            border: 1px solid rgba(196, 30, 58, 0.1) !important;
         }}
 
         /* דפים בודדים ברמה העליונה (כמו "ראשי", "פעילות") */
         [data-testid="stSidebarNav"] > ul > li > div.stPageLink {{
             padding-right: 2rem !important;
+            margin-bottom: 0.5rem !important;
         }}
 
-        /* תתי תפריטים - הזחה קטנה יותר */
+        /* תתי תפריטים - הזחה ברורה */
+        [data-testid="stSidebarNav"] details ul {{
+            background-color: rgba(255, 255, 255, 0.3) !important;
+            border-radius: 0.3rem !important;
+            padding-top: 0.3rem !important;
+            padding-bottom: 0.3rem !important;
+            margin-top: 0.3rem !important;
+        }}
+
         [data-testid="stSidebarNav"] details ul li {{
             padding-right: 0rem !important;
         }}
 
         [data-testid="stSidebarNav"] details ul li .stPageLink {{
-            padding-right: 3rem !important;
+            padding-right: 3.5rem !important;
+            padding-left: 1rem !important;
             font-size: 0.9rem !important;
             font-weight: 400 !important;
+            margin: 0.15rem 0.5rem !important;
         }}
 
         /* הסתרת marker ברירת המחדל */
@@ -202,28 +217,33 @@ def apply_modern_styling_compact(rtl=False):
             display: none !important;
         }}
 
-        /* חץ מותאם אישית - תמיד נראה ומודגש */
-        [data-testid="stSidebarNav"] > ul > li > details > summary::before {{
-            content: "◀" !important;
-            display: inline-block !important;
-            position: absolute !important;
-            right: 0.5rem !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            transition: transform 0.3s ease !important;
-            color: {accent_color} !important;
-            font-size: 1rem !important;
-            font-weight: bold !important;
-            opacity: 1 !important;
+        [data-testid="stSidebarNav"] summary::-moz-list-bullet {{
+            display: none !important;
         }}
 
-        [data-testid="stSidebarNav"] details[open] > summary::before {{
+        /* חץ מותאם אישית - תמיד גלוי */
+        [data-testid="stSidebarNav"] > ul > li > details > summary::after {{
+            content: "◀" !important;
+            position: absolute !important;
+            right: 0.7rem !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            transition: transform 0.25s ease !important;
+            color: {accent_color} !important;
+            font-size: 1.1rem !important;
+            font-weight: bold !important;
+            opacity: 1 !important;
+            z-index: 10 !important;
+        }}
+
+        [data-testid="stSidebarNav"] details[open] > summary::after {{
             transform: translateY(-50%) rotate(-90deg) !important;
         }}
 
         /* Hover על קטגוריה ראשית */
         [data-testid="stSidebarNav"] > ul > li > details > summary:hover {{
-            background-color: rgba(139, 92, 246, 0.15) !important;
+            background-color: rgba(196, 30, 58, 0.15) !important;
+            border-color: rgba(196, 30, 58, 0.3) !important;
         }}
 
         /* Sidebar text */
@@ -233,19 +253,20 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Buttons */
         .stButton > button {{
-            border-radius: 0.5rem;
-            font-weight: 500;
+            border-radius: 25px;
+            font-weight: 600;
             transition: all 0.3s;
             direction: {direction};
-            background-color: {secondary_color} !important;
+            background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
             color: white !important;
             border: none !important;
+            padding: 0.5rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
         }}
 
         .stButton > button:hover {{
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
-            background-color: {primary_color} !important;
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4) !important;
         }}
 
         /* Tables */
@@ -294,8 +315,8 @@ def show_compact_user_info():
     level_text = role_names.get(role, "משתמש")
     auth_text = "Entra ID" if st.session_state.get('auth_method') == 'entra_id' else "מקומי"
 
-    # שורה אחת - מיושרת ימינה
-    col_user, col_auth, col_details, col_logout, col_test = st.columns([3, 2, 2, 1.5, 1.5])
+    # שורה אחת - מיושרת ימינה, עמודות רחבות יותר לכפתורים
+    col_user, col_auth, col_details, col_refresh, col_logout, col_test = st.columns([2.5, 1.5, 1.8, 1.3, 1.3, 1.5])
 
     with col_user:
         st.markdown(f"**{access_icon} {st.session_state.get('username', 'N/A')}** • {level_text}")
@@ -318,6 +339,20 @@ def show_compact_user_info():
                         st.caption(f"ועוד {dept_count - 5}...")
             else:
                 st.info("אין קבוצות מוגדרות")
+
+    with col_refresh:
+        # כפתור ניקוי נתונים
+        if st.button("🔄 ניקוי", key="refresh_page", help="נקה נתונים זמניים", use_container_width=True):
+            keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level',
+                            'login_time', 'auth_method', 'session_id',
+                            'entra_username', 'local_username', 'role', 'local_groups', 'allowed_departments']
+
+            for key in list(st.session_state.keys()):
+                if key not in keys_to_keep:
+                    del st.session_state[key]
+
+            st.success("נתונים נוקו!")
+            st.rerun()
 
     with col_logout:
         if st.button("🚪 יציאה", key="logout_btn", help="התנתק מהמערכת", use_container_width=True):
@@ -427,27 +462,16 @@ def main():
     # Header קומפקטי עם לוגו
     st.markdown("""
     <style>
-        .header-logo {
+        .header-container {
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        .logo-text {
-            font-size: 1.8rem;
+        .title-text {
+            font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            background: linear-gradient(90deg, #C41E3A 0%, #4A90E2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -455,26 +479,32 @@ def main():
             padding: 0;
             line-height: 1;
         }
-        .logo-subtitle {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 0.2rem;
-            font-weight: 400;
-        }
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_user = st.columns([3, 2])
+    col_logo, col_title, col_user = st.columns([1.5, 2, 6.5])
+
     with col_logo:
-        st.markdown("""
-        <div class="header-logo">
-            <div class="logo-icon">🔐</div>
-            <div>
-                <div class="logo-text">SafeQ Cloud Manager</div>
-                <div class="logo-subtitle">Print Management Platform</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # לוגו של החברה
+        try:
+            import sys
+            import os
+
+            def resource_path(relative_path: str) -> str:
+                """מחזיר נתיב תקין לקובץ"""
+                if hasattr(sys, "_MEIPASS"):
+                    return os.path.join(sys._MEIPASS, relative_path)
+                return os.path.join(os.path.abspath("."), relative_path)
+
+            logo_path = resource_path("assets/MafilIT_Logo.png")
+            st.image(logo_path, width=200)
+        except Exception as e:
+            # אם הלוגו לא נמצא, הצג טקסט
+            st.markdown("**MafilIT**")
+
+    with col_title:
+        st.markdown('<h3 class="title-text">מנהל הענן של SafeQ</h3>', unsafe_allow_html=True)
+
     with col_user:
         show_compact_user_info()
 

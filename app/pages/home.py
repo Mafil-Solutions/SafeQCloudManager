@@ -69,31 +69,28 @@ def show():
             with st.container():
                 st.markdown("**📋 רשימת משתמשים**")
                 st.caption("צפייה בכל המשתמשים, סינון וייצוא CSV")
-                if st.button("➡️ עבור לרשימת משתמשים", key="home_goto_users_list", use_container_width=True):
-                    st.switch_page("pages/users/user_list.py")
+                # Use navigation instead of switch_page - it's more reliable
+                st.info("💡 השתמש בתפריט הימני: **משתמשים** → **רשימת משתמשים**")
 
             st.markdown("")
 
             with st.container():
                 st.markdown("**➕ הוספת משתמש**")
                 st.caption("יצירת משתמש חדש במערכת")
-                if st.button("➡️ עבור להוספת משתמש", key="home_goto_add_user", use_container_width=True):
-                    st.switch_page("pages/users/add_user.py")
+                st.info("💡 השתמש בתפריט הימני: **משתמשים** → **הוספת משתמש**")
 
         with col2:
             with st.container():
                 st.markdown("**🔍 חיפוש ועריכה**")
                 st.caption("חיפוש מתקדם ועריכת משתמשים")
-                if st.button("➡️ עבור לחיפוש ועריכה", key="home_goto_search_edit", use_container_width=True):
-                    st.switch_page("pages/users/search_edit.py")
+                st.info("💡 השתמש בתפריט הימני: **משתמשים** → **חיפוש ועריכה**")
 
             st.markdown("")
 
             with st.container():
                 st.markdown("**👨‍👩‍👧‍👦 קבוצות**")
                 st.caption("ניהול קבוצות משתמשים")
-                if st.button("➡️ עבור לניהול קבוצות", key="home_goto_groups", use_container_width=True):
-                    st.switch_page("pages/users/groups.py")
+                st.info("💡 השתמש בתפריט הימני: **משתמשים** → **קבוצות**")
 
         st.markdown("---")
 
@@ -104,25 +101,22 @@ def show():
         with col_act:
             st.markdown("**📋 הפעילות שלי**")
             st.caption("צפייה בפעולות שביצעת")
-            if st.button("➡️ עבור לפעילות", key="home_goto_activity", use_container_width=True):
-                st.switch_page("pages/my_activity.py")
+            st.info("💡 השתמש בתפריט הימני: **פעילות** → **הפעילות שלי**")
 
         with col_print:
             st.markdown("**🖨️ מדפסות**")
             st.caption("ניהול מדפסות (בקרוב)")
-            if st.button("➡️ עבור למדפסות", key="home_goto_printers", use_container_width=True):
-                st.switch_page("pages/printers/__init__.py")
+            st.info("💡 תכונה זו בפיתוח")
 
         with col_scan:
             st.markdown("**📄 סריקה**")
             st.caption("תהליכי סריקה (בקרוב)")
-            if st.button("➡️ עבור לסריקה", key="home_goto_scanning", use_container_width=True):
-                st.switch_page("pages/scanning/__init__.py")
+            st.info("💡 תכונה זו בפיתוח")
 
         st.markdown("---")
 
         # טיפ
-        st.info("💡 **טיפ:** לחץ על אחד מהכפתורים למעלה לגישה מהירה, או השתמש בתפריט הימני לניווט מלא")
+        st.info("💡 **טיפ:** השתמש בתפריט הימני לניווט מהיר בין המודולים השונים")
 
     else:
         st.warning("⚠️ לא מזוהה משתמש במערכת")

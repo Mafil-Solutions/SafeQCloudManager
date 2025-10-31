@@ -31,46 +31,88 @@ def show():
             text-align: right;
         }
 
+        /* RTL for all form containers */
+        .stSelectbox, .stTextInput, .stNumberInput, .stCheckbox {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Nested divs */
+        .stSelectbox > div,
+        .stTextInput > div,
+        .stNumberInput > div,
+        .stCheckbox > div {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Even deeper nesting */
         .stSelectbox > div > div,
         .stTextInput > div > div,
         .stNumberInput > div > div {
-            direction: rtl;
-            text-align: right;
+            direction: rtl !important;
+            text-align: right !important;
         }
 
-        /* Labels aligned right */
-        .stSelectbox label, .stTextInput label, .stNumberInput label, .stCheckbox label {
-            direction: rtl;
+        /* Labels - force right alignment */
+        .stSelectbox label,
+        .stTextInput label,
+        .stNumberInput label,
+        .stCheckbox label {
+            direction: rtl !important;
             text-align: right !important;
             justify-content: flex-end !important;
+            display: flex !important;
+            flex-direction: row-reverse !important;
         }
 
-        /* Dropdown and input fields */
+        /* Input fields themselves */
         .stSelectbox select,
         .stTextInput input,
         .stNumberInput input {
-            direction: rtl;
+            direction: rtl !important;
             text-align: right !important;
         }
 
-        /* Checkbox alignment */
+        /* Selectbox dropdown content */
+        .stSelectbox div[data-baseweb="select"] > div {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Checkbox text and box */
         .stCheckbox {
-            direction: rtl;
-            text-align: right;
+            direction: rtl !important;
         }
 
         .stCheckbox > label {
-            flex-direction: row-reverse;
+            flex-direction: row-reverse !important;
+            direction: rtl !important;
+        }
+
+        .stCheckbox > label > div {
+            direction: rtl !important;
+            margin-right: 0 !important;
+            margin-left: 0.5rem !important;
         }
 
         /* DataFrame RTL */
-        .stDataFrame {
-            direction: rtl;
+        .stDataFrame, .stDataFrame * {
+            direction: rtl !important;
         }
 
-        /* Button text alignment */
+        /* Button alignment */
+        .stButton {
+            direction: rtl !important;
+        }
+
         .stButton > button {
-            direction: rtl;
+            direction: rtl !important;
+        }
+
+        /* Columns RTL */
+        div[data-testid="column"] {
+            direction: rtl !important;
         }
         /* הפוך את כל האפליקציה ל־RTL */
 .stApp {
