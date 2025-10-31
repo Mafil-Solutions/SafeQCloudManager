@@ -16,6 +16,29 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
     def show():
         """הצגת דף הבית - מרכז בקרה עם קיצורי דרך"""
 
+        # CSS לכפתורי ניווט יפים
+        st.markdown("""
+        <style>
+            /* כפתורי page_link מעוצבים */
+            .stPageLink {
+                background: linear-gradient(135deg, #C41E3A 0%, #4A90E2 100%) !important;
+                color: white !important;
+                padding: 1rem 1.5rem !important;
+                border-radius: 0.7rem !important;
+                font-weight: 600 !important;
+                text-align: center !important;
+                transition: all 0.3s ease !important;
+                box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
+                border: none !important;
+            }
+
+            .stPageLink:hover {
+                transform: translateY(-3px) !important;
+                box-shadow: 0 6px 25px rgba(196, 30, 58, 0.5) !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
         st.info("💡 **טיפ:** השתמש בכפתורים למטה או בתפריט הימני (סיידבר) לניווט מהיר")
 
         # ברוכים הבאים
