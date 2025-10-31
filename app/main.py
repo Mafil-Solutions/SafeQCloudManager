@@ -101,6 +101,9 @@ def apply_modern_styling_compact(rtl=False):
             padding-top: 0.5rem !important;
             padding-bottom: 1rem !important;
             max-width: 100% !important;
+            text-align: right;
+            margin-left: auto;
+            margin-right: 0;
         }}
 
         /* כותרת ראשית קומפקטית */
@@ -180,7 +183,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* דפים בודדים ברמה העליונה (כמו "ראשי", "פעילות") */
         [data-testid="stSidebarNav"] > ul > li > div.stPageLink {{
-            padding-right: 10rem !important;
+            padding-right: 2rem !important;
         }}
 
         /* תתי תפריטים - הזחה קטנה יותר */
