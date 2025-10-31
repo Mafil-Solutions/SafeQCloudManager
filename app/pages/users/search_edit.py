@@ -24,19 +24,7 @@ def show():
     # RTL styling for search page
     st.markdown("""
     <style>
-    .block-container {
-    direction: rtl;
-    text-align: right;
-    margin-left: auto;
-    margin-right: 0;
-    padding-right: 80px;
-}
-
-[data-testid="column"] {
-    direction: rtl;
-    text-align: right;
-    justify-content: flex-end;
-}
+    
         /* RTL alignment for all form elements */
         .stSelectbox, .stTextInput, .stNumberInput {
             direction: rtl;
@@ -84,6 +72,31 @@ def show():
         .stButton > button {
             direction: rtl;
         }
+        /* הפוך את כל האפליקציה ל־RTL */
+.stApp {
+    direction: rtl;
+}
+
+/* מיקום בלוק התוכן הראשי לימין */
+.block-container {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;  /* <-- זה מזיז את הכל פיזית לימין */
+    padding-right: 50px;    /* ריווח מהקצה */
+}
+
+/* עמודות יופיעו מהימין לשמאל */
+[data-testid="column"] {
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+/* טפסים ושדות */
+.stTextInput, .stSelectbox, .stNumberInput {
+    direction: rtl;
+    text-align: right;
+}
     </style>
     """, unsafe_allow_html=True)
 
