@@ -161,10 +161,9 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* כותרות קטגוריות ראשיות - ללא הזחה */
+        /* כותרות קטגוריות ראשיות - עם חץ גלוי */
         [data-testid="stSidebarNav"] > ul > li > details {{
-            margin-top: 0.8rem !important;
-            margin-bottom: 0.3rem !important;
+            margin: 0.8rem 0 0.3rem 0 !important;
             position: relative !important;
         }}
 
@@ -175,36 +174,40 @@ def apply_modern_styling_compact(rtl=False):
             color: {accent_color} !important;
             list-style: none !important;
             cursor: pointer !important;
-            background-color: rgba(196, 30, 58, 0.08) !important;
+            background: linear-gradient(45deg, rgba(196, 30, 58, 0.08), rgba(74, 144, 226, 0.05)) !important;
             border-radius: 0.5rem !important;
             margin-bottom: 0.3rem !important;
             position: relative !important;
-            border: 1px solid rgba(196, 30, 58, 0.1) !important;
+            border: 1px solid rgba(196, 30, 58, 0.15) !important;
         }}
 
-        /* דפים בודדים ברמה העליונה - ללא הזחה */
-        [data-testid="stSidebarNav"] > ul > li > div {{
+        /* דפים בודדים ברמה העליונה */
+        [data-testid="stSidebarNav"] > ul > li > div:not([data-baseweb]) {{
             margin-bottom: 0.5rem !important;
+            padding-right: 1rem !important;
         }}
 
-        /* תתי תפריטים - הזחה ברורה */
+        /* תתי תפריטים - הזחה מימין (RTL) */
         [data-testid="stSidebarNav"] details > ul {{
-            background-color: rgba(255, 255, 255, 0.5) !important;
-            border-radius: 0.3rem !important;
-            padding: 0.5rem 0.5rem 0.5rem 0 !important;
-            margin: 0.3rem 0 0.5rem 2rem !important;
-            border-right: 3px solid {accent_color} !important;
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            border-radius: 0.4rem !important;
+            padding: 0.5rem 0.5rem 0.5rem 2rem !important;
+            margin-right: 2rem !important;
+            margin-top: 0.3rem !important;
+            margin-bottom: 0.5rem !important;
+            border-right: 4px solid {accent_color} !important;
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.05) !important;
         }}
 
         [data-testid="stSidebarNav"] details > ul > li {{
-            margin: 0.2rem 0 !important;
+            margin: 0.15rem 0 !important;
         }}
 
         [data-testid="stSidebarNav"] details > ul > li > div {{
-            padding: 0.4rem 1rem 0.4rem 0.5rem !important;
+            padding: 0.4rem 0.8rem !important;
             font-size: 0.9rem !important;
             font-weight: 400 !important;
-            margin-right: 0.5rem !important;
+            border-radius: 0.3rem !important;
         }}
 
         /* הסתרת marker ברירת המחדל */
@@ -213,29 +216,50 @@ def apply_modern_styling_compact(rtl=False):
             display: none !important;
         }}
 
-        /* חץ מותאם אישית - תמיד גלוי וברור */
-        [data-testid="stSidebarNav"] > ul > li > details > summary::after {{
+        /* חץ מותאם - גלוי תמיד - בולט מאוד */
+        [data-testid="stSidebarNav"] > ul > li > details > summary::before {{
             content: "◀" !important;
+            display: inline-block !important;
             position: absolute !important;
-            right: 0.7rem !important;
+            right: 0.5rem !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
-            transition: transform 0.25s ease !important;
+            transition: transform 0.3s ease !important;
             color: {accent_color} !important;
-            font-size: 1.2rem !important;
+            font-size: 1.5rem !important;
             font-weight: 900 !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2) !important;
             opacity: 1 !important;
             z-index: 10 !important;
         }}
 
-        [data-testid="stSidebarNav"] details[open] > summary::after {{
+        [data-testid="stSidebarNav"] details[open] > summary::before {{
             transform: translateY(-50%) rotate(-90deg) !important;
         }}
 
-        /* Hover על קטגוריה ראשית */
+        /* Hover על קטגוריה */
         [data-testid="stSidebarNav"] > ul > li > details > summary:hover {{
-            background-color: rgba(196, 30, 58, 0.15) !important;
+            background: linear-gradient(45deg, rgba(196, 30, 58, 0.15), rgba(74, 144, 226, 0.1)) !important;
             border-color: rgba(196, 30, 58, 0.3) !important;
+            transform: translateX(-2px) !important;
+        }}
+
+        /* דף פעיל - הדגשה חזקה */
+        [data-testid="stSidebarNav"] .stPageLink[data-active="true"] {{
+            background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%) !important;
+            color: white !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.5) !important;
+            border-right: 5px solid {primary_color} !important;
+            transform: translateX(-5px) !important;
+        }}
+
+        /* קטגוריה פעילה */
+        [data-testid="stSidebarNav"] > ul > li > details[open] > summary {{
+            background: linear-gradient(45deg, rgba(196, 30, 58, 0.2), rgba(74, 144, 226, 0.15)) !important;
+            border-color: {primary_color} !important;
+            font-weight: 800 !important;
+            box-shadow: 0 2px 10px rgba(196, 30, 58, 0.2) !important;
         }}
 
         /* Sidebar text */
@@ -302,63 +326,73 @@ def show_compact_user_info():
     # CSS לכפתורים קטנים מאוד
     st.markdown("""
     <style>
-        /* כפתורים זעירים בהדר */
+        /* כפתורים זעירים בהדר - ללא רקע */
         div[data-testid="column"] .stButton > button {
             padding: 0.15rem 0.5rem !important;
             font-size: 0.8rem !important;
-            height: 1.6rem !important;
-            min-height: 1.6rem !important;
-            background: white !important;
+            height: 1.5rem !important;
+            min-height: 1.5rem !important;
+            background: transparent !important;
             color: #666 !important;
-            border: 1px solid #ddd !important;
+            border: none !important;
+            border-left: 1px solid #ddd !important;
         }
 
         div[data-testid="column"] .stButton > button:hover {
             background: #f5f5f5 !important;
-            border-color: #C41E3A !important;
+            color: #C41E3A !important;
         }
 
         /* Expander זעיר */
         div[data-testid="column"] .streamlit-expanderHeader {
             font-size: 0.75rem !important;
             padding: 0.15rem 0.4rem !important;
-            min-height: 1.6rem !important;
+            min-height: 1.5rem !important;
+            background: transparent !important;
+            border: none !important;
+            border-left: 1px solid #ddd !important;
         }
 
         /* טקסט זעיר */
-        div[data-testid="column"] p {
+        div[data-testid="column"] p, div[data-testid="column"] small {
             font-size: 0.8rem !important;
-            margin: 0.1rem 0 !important;
-            line-height: 1.2 !important;
+            margin: 0 !important;
+            line-height: 1.5rem !important;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # שורה קומפקטית מאוד
-    col_user, col_info, col_refresh, col_logout = st.columns([3, 1, 0.8, 0.9])
+    # שורה קומפקטית מאוד עם הפרדות
+    col_user, col_divider1, col_schools, col_divider2, col_refresh, col_logout = st.columns([3.5, 0.1, 2, 0.1, 1, 1])
 
     with col_user:
         # אייקון משתמש + שם + רמה
-        st.markdown(f"<small style='font-size:0.85rem'>👤 **{st.session_state.get('username', 'N/A')}** · {level_text}</small>", unsafe_allow_html=True)
+        st.markdown(f"<div style='padding: 0; line-height: 1.5rem; font-size: 0.8rem;'>👤 <b>{st.session_state.get('username', 'N/A')}</b> · {level_text}</div>", unsafe_allow_html=True)
 
-    with col_info:
-        # אייקון מידע עם קבוצות
-        with st.expander("ℹ️", expanded=False):
+    with col_divider1:
+        st.markdown("<div style='border-left: 1px solid #ddd; height: 1.5rem;'></div>", unsafe_allow_html=True)
+
+    with col_schools:
+        # בתי ספר זמינים עם חץ למטה
+        with st.expander("🏫 בתי ספר זמינים ▼", expanded=False):
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
-                    st.caption("✅ הכל")
+                    st.caption("✅ כל בתי הספר")
                 else:
                     dept_count = len(st.session_state.allowed_departments)
-                    st.caption(f"**{dept_count} מחלקות**")
-                    for dept in st.session_state.allowed_departments[:3]:
+                    st.caption(f"**{dept_count} בתי ספר:**")
+                    for dept in st.session_state.allowed_departments[:5]:
                         st.caption(f"• {dept}")
-                    if dept_count > 3:
-                        st.caption(f"+{dept_count - 3}")
+                    if dept_count > 5:
+                        st.caption(f"+{dept_count - 5} נוספים")
             else:
-                st.caption("אין קבוצות")
+                st.caption("אין בתי ספר")
+
+    with col_divider2:
+        st.markdown("<div style='border-left: 1px solid #ddd; height: 1.5rem;'></div>", unsafe_allow_html=True)
 
     with col_refresh:
-        if st.button("🔄", key="refresh_page", help="ניקוי נתונים", use_container_width=True):
+        if st.button("🔄 ניקוי", key="refresh_page", help="ניקוי נתונים זמניים", use_container_width=True):
             keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level',
                             'login_time', 'auth_method', 'session_id',
                             'entra_username', 'local_username', 'role', 'local_groups', 'allowed_departments']
@@ -368,7 +402,8 @@ def show_compact_user_info():
             st.rerun()
 
     with col_logout:
-        if st.button("🚪➡️", key="logout_btn", help="יציאה מהמערכת", use_container_width=True):
+        # אייקון יציאה - דלת
+        if st.button("🚪 יציאה", key="logout_btn", help="יציאה מהמערכת", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -462,27 +497,24 @@ def main():
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.3rem;
-            padding: 0.25rem 0;
+            margin-bottom: 0;
+            padding: 0;
         }
         .title-text {
-            font-size: 1.1rem;
+            font-size: 2rem;
             font-weight: 700;
             color: #C41E3A;
             margin: 0;
             padding: 0;
-            line-height: 1;
-        }
-        .logo-small {
-            height: 40px;
+            line-height: 2rem;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_title, col_user = st.columns([1.2, 2, 6.8])
+    col_logo, col_title, col_user = st.columns([1, 2.5, 6.5])
 
     with col_logo:
-        # לוגו של החברה - קטן יותר
+        # לוגו של החברה - קטן
         try:
             import sys
             import os
@@ -494,9 +526,8 @@ def main():
                 return os.path.join(os.path.abspath("."), relative_path)
 
             logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=140)
+            st.image(logo_path, width=120)
         except Exception as e:
-            # אם הלוגו לא נמצא, הצג טקסט
             st.markdown("**MafilIT**")
 
     with col_title:
@@ -505,7 +536,7 @@ def main():
     with col_user:
         show_compact_user_info()
 
-    st.markdown('<hr style="margin: 0.3rem 0; border: 1px solid #e5e7eb;">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()

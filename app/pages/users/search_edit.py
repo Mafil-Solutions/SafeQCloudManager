@@ -36,23 +36,46 @@ def show():
 
         /* מיקום בלוק התוכן הראשי לימין */
         .block-container {
-            text-align: right;
+            text-align: right !important;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            padding-right: 50px;
+            align-items: flex-end !important;
+            padding-right: 3rem !important;
         }
 
         /* עמודות יופיעו מהימין לשמאל */
         [data-testid="column"] {
-            flex-direction: row-reverse;
-            text-align: right;
+            flex-direction: row-reverse !important;
+            text-align: right !important;
+            align-items: flex-end !important;
         }
 
-        /* טפסים ושדות */
-        .stTextInput, .stSelectbox, .stNumberInput {
-            direction: rtl;
-            text-align: right;
+        /* טפסים ושדות - RTL מלא */
+        .stTextInput > div, .stSelectbox > div, .stNumberInput > div {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        .stTextInput input, .stSelectbox select, .stNumberInput input {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        .stTextInput label, .stSelectbox label, .stNumberInput label {
+            direction: rtl !important;
+            text-align: right !important;
+            float: right !important;
+        }
+
+        /* Checkbox RTL */
+        .stCheckbox {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Button RTL */
+        .stButton {
+            text-align: right !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -66,7 +89,9 @@ def show():
     st.subheader("חיפוש")
 
     # שורה ראשונה: מקור (בצד ימין)
-    col_spacer, col_provider = st.columns([4, 2])
+    col_spacer, col_provider = st.columns([3, 3])
+    with col_spacer:
+        pass  # עמודה ריקה משמאל
     with col_provider:
         # בדיקת הרשאות - רק superadmin יכול לבחור Entra
         role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
@@ -81,7 +106,10 @@ def show():
                                      help="רק superadmin יכול לבחור Entra" if role != 'superadmin' else None)
 
     # שורה שנייה: חיפוש לפי ושדות (עמודה ימנית מכיל הכל)
-    col_left_spacer, col_right_fields = st.columns([1, 1])
+    col_left_spacer, col_right_fields = st.columns([2, 4])
+
+    with col_left_spacer:
+        pass  # עמודה ריקה משמאל
 
     with col_right_fields:
         search_type_map_en_to_he = {
@@ -100,7 +128,9 @@ def show():
                                    help="מצא את כל המשתמשים המכילים את ערך החיפוש")
 
     # שורה שלישית: תוצאות להצגה (בצד ימין)
-    col_spacer2, col_max_results = st.columns([4, 2])
+    col_spacer2, col_max_results = st.columns([3, 3])
+    with col_spacer2:
+        pass  # עמודה ריקה משמאל
     with col_max_results:
         max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=200)
 

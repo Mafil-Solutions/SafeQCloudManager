@@ -10,6 +10,31 @@ import streamlit as st
 def show():
     """הצגת דף סקירה לניהול משתמשים"""
 
+    # CSS לכפתורים מעוצבים
+    st.markdown("""
+    <style>
+        /* כפתורי סקירה מעוצבים */
+        div[data-testid="column"] .stButton > button {
+            background: linear-gradient(135deg, #C41E3A 0%, #4A90E2 100%) !important;
+            color: white !important;
+            padding: 0.8rem 1.2rem !important;
+            border-radius: 0.7rem !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
+            border: none !important;
+            height: auto !important;
+            min-height: 2.5rem !important;
+        }
+
+        div[data-testid="column"] .stButton > button:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 6px 25px rgba(196, 30, 58, 0.5) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.header("👥 ניהול משתמשים")
     st.caption("בחר פעולה מהאפשרויות למטה")
 
