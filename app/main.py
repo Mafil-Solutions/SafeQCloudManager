@@ -161,17 +161,15 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* כותרות קטגוריות - ללא הזחה */
+        /* כותרות קטגוריות ראשיות - ללא הזחה */
         [data-testid="stSidebarNav"] > ul > li > details {{
             margin-top: 0.8rem !important;
             margin-bottom: 0.3rem !important;
             position: relative !important;
-            margin-right: 0 !important;
         }}
 
         [data-testid="stSidebarNav"] > ul > li > details > summary {{
-            padding-right: 2.5rem !important;
-            padding-left: 1rem !important;
+            padding: 0.6rem 2.5rem 0.6rem 1rem !important;
             font-weight: 700 !important;
             font-size: 1rem !important;
             color: {accent_color} !important;
@@ -179,50 +177,38 @@ def apply_modern_styling_compact(rtl=False):
             cursor: pointer !important;
             background-color: rgba(196, 30, 58, 0.08) !important;
             border-radius: 0.5rem !important;
-            padding-top: 0.6rem !important;
-            padding-bottom: 0.6rem !important;
             margin-bottom: 0.3rem !important;
-            margin-right: 0 !important;
             position: relative !important;
             border: 1px solid rgba(196, 30, 58, 0.1) !important;
         }}
 
         /* דפים בודדים ברמה העליונה - ללא הזחה */
         [data-testid="stSidebarNav"] > ul > li > div {{
-            margin-right: 0 !important;
             margin-bottom: 0.5rem !important;
         }}
 
-        /* תתי תפריטים - הזחה ברורה עם מסגרת */
-        [data-testid="stSidebarNav"] details ul {{
+        /* תתי תפריטים - הזחה ברורה */
+        [data-testid="stSidebarNav"] details > ul {{
             background-color: rgba(255, 255, 255, 0.5) !important;
             border-radius: 0.3rem !important;
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-            margin-top: 0.3rem !important;
-            margin-right: 0 !important;
-            margin-left: 1.5rem !important;
+            padding: 0.5rem 0.5rem 0.5rem 0 !important;
+            margin: 0.3rem 0 0.5rem 2rem !important;
             border-right: 3px solid {accent_color} !important;
         }}
 
-        [data-testid="stSidebarNav"] details ul li {{
-            padding-right: 0 !important;
-            margin-right: 0 !important;
+        [data-testid="stSidebarNav"] details > ul > li {{
+            margin: 0.2rem 0 !important;
         }}
 
-        [data-testid="stSidebarNav"] details ul li div {{
-            padding-right: 1rem !important;
-            padding-left: 0.5rem !important;
-            margin-right: 0.5rem !important;
+        [data-testid="stSidebarNav"] details > ul > li > div {{
+            padding: 0.4rem 1rem 0.4rem 0.5rem !important;
             font-size: 0.9rem !important;
             font-weight: 400 !important;
+            margin-right: 0.5rem !important;
         }}
 
         /* הסתרת marker ברירת המחדל */
-        [data-testid="stSidebarNav"] details summary::-webkit-details-marker {{
-            display: none !important;
-        }}
-
+        [data-testid="stSidebarNav"] details summary::-webkit-details-marker,
         [data-testid="stSidebarNav"] summary::-moz-list-bullet {{
             display: none !important;
         }}
@@ -302,15 +288,8 @@ def apply_modern_styling_compact(rtl=False):
 
 
 def show_compact_user_info():
-    """הצגת מידע משתמש קומפקטי בראש העמוד - שורה אחת דקה"""
+    """הצגת מידע משתמש קומפקטי בראש העמוד - שורה אחת זעירה"""
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
-    role_icons = {
-        'viewer': '👁️',
-        'support': '🛠️',
-        'admin': '👑',
-        'superadmin': '⭐'
-    }
-    access_icon = role_icons.get(role, '👤')
 
     role_names = {
         'viewer': 'צופה',
@@ -319,51 +298,58 @@ def show_compact_user_info():
         'superadmin': 'מנהל על'
     }
     level_text = role_names.get(role, "משתמש")
-    auth_text = "Entra ID" if st.session_state.get('auth_method') == 'entra_id' else "מקומי"
 
-    # CSS לכפתורים קטנים יותר
+    # CSS לכפתורים קטנים מאוד
     st.markdown("""
     <style>
-        /* כפתורים קטנים בהדר */
+        /* כפתורים זעירים בהדר */
         div[data-testid="column"] .stButton > button {
-            padding: 0.25rem 0.75rem !important;
-            font-size: 0.85rem !important;
-            height: 2rem !important;
-            min-height: 2rem !important;
+            padding: 0.15rem 0.5rem !important;
+            font-size: 0.8rem !important;
+            height: 1.6rem !important;
+            min-height: 1.6rem !important;
+            background: white !important;
+            color: #666 !important;
+            border: 1px solid #ddd !important;
         }
 
-        /* Expander קטן יותר */
+        div[data-testid="column"] .stButton > button:hover {
+            background: #f5f5f5 !important;
+            border-color: #C41E3A !important;
+        }
+
+        /* Expander זעיר */
         div[data-testid="column"] .streamlit-expanderHeader {
-            font-size: 0.85rem !important;
-            padding: 0.25rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            padding: 0.15rem 0.4rem !important;
+            min-height: 1.6rem !important;
         }
 
-        /* טקסט קטן יותר */
+        /* טקסט זעיר */
         div[data-testid="column"] p {
-            font-size: 0.9rem !important;
-            margin: 0.2rem 0 !important;
+            font-size: 0.8rem !important;
+            margin: 0.1rem 0 !important;
+            line-height: 1.2 !important;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # שורה קומפקטית
-    col_user, col_auth, col_groups, col_refresh, col_logout, col_test = st.columns([2, 1.2, 1.5, 0.9, 0.9, 0.9])
+    # שורה קומפקטית מאוד
+    col_user, col_info, col_refresh, col_logout = st.columns([3, 1, 0.8, 0.9])
 
     with col_user:
-        st.markdown(f"<small>{access_icon} **{st.session_state.get('username', 'N/A')}** • {level_text}</small>", unsafe_allow_html=True)
+        # אייקון משתמש + שם + רמה
+        st.markdown(f"<small style='font-size:0.85rem'>👤 **{st.session_state.get('username', 'N/A')}** · {level_text}</small>", unsafe_allow_html=True)
 
-    with col_auth:
-        st.markdown(f"<small>🔐 {auth_text}</small>", unsafe_allow_html=True)
-
-    with col_groups:
-        # Expander זעיר לקבוצות
-        with st.expander("📁", expanded=False):
+    with col_info:
+        # אייקון מידע עם קבוצות
+        with st.expander("ℹ️", expanded=False):
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
                     st.caption("✅ הכל")
                 else:
                     dept_count = len(st.session_state.allowed_departments)
-                    st.caption(f"{dept_count} מחלקות")
+                    st.caption(f"**{dept_count} מחלקות**")
                     for dept in st.session_state.allowed_departments[:3]:
                         st.caption(f"• {dept}")
                     if dept_count > 3:
@@ -382,26 +368,10 @@ def show_compact_user_info():
             st.rerun()
 
     with col_logout:
-        if st.button("🚪", key="logout_btn", help="יציאה", use_container_width=True):
+        if st.button("🚪➡️", key="logout_btn", help="יציאה מהמערכת", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
-
-    with col_test:
-        api = SafeQAPI()
-        if st.button("🔍", key="header_test_connection", help="בדיקה", use_container_width=True):
-            logger = AuditLogger()
-            with st.spinner("..."):
-                if api.test_connection():
-                    st.success("✅")
-                    logger.log_action(st.session_state.username, "Connection Test", "Success",
-                                    st.session_state.get('user_email', ''), "", True,
-                                    st.session_state.get('access_level', 'viewer'))
-                else:
-                    st.error("❌")
-                    logger.log_action(st.session_state.username, "Connection Test", "Failed",
-                                    st.session_state.get('user_email', ''), "", False,
-                                    st.session_state.get('access_level', 'viewer'))
 
 
 def show_sidebar_info():
@@ -485,33 +455,34 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # Header קומפקטי עם לוגו
+    # Header קומפקטי מאוד עם לוגו
     st.markdown("""
     <style>
-        .header-container {
+        .header-row {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+            padding: 0.25rem 0;
         }
         .title-text {
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            background: linear-gradient(90deg, #C41E3A 0%, #4A90E2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #C41E3A;
             margin: 0;
             padding: 0;
             line-height: 1;
         }
+        .logo-small {
+            height: 40px;
+        }
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_title, col_user = st.columns([1.5, 2, 6.5])
+    col_logo, col_title, col_user = st.columns([1.2, 2, 6.8])
 
     with col_logo:
-        # לוגו של החברה
+        # לוגו של החברה - קטן יותר
         try:
             import sys
             import os
@@ -523,24 +494,23 @@ def main():
                 return os.path.join(os.path.abspath("."), relative_path)
 
             logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=200)
+            st.image(logo_path, width=140)
         except Exception as e:
             # אם הלוגו לא נמצא, הצג טקסט
             st.markdown("**MafilIT**")
 
     with col_title:
-        st.markdown('<h3 class="title-text">מנהל הענן של SafeQ</h3>', unsafe_allow_html=True)
+        st.markdown('<div class="title-text">Mafil Cloud Services</div>', unsafe_allow_html=True)
 
     with col_user:
         show_compact_user_info()
 
-    st.markdown("---")
+    st.markdown('<hr style="margin: 0.3rem 0; border: 1px solid #e5e7eb;">', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()
 
     # ייבוא דפים (רק אחרי login!)
-    from pages.home import show as home_show
     from pages.my_activity import show as my_activity_show
     from pages.users.overview import show as users_overview_show
     from pages.users.user_list import show as users_list_show
@@ -552,8 +522,6 @@ def main():
     from pages.reports import show as reports_show
 
     # הגדרת דפים עם st.Page() - עם URL ייחודי לכל אחד
-    home_page = st.Page(home_show, title="בית", icon="🏠", url_path="home", default=True)
-
     # דפי משתמשים - עם דף סקירה
     users_overview_page = st.Page(users_overview_show, title="סקירה", icon="👥", url_path="users_overview")
     users_list_page = st.Page(users_list_show, title="רשימת משתמשים", icon="📋", url_path="users_list")
@@ -569,6 +537,10 @@ def main():
     # דף הפעילות שלי
     my_activity_page = st.Page(my_activity_show, title="הפעילות שלי", icon="📋", url_path="my_activity")
 
+    # דף הבית - עם גישה לאובייקטי Page
+    from pages.home import create_home_page
+    home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page)
+
     # יצירת ניווט עם קבוצות היררכיות
     nav = st.navigation({
         "ראשי": [home_page],
@@ -578,6 +550,25 @@ def main():
         "📊 דוחות": [reports_page],
         "פעילות": [my_activity_page]
     })
+
+    # בדיקת חיבור בסיידבר
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("##### 🔌 בדיקת חיבור")
+        if st.button("בדוק חיבור לשרת", key="sidebar_test_connection", use_container_width=True):
+            api = SafeQAPI()
+            logger = AuditLogger()
+            with st.spinner("בודק..."):
+                if api.test_connection():
+                    st.success("✅ החיבור תקין!")
+                    logger.log_action(st.session_state.username, "Connection Test", "Success",
+                                    st.session_state.get('user_email', ''), "", True,
+                                    st.session_state.get('access_level', 'viewer'))
+                else:
+                    st.error("❌ החיבור נכשל")
+                    logger.log_action(st.session_state.username, "Connection Test", "Failed",
+                                    st.session_state.get('user_email', ''), "", False,
+                                    st.session_state.get('access_level', 'viewer'))
 
     # הרצת הדף הנבחר
     nav.run()
