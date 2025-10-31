@@ -102,6 +102,9 @@ def apply_modern_styling_compact(rtl=False):
             padding-top: 0.5rem !important;
             padding-bottom: 1rem !important;
             max-width: 100% !important;
+            text-align: right;
+            margin-left: auto;
+            margin-right: 0;
         }}
 
         /* כותרת ראשית קומפקטית */
