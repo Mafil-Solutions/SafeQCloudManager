@@ -247,7 +247,6 @@ def apply_modern_styling_compact(rtl=False):
         .stButton > button {{
             border-radius: 25px;
             font-weight: 600;
-            transition: all 0.3s;
             direction: {direction};
             background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
             color: white !important;
@@ -257,8 +256,20 @@ def apply_modern_styling_compact(rtl=False):
         }}
 
         .stButton > button:hover {{
+            background: linear-gradient(45deg, #FF6B6B, {primary_color}) !important;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4) !important;
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
+        }}
+
+        /* Primary button */
+        .stButton > button[kind="primary"] {{
+            background: linear-gradient(45deg, {secondary_color}, #4ECDC4) !important;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }}
+
+        .stButton > button[kind="primary"]:hover {{
+            background: linear-gradient(45deg, #4ECDC4, {secondary_color}) !important;
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
         }}
 
         /* Tables */
@@ -282,6 +293,27 @@ def apply_modern_styling_compact(rtl=False):
         .stTextInput input:focus, .stSelectbox select:focus, .stNumberInput input:focus {{
             border-color: {accent_color} !important;
             box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+        }}
+
+        /* Navigation buttons with gradient */
+        .nav-button {{
+            background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%) !important;
+            color: white !important;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+            border: none;
+            width: 100%;
+            margin: 0.5rem 0;
+        }}
+
+        .nav-button:hover {{
+            background: linear-gradient(135deg, {secondary_color} 0%, {primary_color} 100%) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.5);
         }}
     </style>
 
