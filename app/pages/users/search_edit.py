@@ -104,7 +104,7 @@ def show():
     st.subheader("חיפוש")
 
     # שורה ראשונה: מקור (בצד ימין)
-    col_spacer, col_provider = st.columns([1, 1])
+    col_spacer, col_provider = st.columns([5, 1])
     with col_spacer:
         pass  # עמודה ריקה משמאל
     with col_provider:
