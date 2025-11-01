@@ -144,9 +144,9 @@ def show():
 
     # שורה שלישית: תוצאות להצגה (בצד ימין)
     col_spacer2, col_max_results = st.columns([1, 5])
-    with col_spacer2:
-        pass  # עמודה ריקה משמאל
     with col_max_results:
+        pass  # עמודה ריקה משמאל
+    with col_spacer2:
         max_results = st.number_input("תוצאות להצגה", min_value=1, max_value=500, value=200)
 
     if st.button("🔍 חפש", key="search_users_btn", type="primary", use_container_width=True):
