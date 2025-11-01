@@ -3,6 +3,7 @@
 """
 SafeQ Cloud Manager - Main Application (New Multi-Page Structure)
 גרסה חדשה עם ניווט היררכי ודפים נפרדים
+Version: 2.0.1 - UI Overhaul Complete
 """
 
 import streamlit as st
