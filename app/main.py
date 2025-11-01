@@ -875,12 +875,22 @@ def show_login_page():
 
 def show_header():
     # Header with logos - מותאם לעברית RTL
-    col1, col2, col3, col4 = st.columns([2, 1, 6, 1.6])
+    col1, col2, col3 = st.columns([2, 6, 2])
 
     with col1:
         # כפתורים בצד ימין (בגלל RTL)
+        # תיבת משתמש מעוצבת
+        username = st.session_state.get('username', 'Guest')
+        st.markdown(f"""
+            <div style="background: linear-gradient(45deg, rgba(196, 30, 58, 0.1), rgba(74, 144, 226, 0.1));
+                        border-radius: 15px; padding: 0.5rem; margin-bottom: 0.5rem;
+                        border: 1px solid rgba(196, 30, 58, 0.3); text-align: center;">
+                <span style="color: #C41E3A; font-weight: 600;">👤 {username}</span>
+            </div>
+        """, unsafe_allow_html=True)
+
         # כפתור יציאה
-        if st.button("🚪 יציאה", key="logout_btn"):
+        if st.button("🚪 יציאה", key="logout_btn", use_container_width=True):
             logger = AuditLogger()
             logger.log_action(
                 st.session_state.username, "Logout",
@@ -897,7 +907,7 @@ def show_header():
             st.rerun()
 
         # כפתור ניקוי נתונים
-        if st.button("🔄 ניקוי נתונים", key="refresh_page"):
+        if st.button("🔄 ניקוי", key="refresh_page", use_container_width=True):
             keys_to_keep = ['logged_in', 'username', 'user_email', 'user_groups', 'access_level',
                             'login_time', 'auth_method', 'session_id',
                             # Hybrid auth fields
@@ -913,16 +923,23 @@ def show_header():
             st.success("כל הנתונים נוקו!")
             st.rerun()
 
-    # col2 ריקה
+    with col2:
+        # כותרת מעוצבת עם צבעי Mafil
+        st.markdown("""
+            <h1 style="text-align: center; margin: 0; padding: 1rem;">
+                <span style="color: #C41E3A; font-weight: bold; font-size: 2.5rem;">Mafil</span>
+                <span style="color: #4A90E2; font-weight: 600; font-size: 2rem;"> Cloud Services</span>
+            </h1>
+            <p style="text-align: center; color: #2C3E50; margin-top: -0.5rem; font-size: 1.1rem;">
+                מנהל הענן של SafeQ
+            </p>
+        """, unsafe_allow_html=True)
 
     with col3:
-        st.title("מנהל הענן של SafeQ")
-
-    with col4:
         # לוגו של החברה בצד שמאל (בגלל RTL)
         try:
             logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=250)
+            st.image(logo_path, width=300)
         except Exception as e:
             pass
 
@@ -1115,13 +1132,15 @@ def apply_modern_styling(rtl=False):
     
     /* כותרת ראשית */
     h1 {{
-        background: linear-gradient(800deg, var(--mafil-red));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }}
+
+    /* כותרות משניות */
+    h2, h3 {{
+        color: var(--mafil-dark-gray);
+        font-weight: 600;
     }}
     
     /* טאבים */
@@ -1168,36 +1187,24 @@ def apply_modern_styling(rtl=False):
         border-radius: 25px;
         padding: 0.5rem 1.5rem;
         font-weight: 600;
-        transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
-        position: relative;
-        overflow: hidden;
     }}
-    
+
     .stButton > button:hover {{
+        background: linear-gradient(45deg, #FF6B6B, var(--mafil-red));
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5);
     }}
-    
-    .stButton > button:before {{
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }}
-    
-    .stButton > button:hover:before {{
-        left: 100%;
-    }}
-    
+
     /* כפתור ראשי */
     .stButton > button[kind="primary"] {{
         background: linear-gradient(45deg, var(--mafil-blue), #4ECDC4);
-        box-shadow: 0 1px 15px rgba(74, 144, 226, 0.3);
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    }}
+
+    .stButton > button[kind="primary"]:hover {{
+        background: linear-gradient(45deg, #4ECDC4, var(--mafil-blue));
+        box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5);
     }}
     
     /* קלטים */
@@ -1231,6 +1238,23 @@ def apply_modern_styling(rtl=False):
         background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
         backdrop-filter: blur(10px);
         border-right: 1px solid rgba(255,255,255,0.2);
+    }}
+
+    /* סגנון לכותרות בסיידבר */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {{
+        color: var(--mafil-red);
+        font-weight: 700;
+        margin-right: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 2px solid rgba(196, 30, 58, 0.2);
+    }}
+
+    /* סגנון למידע בסיידבר */
+    [data-testid="stSidebar"] .stInfo {{
+        margin-right: 1.5rem;
+        border-radius: 10px;
     }}
     
     /* הודעות הצלחה */
@@ -1287,9 +1311,25 @@ def apply_modern_styling(rtl=False):
         animation: fadeInUp 0.6s ease-out;
     }}
     
-    /* מעבר חלק */
-    * {{
-        transition: all 0.3s ease !important;
+    /* כפתורי ניווט מיוחדים עם gradient אדום-כחול */
+    .nav-button {{
+        background: linear-gradient(135deg, var(--mafil-red) 0%, var(--mafil-blue) 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+        border: none;
+        width: 100%;
+        margin: 0.5rem 0;
+    }}
+
+    .nav-button:hover {{
+        background: linear-gradient(135deg, var(--mafil-blue) 0%, var(--mafil-red) 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(74, 144, 226, 0.5);
     }}
     
     /* גלילה מותאמת אישית */
