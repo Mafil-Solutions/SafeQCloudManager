@@ -121,7 +121,7 @@ def show():
                                      help="רק superadmin יכול לבחור Entra" if role != 'superadmin' else None)
 
     # שורה שנייה: חיפוש לפי ושדות (עמודה ימנית מכיל הכל)
-    col_left_spacer, col_right_fields = st.columns([1, 5])
+    col_left_spacer, col_right_fields = st.columns([4, 3])
 
     with col_right_fields:
         pass  # עמודה ריקה משמאל
