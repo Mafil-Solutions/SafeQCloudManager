@@ -107,7 +107,7 @@ def show():
     col_spacer, col_provider = st.columns([4, 2])
     with col_provider:
         pass  # עמודה ריקה משמאל
-    with col_provider:
+    with col_spacer:
         # בדיקת הרשאות - רק superadmin יכול לבחור Entra
         role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
         if role == 'superadmin':
