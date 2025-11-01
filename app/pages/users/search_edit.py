@@ -143,7 +143,7 @@ def show():
                                    help="מצא את כל המשתמשים המכילים את ערך החיפוש")
 
     # שורה שלישית: תוצאות להצגה (בצד ימין)
-    col_spacer2, col_max_results = st.columns([1, 5])
+    col_spacer2, col_max_results = st.columns([1, 4])
     with col_max_results:
         pass  # עמודה ריקה משמאל
     with col_spacer2:
