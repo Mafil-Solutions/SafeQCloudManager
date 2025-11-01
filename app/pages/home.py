@@ -16,31 +16,23 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
     def show():
         """הצגת דף הבית - מרכז בקרה עם קיצורי דרך"""
 
-        # CSS לכפתורי ניווט - כמו כפתור primary
+        # CSS לכפתורי ניווט - gradient פשוט
         st.markdown("""
         <style>
-            /* כפתורי page_link מעוצבים כמו כפתור primary */
-            .stPageLink > a {
-                background: linear-gradient(135deg, #C41E3A 0%, #4A90E2 100%) !important;
+            /* כפתורי page_link */
+            a[kind="tertiary"] {
+                background: linear-gradient(135deg, #C41E3A, #4A90E2) !important;
                 color: white !important;
                 padding: 0.5rem 1rem !important;
                 border-radius: 0.5rem !important;
                 font-weight: 600 !important;
-                text-align: center !important;
-                transition: all 0.3s ease !important;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
                 border: none !important;
                 text-decoration: none !important;
-                display: block !important;
+                display: inline-block !important;
             }
 
-            .stPageLink > a:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-            }
-
-            .stPageLink > a:active {
-                transform: translateY(0) !important;
+            a[kind="tertiary"]:hover {
+                opacity: 0.9 !important;
             }
         </style>
         """, unsafe_allow_html=True)

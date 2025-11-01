@@ -211,33 +211,7 @@ def apply_modern_styling_compact(rtl=False):
             border-radius: 0.3rem !important;
         }}
 
-        /* הסתרת marker ברירת המחדל */
-        [data-testid="stSidebarNav"] details summary::-webkit-details-marker,
-        [data-testid="stSidebarNav"] summary::-moz-list-bullet {{
-            display: none !important;
-        }}
-
-        /* חץ מותאם - גלוי תמיד מימין - בולט מאוד */
-        [data-testid="stSidebarNav"] > ul > li > details > summary::before {{
-            content: "◀" !important;
-            display: inline-block !important;
-            position: absolute !important;
-            right: 1rem !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            transition: transform 0.3s ease !important;
-            color: {accent_color} !important;
-            font-size: 1.2rem !important;
-            font-weight: 900 !important;
-            opacity: 1 !important;
-            z-index: 10 !important;
-        }}
-
-        /* כשפתוח - חץ מסתובב למטה */
-        [data-testid="stSidebarNav"] details[open] > summary::before {{
-            content: "▼" !important;
-            transform: translateY(-50%) !important;
-        }}
+        /* החצים נשלטים על ידי Streamlit - אין שליטה מלאה דרך CSS */
 
         /* Hover על קטגוריה */
         [data-testid="stSidebarNav"] > ul > li > details > summary:hover {{
@@ -369,17 +343,6 @@ def show_compact_user_info():
             background: #e9ecef !important;
         }
 
-        /* הסתרת חץ ימין של expander והצגת רק חץ למטה */
-        div[data-testid="column"] .streamlit-expanderHeader svg {
-            display: none !important;
-        }
-
-        div[data-testid="column"] .streamlit-expanderHeader::after {
-            content: "▼" !important;
-            margin-right: 0.3rem !important;
-            font-size: 0.7rem !important;
-        }
-
         /* טקסט זעיר */
         div[data-testid="column"] p, div[data-testid="column"] small {
             font-size: 0.75rem !important;
@@ -400,9 +363,9 @@ def show_compact_user_info():
     col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([1.5, 0.1, 0.8, 0.1, 0.8])
 
     with col_user_exp:
-        # משתמש + הרשאה בתוך expander עם בתי ספר
+        # משתמש + הרשאה בתוך expander עם בתי ספר - עם חץ בטקסט
         username = st.session_state.get('username', 'N/A')
-        with st.expander(f"👤 {username} · {level_text} ▼", expanded=False):
+        with st.expander(f"👤 {username} · {level_text}", expanded=False):
             st.markdown("**🏫 בתי ספר זמינים:**")
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
@@ -522,28 +485,9 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # Header קומפקטי וקפוא (sticky)
+    # Header קומפקטי - עיצוב כותרת בלבד
     st.markdown("""
     <style>
-        /* Header sticky - targeting first block */
-        .main > div > div > div > div:first-child {
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 999 !important;
-            background: white !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            padding: 0.3rem 1rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-
-        .header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0;
-            padding: 0;
-        }
-
         .title-text {
             font-size: 2.2rem;
             font-weight: 700;
