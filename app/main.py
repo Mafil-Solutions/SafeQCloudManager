@@ -99,24 +99,12 @@ def apply_modern_styling_compact(rtl=False):
 
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
-            padding-top: 4rem !important;
+            padding-top: 0.5rem !important;
             padding-bottom: 1rem !important;
             max-width: 100% !important;
             text-align: right;
             margin-left: auto;
             margin-right: 0;
-        }}
-
-        /* Header container sticky */
-        .main > div:first-child {{
-            position: fixed !important;
-            top: 0 !important;
-            right: 0 !important;
-            left: 21rem !important;
-            z-index: 999 !important;
-            background: white !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            padding: 0.3rem 1rem !important;
         }}
 
         /* כותרת ראשית קומפקטית */
@@ -171,14 +159,15 @@ def apply_modern_styling_compact(rtl=False):
             padding: 0 !important;
         }}
 
-        /* כותרות קטגוריות ראשיות - עם חץ גלוי */
+        /* כותרות קטגוריות ראשיות - עם חץ גלוי והזחה ימינה */
         [data-testid="stSidebarNav"] > ul > li > details {{
             margin: 0.8rem 0 0.3rem 0 !important;
             position: relative !important;
+            padding-right: 1rem !important;
         }}
 
         [data-testid="stSidebarNav"] > ul > li > details > summary {{
-            padding: 0.6rem 2.5rem 0.6rem 1rem !important;
+            padding: 0.6rem 1rem 0.6rem 2.5rem !important;
             font-weight: 700 !important;
             font-size: 1rem !important;
             color: {accent_color} !important;
@@ -227,25 +216,26 @@ def apply_modern_styling_compact(rtl=False):
             display: none !important;
         }}
 
-        /* חץ מותאם - גלוי תמיד - בולט מאוד */
+        /* חץ מותאם - גלוי תמיד מימין - בולט מאוד */
         [data-testid="stSidebarNav"] > ul > li > details > summary::before {{
             content: "◀" !important;
             display: inline-block !important;
             position: absolute !important;
-            right: 0.5rem !important;
+            right: 1rem !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
             transition: transform 0.3s ease !important;
             color: {accent_color} !important;
-            font-size: 1.5rem !important;
+            font-size: 1.2rem !important;
             font-weight: 900 !important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2) !important;
             opacity: 1 !important;
             z-index: 10 !important;
         }}
 
+        /* כשפתוח - חץ מסתובב למטה */
         [data-testid="stSidebarNav"] details[open] > summary::before {{
-            transform: translateY(-50%) rotate(-90deg) !important;
+            content: "▼" !important;
+            transform: translateY(-50%) !important;
         }}
 
         /* Hover על קטגוריה */
@@ -364,7 +354,7 @@ def show_compact_user_info():
             color: #C41E3A !important;
         }
 
-        /* Expander זעיר */
+        /* Expander זעיר עם רקע */
         div[data-testid="column"] .streamlit-expanderHeader {
             font-size: 0.8rem !important;
             padding: 0.15rem 0.6rem !important;
@@ -376,6 +366,17 @@ def show_compact_user_info():
 
         div[data-testid="column"] .streamlit-expanderHeader:hover {
             background: #e9ecef !important;
+        }
+
+        /* הסתרת חץ ימין של expander והצגת רק חץ למטה */
+        div[data-testid="column"] .streamlit-expanderHeader svg {
+            display: none !important;
+        }
+
+        div[data-testid="column"] .streamlit-expanderHeader::after {
+            content: "▼" !important;
+            margin-right: 0.3rem !important;
+            font-size: 0.7rem !important;
         }
 
         /* טקסט זעיר */
@@ -395,7 +396,7 @@ def show_compact_user_info():
     """, unsafe_allow_html=True)
 
     # שורה עם expander משתמש ליד כפתורי פעולה
-    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([2, 0.1, 0.8, 0.1, 0.8])
+    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([1.5, 0.1, 0.8, 0.1, 0.8])
 
     with col_user_exp:
         # משתמש + הרשאה בתוך expander עם בתי ספר
@@ -523,14 +524,15 @@ def main():
     # Header קומפקטי וקפוא (sticky)
     st.markdown("""
     <style>
-        /* Header sticky CSS */
-        .element-container:has(> div > div > div > [data-testid="column"]) {
+        /* Header sticky - targeting first block */
+        .main > div > div > div > div:first-child {
             position: sticky !important;
             top: 0 !important;
             z-index: 999 !important;
             background: white !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            padding: 0.2rem 0.5rem !important;
+            padding: 0.3rem 1rem !important;
+            margin-bottom: 0.5rem !important;
         }
 
         .header-row {

@@ -21,7 +21,7 @@ def show():
     """הצגת דף חיפוש ועריכת משתמשים"""
     check_authentication()
 
-    # RTL styling - חזק מאוד
+    # RTL styling - חזק מאוד + יישור ימינה
     st.markdown("""
     <style>
         /* DataFrame RTL */
@@ -40,16 +40,19 @@ def show():
             direction: rtl !important;
         }
 
-        /* עמודות - RTL */
+        /* עמודות - RTL עם יישור ימינה */
         div[data-testid="column"] {
             direction: rtl !important;
             text-align: right !important;
+            display: flex !important;
+            justify-content: flex-end !important;
         }
 
         /* כל אלמנטי הטופס - RTL חזק */
         .stTextInput, .stSelectbox, .stNumberInput {
             direction: rtl !important;
             text-align: right !important;
+            width: 100% !important;
         }
 
         .stTextInput > div, .stSelectbox > div, .stNumberInput > div {
@@ -101,7 +104,7 @@ def show():
     st.subheader("חיפוש")
 
     # שורה ראשונה: מקור (בצד ימין)
-    col_spacer, col_provider = st.columns([3, 3])
+    col_spacer, col_provider = st.columns([1, 5])
     with col_spacer:
         pass  # עמודה ריקה משמאל
     with col_provider:
@@ -118,7 +121,7 @@ def show():
                                      help="רק superadmin יכול לבחור Entra" if role != 'superadmin' else None)
 
     # שורה שנייה: חיפוש לפי ושדות (עמודה ימנית מכיל הכל)
-    col_left_spacer, col_right_fields = st.columns([2, 4])
+    col_left_spacer, col_right_fields = st.columns([1, 5])
 
     with col_left_spacer:
         pass  # עמודה ריקה משמאל
@@ -140,7 +143,7 @@ def show():
                                    help="מצא את כל המשתמשים המכילים את ערך החיפוש")
 
     # שורה שלישית: תוצאות להצגה (בצד ימין)
-    col_spacer2, col_max_results = st.columns([3, 3])
+    col_spacer2, col_max_results = st.columns([1, 5])
     with col_spacer2:
         pass  # עמודה ריקה משמאל
     with col_max_results:
@@ -267,7 +270,9 @@ def show():
             st.dataframe(df, use_container_width=True, height=400)
 
             # כפתורי פעולה
-            col_csv, col_clear = st.columns([3, 1])
+            col_spacer3, col_csv, col_clear = st.columns([1, 3, 1])
+            with col_spacer3:
+                pass  # עמודה ריקה משמאל
             with col_csv:
                 csv = df.to_csv(index=False)
                 st.download_button(
