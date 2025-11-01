@@ -123,10 +123,10 @@ def show():
     # שורה שנייה: חיפוש לפי ושדות (עמודה ימנית מכיל הכל)
     col_left_spacer, col_right_fields = st.columns([1, 5])
 
-    with col_left_spacer:
+    with col_right_fields:
         pass  # עמודה ריקה משמאל
 
-    with col_right_fields:
+    with col_left_spacer:
         search_type_map_en_to_he = {
             "Username": "שם משתמש", "Full Name": "שם מלא",
             "Department": "מחלקה", "Email": "אימייל"
