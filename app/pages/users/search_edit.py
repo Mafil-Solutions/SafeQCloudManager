@@ -104,8 +104,8 @@ def show():
     st.subheader("חיפוש")
 
     # שורה ראשונה: מקור (בצד ימין)
-    col_spacer, col_provider = st.columns([0, 9])
-    with col_spacer:
+    col_spacer, col_provider = st.columns([4, 2])
+    with col_provider:
         pass  # עמודה ריקה משמאל
     with col_provider:
         # בדיקת הרשאות - רק superadmin יכול לבחור Entra
