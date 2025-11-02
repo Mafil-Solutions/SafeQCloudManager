@@ -303,7 +303,7 @@ def apply_modern_styling_compact(rtl=False):
             background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%) !important;
             color: white !important;
             padding: 1rem 2rem;
-            border-radius: 15px;
+            border-radius: 50px;
             text-align: center;
             font-weight: 700;
             font-size: 1.2rem;
