@@ -100,8 +100,8 @@ def apply_modern_styling_compact(rtl=False):
 
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
-            padding-top: 50rem !important;
-            padding-bottom: 50rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
             max-width: 100% !important;
             text-align: right;
             margin-left: auto;
