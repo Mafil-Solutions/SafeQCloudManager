@@ -53,6 +53,23 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         /* עיצוב מצב hover */
     [data-testid="stPageLink"] a:hover {
         opacity: 0.9 !important;
+        }
+        /* כפתורי סקירה (st.button) */
+            .stButton > button {
+                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+                color: white !important;
+                padding: 0.5rem 1rem !important;
+                border-radius: 0.5rem !important;
+                font-weight: 600 !important;
+                border: none !important;
+            }
+
+            .stButton > button:hover {
+                opacity: 0.9 !important;
+            }
+            /* ============================ */
+
+        </style>
         </style>
         """, unsafe_allow_html=True)
 
