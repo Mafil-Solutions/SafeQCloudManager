@@ -17,7 +17,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         """הצגת דף הבית - מרכז בקרה עם קיצורי דרך"""
 
         # CSS לכפתורי ניווט - gradient פשוט
-        st.markdown("""
+        st.markdown(""
         <style>
             /* כפתורי page_link */
             a[kind="tertiary"] {
