@@ -162,9 +162,9 @@ def apply_modern_styling_compact(rtl=False):
 
         /* כותרות קטגוריות ראשיות - עם חץ גלוי והזחה ימינה */
         [data-testid="stSidebarNav"] > ul > li > details {{
-            margin: 0.8rem 0 0.3rem 0 !important;
+            margin: 5rem 0 5rem 0 !important;
             position: relative !important;
-            padding-left: 5rem !important;
+            padding-right: 1rem !important;
         }}
 
         [data-testid="stSidebarNav"] > ul > li > details > summary {{
