@@ -138,7 +138,7 @@ def apply_modern_styling_compact(rtl=False):
             transition: all 0.3s ease !important;
             color: #334155 !important;
             font-weight: 500 !important;
-            background-color: #334155 !important;
+            background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
         }}
 
         .stPageLink:hover {{
