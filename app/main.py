@@ -245,14 +245,17 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Buttons */
         .stButton > button {{
+            background: linear-gradient(45deg, var(--mafil-red), #FF6B6B);
+            color: white;
+            border: none;
             border-radius: 25px;
-            font-weight: 600;
-            direction: {direction};
-            background: linear-gradient(45deg, var{primary_color}, #FF6B6B) !important;
-            color: white !important;
-            border: none !important;
             padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+            position: relative;
+            overflow: hidden;
+
         }}
 
         .stButton > button:hover {{
