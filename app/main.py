@@ -268,7 +268,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
 
         .stButton > button[kind="primary"]:hover {{
-            background: linear-gradient(45deg, #4ECDC4, {secondary_color}) !important;
+            background: linear-gradient(45deg, #4ECDC4, {primary_color}) !important;
             box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
         }}
 
