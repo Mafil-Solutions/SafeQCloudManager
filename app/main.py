@@ -563,7 +563,7 @@ def main():
     with col_user:
         show_compact_user_info()
 
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb; background-color: rgb(255, 255, 255);">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb; background-color:#FFFF;">', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()
