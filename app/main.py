@@ -400,8 +400,8 @@ def show_compact_user_info():
     with col_user_exp:
         # משתמש + הרשאה בתוך expander עם בתי ספר - עם חץ בטקסט
         username = st.session_state.get('username', 'N/A')
-        with st.expander(f"👤 {username} · {level_text}", expanded=False):
-            st.markdown("**🏫 בתי ספר זמינים:**" · {level_text})
+        with st.expander(f"👤 {username}-{level_text}", expanded=False):
+            st.markdown("**🏫 בתי ספר זמינים:**")
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
                     st.caption("✅ כל בתי הספר")
