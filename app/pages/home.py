@@ -17,11 +17,11 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         """הצגת דף הבית - מרכז בקרה עם קיצורי דרך"""
 
         # CSS לכפתורי ניווט - gradient פשוט
-        st.markdown(""
+        st.markdown("""
         <style>
             /* כפתורי page_link */
             a[kind="tertiary"] {
-                background: linear-gradient(45deg, #FFFF, #FF6B6B) !important;
+                background-color: linear-gradient(45deg, #FFFF, #FF6B6B) !important;
                 color: white !important;
                 padding: 0.5rem 1rem !important;
                 border-radius: 0.5rem !important;
@@ -30,7 +30,6 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 text-decoration: none !important;
                 display: inline-block !important;
             }
-
             a[kind="tertiary"]:hover {
                 opacity: 0.9 !important;
             }
