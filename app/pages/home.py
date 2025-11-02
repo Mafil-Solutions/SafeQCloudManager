@@ -39,7 +39,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             margin: 0.15rem 0 !important;
             border-radius: 0.5rem !important;
             transition: all 0.3s ease !important;
-            color: #ffff !important;
+            color: white !important;
             font-weight: 600 !important;
             background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
         }
