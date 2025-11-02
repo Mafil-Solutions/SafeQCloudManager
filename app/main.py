@@ -350,7 +350,7 @@ def show_compact_user_info():
             font-size: 0.8rem !important;
             height: 1.5rem !important;
             min-height: 1.5rem !important;
-            background-color: #f8f9fa!important;
+            background: #f8f9fa!important;
             color: #666 !important;
             border: 1px solid #ddd !important;
             border-radius: 0.3rem !important;
@@ -538,7 +538,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_title, col_user = st.columns([2, 2, 3.5])
+    col_logo, col_title, col_user = st.columns([2, 2, 2.5])
 
     with col_logo:
         # לוגו של החברה - מוגדל
@@ -563,7 +563,7 @@ def main():
     with col_user:
         show_compact_user_info()
 
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb; background-color: rgb(255, 255, 255)">', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()
