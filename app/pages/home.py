@@ -21,7 +21,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         <style>
             /* כפתורי page_link */
             a[kind="tertiary"] {
-                background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
+                background: linear-gradient(45deg, #FFFF, #FF6B6B) !important;
                 color: white !important;
                 padding: 0.5rem 1rem !important;
                 border-radius: 0.5rem !important;
