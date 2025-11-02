@@ -248,7 +248,7 @@ def apply_modern_styling_compact(rtl=False):
             border-radius: 25px;
             font-weight: 600;
             direction: {direction};
-            background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
+            background: linear-gradient(45deg, var{primary_color}, #FF6B6B) !important;
             color: white !important;
             border: none !important;
             padding: 0.5rem 1.5rem;
