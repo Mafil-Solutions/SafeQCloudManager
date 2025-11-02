@@ -350,7 +350,7 @@ def show_compact_user_info():
             font-size: 0.8rem !important;
             height: 1.5rem !important;
             min-height: 1.5rem !important;
-            background: #f8f9fa !important;
+            background: #ffff !important;
             color: #666 !important;
             border: 1px solid #ddd !important;
             border-radius: 0.3rem !important;
