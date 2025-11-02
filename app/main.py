@@ -350,11 +350,11 @@ def show_compact_user_info():
         /* כפתורים זעירים בהדר - עם רקע */
         div[data-testid="column"] .stButton > button {
             padding: 0.15rem 0.5rem !important;
-            font-size: 100rem !important;
+            font-size: 0.8rem !important;
             height: 1.5rem !important;
             min-height: 1.5rem !important;
-            background: #C41E3A!important;
-            color: #0000 !important;
+            background: #f8f9fa !important;
+            color: #666 !important;
             border: 1px solid #ddd !important;
             border-radius: 0.3rem !important;
         }
