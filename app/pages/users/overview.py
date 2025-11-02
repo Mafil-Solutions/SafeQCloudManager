@@ -15,13 +15,12 @@ def show():
     <style>
         /* כפתורי סקירה */
         .stButton > button {
-            background: linear-gradient(45deg, var(#C41E3A), #FF6B6B) !important;
+            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             padding: 0.5rem 1rem !important;
             border-radius: 0.5rem !important;
             font-weight: 600 !important;
             border: none !important;
-            opacity: 0.9 !important;
         }
 
         .stButton > button:hover {
