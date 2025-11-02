@@ -164,7 +164,7 @@ def apply_modern_styling_compact(rtl=False):
         [data-testid="stSidebarNav"] > ul > li > details {{
             margin: 0.8rem 0 0.3rem 0 !important;
             position: relative !important;
-            padding-right: 5rem !important;
+            padding-left: 5rem !important;
         }}
 
         [data-testid="stSidebarNav"] > ul > li > details > summary {{
