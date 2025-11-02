@@ -538,7 +538,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_title, col_user = st.columns([2, 4, 3])
+    col_logo, col_title, col_user = st.columns([2, 4, 4])
 
     with col_logo:
         # לוגו של החברה - מוגדל
