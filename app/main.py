@@ -553,7 +553,7 @@ def main():
                 return os.path.join(os.path.abspath("."), relative_path)
 
             logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=180)
+            st.image(logo_path, width=130)
         except Exception as e:
             st.markdown("**MafilIT**")
 
