@@ -266,12 +266,12 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Primary button */
         .stButton > button[kind="primary"] {{
-            background: linear-gradient(45deg, {secondary_color}, #4ECDC4) !important;
+            background: linear-gradient(45deg, {primary_color}, #4ECDC4) !important;
             box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
         }}
 
         .stButton > button[kind="primary"]:hover {{
-            background: linear-gradient(45deg, #4ECDC4, {secondary_color}) !important;
+            background: linear-gradient(45deg, #4ECDC4, {primary_color}) !important;
             box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
         }}
 
