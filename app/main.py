@@ -300,10 +300,10 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Navigation buttons with gradient */
         .nav-button {{
-            background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%) !important;
+            background: linear-gradient(0deg, {primary_color} 0%, {secondary_color} 100%) !important;
             color: white !important;
             padding: 1rem 2rem;
-            border-radius: 50px;
+            border-radius: 15px;
             text-align: center;
             font-weight: 700;
             font-size: 1.2rem;
