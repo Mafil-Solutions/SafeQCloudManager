@@ -45,6 +45,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         }
 
         [data-testid="stPageLink"] a [data-testid="stMarkdownContainer"] p {
+        font-size: 0.8rem !important;
         color: white !important;
         font-weight: 600 !important;
         }
