@@ -16,59 +16,22 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
     def show():
         """הצגת דף הבית - מרכז בקרה עם קיצורי דרך"""
 
-        # CSS לכפתורי ניווט - gradient פשוט
+        # CSS לכפתורים - בדיוק כמו overview.py
         st.markdown("""
         <style>
-            /* כפתורי page_link */
-            a[kind="tertiary"] {
-                background-color: linear-gradient(45deg, #FFFF, #FF6B6B) !important;
+            /* כפתורי st.button - זהה לעמוד overview */
+            .stButton > button {
+                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 color: white !important;
                 padding: 0.5rem 1rem !important;
                 border-radius: 0.5rem !important;
                 font-weight: 600 !important;
                 border: none !important;
-                text-decoration: none !important;
-                display: inline-block !important;
             }
-            a[kind="tertiary"]:hover {
+
+            .stButton > button:hover {
                 opacity: 0.9 !important;
             }
-            /* עיצוב כפתורי ניווט */
-        [data-testid="stPageLink"] a {
-            padding: 0.6rem 1rem !important;
-            margin: 0.15rem 0 !important;
-            border-radius: 0.5rem !important;
-            transition: all 0.3s ease !important;
-            color: white !important;
-            font-weight: 600 !important;
-            background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
-        }
-
-        [data-testid="stPageLink"] a [data-testid="stMarkdownContainer"] p {
-        font-size: 0.8rem !important;
-        color: white !important;
-        font-weight: 600 !important;
-        }
-        
-        /* עיצוב מצב hover */
-    [data-testid="stPageLink"] a:hover {
-        opacity: 0.9 !important;
-        }
-        /* כפתורי סקירה (st.button) */
-            /* כפתורי סקירה */
-        .stButton > button {
-            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
-            color: white !important;
-            padding: 0.5rem 1rem !important;
-            border-radius: 0.5rem !important;
-            font-weight: 600 !important;
-            border: none !important;
-        }
-
-        .stButton > button:hover {
-            opacity: 0.9 !important;
-        }
-            /* ============================ */
         </style>
         """, unsafe_allow_html=True)
 
@@ -100,28 +63,30 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**📋 רשימת משתמשים**")
                     st.caption("צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra), וייצוא לקובץ CSV")
-                    if st.button("📋➡️ עבור לרשימת משתמשים", key="goto_users_list", use_container_width=True):
-
+                    if st.button("➡️ עבור לרשימת משתמשים", key="goto_users_list", use_container_width=True):
                         st.switch_page("pages/users/user_list.py")
-
                 st.markdown("")
 
                 with st.container():
                     st.markdown("**🔍 חיפוש ועריכה**")
                     st.caption("חיפוש מתקדם ועריכת פרטי משתמשים קיימים")
-                    st.page_link(users_search_page, label="➡️ עבור לחיפוש ועריכה", icon="🔍", use_container_width=True)
+                    if st.button("➡️ עבור לחיפוש ועריכה", key="goto_search_edit", use_container_width=True):
+                        st.switch_page("pages/users/search_edit.py")
 
             with col2:
                 with st.container():
                     st.markdown("**➕ הוספת משתמש**")
                     st.caption("יצירת משתמש חדש במערכת SafeQ Cloud")
-                    st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", icon="➕", use_container_width=True)
+                    if st.button("➡️ עבור להוספת משתמש", key="goto_add_user", use_container_width=True):
+                        st.switch_page("pages/users/add_user.py")
+
                 st.markdown("")
 
                 with st.container():
                     st.markdown("**👨‍👩‍👧‍👦 קבוצות**")
                     st.caption("ניהול קבוצות משתמשים - יצירה, עריכה, הוספה והסרה")
-                    st.page_link(users_groups_page, label="➡️ עבור לניהול קבוצות", icon="👨‍👩‍👧‍👦", use_container_width=True)
+                    if st.button("➡️ עבור לניהול קבוצות", key="goto_groups", use_container_width=True):
+                        st.switch_page("pages/users/groups.py")
 
             st.markdown("---")
 
@@ -132,7 +97,8 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             with col_act:
                 st.markdown("**📋 הפעילות שלי**")
                 st.caption("צפייה בפעולות שביצעת במערכת")
-                st.page_link(my_activity_page, label="➡️ עבור לפעילות", icon="📋", use_container_width=True)
+                if st.button("➡️ עבור לפעילות", key="goto_my_activity", use_container_width=True):
+                    st.switch_page("pages/my_activity.py")
 
             with col_print:
                 st.markdown("**🖨️ מדפסות**")
