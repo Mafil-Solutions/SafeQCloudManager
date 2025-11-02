@@ -94,7 +94,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
 
             # קטגוריה: ניהול משתמשים
             st.markdown("### 👥 ניהול משתמשים")
-            col1, col2 = st.columns(4,4)
+            col1, col2 = st.columns(2)
 
             with col1:
                 with st.container():
