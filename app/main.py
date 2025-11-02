@@ -386,7 +386,7 @@ def show_compact_user_info():
         .header-divider {
             border-left: 3px solid #ddd;
             height: 2.5rem;
-            margin: 0 0.3rem;
+            margin: 1 0.3rem;
         }
     </style>
     """, unsafe_allow_html=True)
