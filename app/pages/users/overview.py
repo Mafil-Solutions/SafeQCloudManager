@@ -21,6 +21,7 @@ def show():
             border-radius: 0.5rem !important;
             font-weight: 600 !important;
             border: none !important;
+            opacity: 0.9 !important;
         }
 
         .stButton > button:hover {
