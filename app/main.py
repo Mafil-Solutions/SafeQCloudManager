@@ -95,7 +95,7 @@ def apply_modern_styling_compact(rtl=False):
         /* צמצום header */
         header[data-testid="stHeader"] {{
             background-color: #ffff;
-            height: 100px !important;
+            height: 0rem !important;
         }}
 
         /* צמצום padding עליון של התוכן */
