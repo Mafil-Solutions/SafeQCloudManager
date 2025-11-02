@@ -162,7 +162,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* כותרות קטגוריות ראשיות - עם חץ גלוי והזחה ימינה */
         [data-testid="stSidebarNav"] > ul > li > details {{
-            margin: 5rem 0 5rem 0 !important;
+            margin: 0.8rem 0 0.3rem 0 !important;
             position: relative !important;
             padding-right: 1rem !important;
         }}
@@ -392,7 +392,7 @@ def show_compact_user_info():
     """, unsafe_allow_html=True)
 
     # שורה עם expander משתמש ליד כפתורי פעולה
-    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([1, 0.1, 1, 0.1, 1])
+    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([0.5, 0.1, 1, 0.1, 1])
 
     with col_user_exp:
         # משתמש + הרשאה בתוך expander עם בתי ספר - עם חץ בטקסט
