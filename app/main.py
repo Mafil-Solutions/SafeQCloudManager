@@ -351,7 +351,7 @@ def show_compact_user_info():
             height: 1.5rem !important;
             min-height: 1.5rem !important;
             background: #f8f9fa!important;
-            color: #666 !important;
+            color: #FFF !important;
             border: 1px solid #ddd !important;
             border-radius: 0.3rem !important;
         }
