@@ -385,7 +385,7 @@ def show_compact_user_info():
         /* הפרדה */
         .header-divider {
             border-left: 3px solid #ddd;
-            height: 3rem;
+            height: 2.5rem;
             margin: 0 0.3rem;
         }
     </style>
