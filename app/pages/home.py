@@ -34,7 +34,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 opacity: 0.9 !important;
             }
             /* עיצוב כפתורי ניווט */
-        [data-testid="stPageLink"]a {
+        [data-testid="stPageLink"] {
             padding: 0.6rem 1rem !important;
             margin: 0.15rem 0 !important;
             border-radius: 0.5rem !important;
