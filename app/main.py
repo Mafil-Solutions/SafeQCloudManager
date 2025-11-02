@@ -283,7 +283,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Expander */
         .streamlit-expanderHeader {{
-            background-color: rgba(255, 255, 255, 0.1) !important;
+            background-color: rgba(0, 0, 0, 0.1) !important;
             border-radius: 0.3rem !important;
         }}
 
@@ -300,7 +300,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Navigation buttons with gradient */
         .nav-button {{
-            background: linear-gradient(0deg, {primary_color} 0%, {secondary_color} 100%) !important;
+            background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%) !important;
             color: white !important;
             padding: 1rem 2rem;
             border-radius: 15px;
