@@ -137,15 +137,14 @@ def apply_modern_styling_compact(rtl=False):
             border-radius: 0.5rem !important;
             transition: all 0.3s ease !important;
             color: white !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
             background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
         }}
 
         .stPageLink:hover {{
-            background-color: {hover_color} !important;
-            color: {primary_color} !important;
-            transform: translateX({'-3px' if rtl else '3px'}) !important;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+            background: linear-gradient(45deg, #FF6B6B, {primary_color}) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
         }}
 
         /* כפתור ניווט פעיל */
