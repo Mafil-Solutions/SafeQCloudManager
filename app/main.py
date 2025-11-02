@@ -138,7 +138,7 @@ def apply_modern_styling_compact(rtl=False):
             transition: all 0.3s ease !important;
             color: #334155 !important;
             font-weight: 500 !important;
-            background-color: transparent !important;
+            background-color: #334155 !important;
         }}
 
         .stPageLink:hover {{
@@ -563,7 +563,7 @@ def main():
     with col_user:
         show_compact_user_info()
 
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb; background-color:#FFFF;">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()
