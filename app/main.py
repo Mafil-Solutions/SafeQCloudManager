@@ -245,7 +245,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Buttons */
         .stButton > button {{
-            background: linear-gradient(45deg, var{primary_color}, #FF6B6B) !important;
+            background: linear-gradient(45deg,{primary_color}, #FF6B6B) !important;
             color: white;
             border: none;
             border-radius: 25px;
