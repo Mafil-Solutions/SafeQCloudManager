@@ -33,6 +33,22 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[kind="tertiary"]:hover {
                 opacity: 0.9 !important;
             }
+            /* עיצוב כפתורי ניווט */
+        .stPageLink {
+            padding: 0.6rem 1rem !important;
+            margin: 0.15rem 0 !important;
+            border-radius: 0.5rem !important;
+            transition: all 0.3s ease !important;
+            color: #ffff !important;
+            font-weight: 600 !important;
+            background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
+        }
+
+        .stPageLink:hover {
+            background: linear-gradient(45deg, #FF6B6B, {primary_color}) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
+        }
         </style>
         """, unsafe_allow_html=True)
 
