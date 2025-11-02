@@ -136,7 +136,7 @@ def apply_modern_styling_compact(rtl=False):
             margin: 0.15rem 0 !important;
             border-radius: 0.5rem !important;
             transition: all 0.3s ease !important;
-            color: #334155 !important;
+            color: white !important;
             font-weight: 500 !important;
             background: linear-gradient(45deg, {primary_color}, #FF6B6B) !important;
         }}
