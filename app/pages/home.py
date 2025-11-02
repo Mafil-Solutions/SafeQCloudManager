@@ -100,7 +100,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**📋 רשימת משתמשים**")
                     st.caption("צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra), וייצוא לקובץ CSV")
-                    if st.button("➡️📋 עבור לרשימת משתמשים", key="goto_users_list", use_container_width=True):
+                    if st.button("📋➡️ עבור לרשימת משתמשים", key="goto_users_list", use_container_width=True):
 
                         st.switch_page("pages/users/user_list.py")
 
