@@ -392,7 +392,7 @@ def show_compact_user_info():
     """, unsafe_allow_html=True)
 
     # שורה עם expander משתמש ליד כפתורי פעולה
-    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([1.5, 0.1, 1, 0.1, 1])
+    col_user_exp, col_divider1, col_refresh, col_divider2, col_logout = st.columns([1.1, 0.1, 1, 0.1, 1])
 
     with col_user_exp:
         # משתמש + הרשאה בתוך expander עם בתי ספר - עם חץ בטקסט
