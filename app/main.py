@@ -353,7 +353,7 @@ def show_compact_user_info():
             font-size: 0.8rem !important;
             height: 1.5rem !important;
             min-height: 1.5rem !important;
-            background: #fff !important;
+            background: #f8f9fa !important;
             color: #666 !important;
             border: 1px solid #ddd !important;
             border-radius: 0.3rem !important;
@@ -401,7 +401,7 @@ def show_compact_user_info():
         # משתמש + הרשאה בתוך expander עם בתי ספר - עם חץ בטקסט
         username = st.session_state.get('username', 'N/A')
         with st.expander(f"👤 {username} · {level_text}", expanded=False):
-            st.markdown("**🏫 בתי ספר זמינים:**")
+            st.markdown("**🏫 בתי ספר זמינים:**" "{level_text}")
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
                     st.caption("✅ כל בתי הספר")
