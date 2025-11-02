@@ -101,8 +101,9 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                     st.markdown("**📋 רשימת משתמשים**")
                     st.caption("צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra), וייצוא לקובץ CSV")
                     if st.button("➡️ עבור לרשימת משתמשים", key="goto_users_list", use_container_width=True):
-                        st.switch_page("pages/users/user_list.py")
-              
+
+                        st.switch_page("pages/users/user_list.py")
+
                 st.markdown("")
 
                 with st.container():
@@ -115,7 +116,6 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                     st.markdown("**➕ הוספת משתמש**")
                     st.caption("יצירת משתמש חדש במערכת SafeQ Cloud")
                     st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", icon="➕", use_container_width=True)
-
                 st.markdown("")
 
                 with st.container():
