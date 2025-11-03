@@ -282,6 +282,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Expander */
         .streamlit-expanderHeader {{
+            display:none;
             background-color: rgba(0, 0, 0, 0.1) !important;
             border-radius: 0.3rem !important;
         }}
