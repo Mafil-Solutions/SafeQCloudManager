@@ -152,7 +152,7 @@ def apply_modern_styling_compact(rtl=False):
         /* Sidebar navigation - NOT sticky */
         [data-testid="stSidebarNavLink"] {{
             position: relative !important;
-            background-color: transparent !important;
+            /* background-color: transparent !important;*/
             padding-right: 2rem !important;
             margin-bottom: 0.1rem !important;
         }}
