@@ -100,20 +100,20 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**🔍 חיפוש ועריכה**")
                     st.caption("חיפוש מתקדם ועריכת פרטי משתמשים קיימים")
-                    st.page_link(users_search_page, label="➡️ עבור לחיפוש ועריכה", use_container_width=True)
+                    st.page_link(users_search_page, label="🔍➡️ עבור לחיפוש ועריכה", use_container_width=True)
 
             with col2:
                 with st.container():
                     st.markdown("**➕ הוספת משתמש**")
                     st.caption("יצירת משתמש חדש במערכת SafeQ Cloud")
-                    st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", use_container_width=True)
+                    st.page_link(users_add_page, label="➕➡️ עבור להוספת משתמש", use_container_width=True)
 
                 st.markdown("")
 
                 with st.container():
                     st.markdown("**👨‍👩‍👧‍👦 קבוצות**")
                     st.caption("ניהול קבוצות משתמשים - יצירה, עריכה, הוספה והסרה")
-                    st.page_link(users_groups_page, label="➡️ עבור לניהול קבוצות", use_container_width=True)
+                    st.page_link(users_groups_page, label="👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
 
             st.markdown("---")
 
@@ -124,7 +124,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             with col_act:
                 st.markdown("**📋 הפעילות שלי**")
                 st.caption("צפייה בפעולות שביצעת במערכת")
-                st.page_link(my_activity_page, label="➡️ עבור לפעילות", use_container_width=True)
+                st.page_link(my_activity_page, label="📋➡️ עבור לפעילות", use_container_width=True)
 
             with col_print:
                 st.markdown("**🖨️ מדפסות**")
