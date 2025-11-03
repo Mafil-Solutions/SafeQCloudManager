@@ -36,7 +36,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
-                font-color: white !important;
+                color: white !important;
                 padding: 0.0rem 0.0rem !important;
                 border-radius: 0.9rem !important;
                 font-weight: 600 !important;
@@ -50,9 +50,10 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             }
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
+                color: white;
             }
 
-           a[data-testid="stPageLink"] {
+           div[data-testid="stPageLink"] {
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
                border-radius:0.5rem ;
@@ -60,7 +61,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                background: none;
             }
 
-            a[data-testid="stPageLink"]:hover {
+            div[data-testid="stPageLink"]:hover {
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
                border: none ;
