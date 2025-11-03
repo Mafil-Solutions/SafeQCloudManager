@@ -94,7 +94,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**📋 רשימת משתמשים**")
                     st.caption("צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra), וייצוא לקובץ CSV")
-                    st.page_link(users_list_page, label="➡️ עבור לרשימת משתמשים", use_container_width=True)
+                    st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
                 st.markdown("")
 
                 with st.container():
