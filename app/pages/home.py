@@ -36,7 +36,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             /* כפתורי st.page_link - זהה לכפתורי st.button */
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
-                color: white !important;
+                font-color: white !important;
                 padding: 0.5rem 1rem !important;
                 border-radius: 0.5rem !important;
                 font-weight: 600 !important;
