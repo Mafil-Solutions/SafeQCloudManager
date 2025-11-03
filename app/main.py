@@ -94,9 +94,9 @@ def apply_modern_styling_compact(rtl=False):
             transition: none !important;
             color: gainsboro;
 }}
-        /* כשהקטגוריה פתוחה — החץ נהיה כהה יותר */
-        [data-testid="stSidebar"] details[open] [data-testid="stIconMaterial"] {{
-            color: black !important;
+        [data-testid="stSidebar"] details[open] summary span[data-testid="stIconMaterial"],
+        [data-testid="stSidebar"] details[open] summary div span[data-testid="stIconMaterial"] {{
+            color: #333 !important;
 }}
 
         /* אם Streamlit מכניס display:none בשלב כלשהו */
