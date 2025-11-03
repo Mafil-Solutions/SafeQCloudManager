@@ -372,7 +372,7 @@ def show_compact_user_info():
     <style>
         /* כפתורים זעירים בהדר - עם רקע */
         div[data-testid="column"] .stButton > button {
-            padding: 0.15rem 0.5rem !important;
+            padding: 0.2rem 0.5rem !important;
             font-size: 0.8rem !important;
             height: 1.5rem !important;
             min-height: 1.5rem !important;
