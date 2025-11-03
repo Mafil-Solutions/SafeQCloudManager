@@ -46,7 +46,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 width: 100% !important;
                 box-sizing: border-box !important;
                 text-align: center !important;
-                line-height: 1 !important;
+                line-height: 0 !important;
             }
 
             a[data-testid="stPageLink-NavLink"]:hover {
