@@ -274,9 +274,9 @@ def apply_modern_styling_compact(rtl=False):
             box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
         }}
         
-         /* צמצום Secondary Buttons */
+         /* Secondary Buttons */
         button[data-testid="stBaseButton-secondary"] {{
-        background-color: #ff9800 !important;
+        background-color: inherit !important;
         color: white !important;
         border-radius: 10px !important;
         border: none !important;
