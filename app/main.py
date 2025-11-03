@@ -126,8 +126,8 @@ def apply_modern_styling_compact(rtl=False):
         [data-testid="stSidebarNavLink"] {{
             position: relative !important;
             background-color: transparent !important;
-            padding-right: 1rem !important;
-            margin-bottom: 0.5rem !important;
+            padding-right: 2rem !important;
+            margin-bottom: 0.1rem !important;
         }}
 
         /* עיצוב כפתורי ניווט */
