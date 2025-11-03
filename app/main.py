@@ -103,6 +103,16 @@ def apply_modern_styling_compact(rtl=False):
         .main {{
             {'margin-right: 21rem !important; margin-left: 0 !important;' if rtl else ''}
         }}
+        /* סוגר כל קטגוריה פתוחה (מסתיר תוכן) */
+        [data-testid="stSidebarNav"] details[open] > ul {{
+            display: none !important;
+        }}
+        
+        /* משנה את כיוון החץ כך שייראה סגור */
+        [data-testid="stSidebarNav"] details[open] summary svg {{
+            transform: rotate(-90deg) !important;
+            transition: none !important;
+        }}
 
         /* צמצום header */
         header[data-testid="stHeader"] {{
