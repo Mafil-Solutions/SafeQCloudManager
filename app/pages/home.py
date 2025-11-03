@@ -86,20 +86,23 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**🔍 חיפוש ועריכה**")
                     st.caption("חיפוש מתקדם ועריכת פרטי משתמשים קיימים")
-                    st.page_link(users_search_page, label="➡️ עבור לחיפוש ועריכה", icon="🔍", use_container_width=True)
+                    if st.button("➡️ עבור לחיפוש ועריכה", key="goto_search_edit", use_container_width=True):
+                        st.switch_page("pages/users/search_edit.py")
 
             with col2:
                 with st.container():
                     st.markdown("**➕ הוספת משתמש**")
                     st.caption("יצירת משתמש חדש במערכת SafeQ Cloud")
-                    st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", icon="➕", use_container_width=True)
+                    if st.button("➡️ עבור להוספת משתמש", key="goto_add_user", use_container_width=True):
+                        st.switch_page("pages/users/add_user.py")
 
                 st.markdown("")
 
                 with st.container():
                     st.markdown("**👨‍👩‍👧‍👦 קבוצות**")
                     st.caption("ניהול קבוצות משתמשים - יצירה, עריכה, הוספה והסרה")
-                    st.page_link(users_groups_page, label="➡️ עבור לניהול קבוצות", icon="👨‍👩‍👧‍👦", use_container_width=True)
+                    if st.button("➡️ עבור לניהול קבוצות", key="goto_groups", use_container_width=True):
+                        st.switch_page("pages/users/groups.py")
 
             st.markdown("---")
 
@@ -110,7 +113,8 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             with col_act:
                 st.markdown("**📋 הפעילות שלי**")
                 st.caption("צפייה בפעולות שביצעת במערכת")
-                st.page_link(my_activity_page, label="➡️ עבור לפעילות", icon="📋", use_container_width=True)
+                if st.button("➡️ עבור לפעילות", key="goto_my_activity", use_container_width=True):
+                    st.switch_page("pages/my_activity.py")
 
             with col_print:
                 st.markdown("**🖨️ מדפסות**")
