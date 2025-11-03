@@ -65,8 +65,8 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
                border: none ;
-               transition: 0 !important;
-               background: none;
+               transition: none !important;
+               background-color: none;
                }
              /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
             a[data-testid="stPageLink-NavLink"] > span:first-child {
