@@ -241,7 +241,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* Hover על קטגוריה */
         [data-testid="stSidebarNavLink"] > ul > li > details[open] > summary:hover {{
-            background: linear-gradient(45deg, rgba(196, 30, 58, 0.15), rgba(74, 144, 226, 0.1)) !important;
+            background-color: linear-gradient(45deg, rgba(196, 30, 58, 0.15), rgba(74, 144, 226, 0.1)) !important;
             border-color: rgba(196, 30, 58, 0.3) !important;
             transform: translateX(-2px) !important;
         }}
