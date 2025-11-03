@@ -38,7 +38,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 font-color: white !important;
                 padding: 0.0rem 0rem !important;
-                border-radius: 0.5rem !important;
+                border-radius: 0.9rem !important;
                 font-weight: 600 !important;
                 border: none !important;
                 text-decoration: none !important;
@@ -46,7 +46,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 width: 100% !important;
                 box-sizing: border-box !important;
                 text-align: center !important;
-                line-height: 1.6 !important;
+                line-height: 1.9 !important;
             }
 
             a[data-testid="stPageLink-NavLink"]:hover {
@@ -113,7 +113,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**👨‍👩‍👧‍👦 קבוצות**")
                     st.caption("ניהול קבוצות משתמשים - יצירה, עריכה, הוספה והסרה")
-                    st.page_link(users_groups_page, label="👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
+                    st.page_link(users_groups_page, label=" 👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
 
             st.markdown("---")
 
