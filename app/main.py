@@ -275,9 +275,18 @@ def apply_modern_styling_compact(rtl=False):
         }}
         
          /* צמצום Secondary Buttons */
-        .stButton > button[kind="secondary"] [data-testid="stBaseButton-secondary""] {{
-            background-color: wheat;
-            height: 0rem !important;
+        button[data-testid="stBaseButton-secondary"] {{
+        background-color: #ff9800 !important;
+        color: white !important;
+        border-radius: 10px !important;
+        border: none !important;
+        padding: 0.5em 1em !important;
+        transition: 0.3s;
+}}
+
+button[data-testid="stBaseButton-secondary"]:hover {
+    background-color: #fb8c00 !important;
+}
         }}
 
         /* Tables */
