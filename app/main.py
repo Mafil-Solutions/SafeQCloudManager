@@ -86,6 +86,7 @@ def apply_modern_styling_compact(rtl=False):
         section[data-testid="stSidebar"][aria-expanded="true"] {{
             transform: translateX(0) !important;
         }}
+        
         /* הפוך את כל החיצים בסיידבר לגלויים תמיד */
         [data-testid="stSidebar"] [data-testid="stIconMaterial"] {{
             visibility: visible !important;
@@ -97,7 +98,6 @@ def apply_modern_styling_compact(rtl=False):
         [data-testid="stSidebar"] [data-testid="stIconMaterial"] {{
             display: inline-block !important;
         }}
-</style>
 
         /* תוכן הראשי יתחיל מצד שמאל כשה-sidebar בימין */
         .main {{
