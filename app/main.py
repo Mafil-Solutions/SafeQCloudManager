@@ -282,11 +282,10 @@ def apply_modern_styling_compact(rtl=False):
         border: none !important;
         padding: 0.5em 1em !important;
         transition: 0.3s;
-}}
+        }}
 
-button[data-testid="stBaseButton-secondary"]:hover {
+button[data-testid="stBaseButton-secondary"]:hover {{
     background-color: #fb8c00 !important;
-}
         }}
 
         /* Tables */
