@@ -53,8 +53,8 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 opacity: 0.9 !important;
             }
 
-            /* הסתרת האייקון של page_link */
-            a[data-testid="stIconEmoji"] svg {
+            /* הסתרת אייקון האימוג'י שתופס מקום */
+            a[data-testid="stPageLink-NavLink"] span[data-testid="stIconEmoji"] {
                 display: none !important;
             }
 
