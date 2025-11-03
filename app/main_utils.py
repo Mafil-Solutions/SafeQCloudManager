@@ -1206,7 +1206,7 @@ def apply_modern_styling(rtl=False):
     .stNumberInput > div > div > input {{
         border-radius: 15px;
         border: 1px solid rgba(196, 30, 58, 0.2);
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(0, 255, 255, 0.9);
         transition: all 0.3s ease;
     }}
     
