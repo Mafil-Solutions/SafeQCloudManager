@@ -352,16 +352,7 @@ button[data-testid="stBaseButton-secondary"]:hover {{
         }}
     </style>
 
-    <script>
-        // סגירת כל הקטגוריות בסיידבר בטעינה
-        document.addEventListener('DOMContentLoaded', function() {{
-            const details = document.querySelectorAll('[data-testid="stSidebarNav"] details');
-            details.forEach(detail => {{
-                detail.removeAttribute('open');
-            }});
-        }});
-    </script>
-    """, unsafe_allow_html=True)
+
 
 
 def show_compact_user_info():
@@ -643,7 +634,7 @@ def main():
         "🖨️ מדפסות": [printers_page],
         "📄 סריקה": [scanning_page],
         "📊 דוחות": [reports_page],
-        "פעילות": [my_activity_page]
+        "📋פעילות": [my_activity_page]
     })
 
     # בדיקת חיבור בסיידבר
