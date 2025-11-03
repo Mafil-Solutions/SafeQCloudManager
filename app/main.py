@@ -351,6 +351,7 @@ button[data-testid="stBaseButton-secondary"]:hover {{
             box-shadow: 0 8px 25px rgba(74, 144, 226, 0.5);
         }}
     </style>
+    """, unsafe_allow_html=True)
 
 
 
