@@ -35,9 +35,9 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
 
             /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
-                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+              /* background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;*/
                 font-color: white !important;
-                padding: 0.0rem 0.0rem !important;
+                /*padding: 0.0rem 0.0rem !important;*/
                 border-radius: 0.9rem !important;
                 font-weight: 600 !important;
                 border: none !important;
@@ -46,13 +46,17 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 width: 100% !important;
                 box-sizing: border-box !important;
                 text-align: center !important;
-                line-height: 1 !important;
+                line-height: 1.5 !important;
             }
-
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
             }
 
+           a[data-testid="stPageLink"] {
+               padding: 0.0rem 0.0rem !important;
+               margin: 0 !important;
+               border-radius:0.5rem ;
+            }
              /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
             a[data-testid="stPageLink-NavLink"] > span:first-child {
                 display: none !important;
