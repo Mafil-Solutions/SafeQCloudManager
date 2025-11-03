@@ -572,7 +572,6 @@ def main():
 
     # ייבוא דפים (רק אחרי login!)
     from pages.my_activity import show as my_activity_show
-    from pages.users.overview import show as users_overview_show
     from pages.users.user_list import show as users_list_show
     from pages.users.search_edit import show as users_search_show
     from pages.users.add_user import show as users_add_show
@@ -582,12 +581,15 @@ def main():
     from pages.reports import show as reports_show
 
     # הגדרת דפים עם st.Page() - עם URL ייחודי לכל אחד
-    # דפי משתמשים - עם דף סקירה
-    users_overview_page = st.Page(users_overview_show, title="סקירה", icon="👥", url_path="users_overview")
+    # דפי משתמשים
     users_list_page = st.Page(users_list_show, title="רשימת משתמשים", icon="📋", url_path="users_list")
     users_search_page = st.Page(users_search_show, title="חיפוש ועריכה", icon="🔍", url_path="users_search")
     users_add_page = st.Page(users_add_show, title="הוספת משתמש", icon="➕", url_path="users_add")
     users_groups_page = st.Page(users_groups_show, title="קבוצות", icon="👨‍👩‍👧‍👦", url_path="users_groups")
+
+    # דף סקירה - עם גישה לדפים אחרים
+    from pages.users.overview import create_overview_page
+    users_overview_page = create_overview_page(users_list_page, users_search_page, users_add_page, users_groups_page)
 
     # דפים עתידיים
     printers_page = st.Page(printers_show, title="מדפסות", icon="🖨️", url_path="printers")

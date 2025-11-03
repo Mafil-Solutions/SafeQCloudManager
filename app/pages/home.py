@@ -16,7 +16,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
     def show():
         """הצגת דף הבית - מרכז בקרה עם קיצורי דרך"""
 
-        # CSS לכפתורים - בדיוק כמו overview.py
+        # CSS לכפתורים - page_link מעוצב בדיוק כמו button
         st.markdown("""
         <style>
             /* כפתורי st.button - זהה לעמוד overview */
@@ -33,7 +33,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 opacity: 0.9 !important;
             }
 
-            /* כפתורי st.page_link - זהה לכפתורי st.button */
+            /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 color: white !important;
@@ -42,11 +42,26 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 font-weight: 600 !important;
                 border: none !important;
                 text-decoration: none !important;
-                display: block !important;
+                display: inline-block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+                line-height: 1.6 !important;
             }
 
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
+            }
+
+            /* הסתרת האייקון של page_link */
+            a[data-testid="stPageLink-NavLink"] svg {
+                display: none !important;
+            }
+
+            /* וידוא שהטקסט בתוך page_link לבן */
+            a[data-testid="stPageLink-NavLink"] span,
+            a[data-testid="stPageLink-NavLink"] p {
+                color: white !important;
             }
         </style>
         """, unsafe_allow_html=True)
