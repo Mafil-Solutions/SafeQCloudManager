@@ -37,7 +37,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 font-color: white !important;
-                padding: 0.0rem 0rem !important;
+                padding: 0.0rem 0.0rem !important;
                 border-radius: 0.9rem !important;
                 font-weight: 600 !important;
                 border: none !important;
@@ -46,7 +46,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 width: 100% !important;
                 box-sizing: border-box !important;
                 text-align: center !important;
-                line-height: 0 !important;
+                line-height: 1 !important;
             }
 
             a[data-testid="stPageLink-NavLink"]:hover {
