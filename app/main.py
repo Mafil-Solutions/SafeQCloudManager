@@ -275,7 +275,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
         
          /* צמצום Secondary Buttons */
-        secondary [data-testid="stBaseButton-secondary""] {{
+        .stButton > button[kind="secondary"] [data-testid="stBaseButton-secondary""] {{
             background-color: wheat;
             height: 0rem !important;
         }}
