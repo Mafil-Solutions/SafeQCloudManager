@@ -54,7 +54,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             }
 
             /* הסתרת האייקון של page_link */
-            a[data-testid="stPageLink-NavLink"] svg {
+            a[data-testid="stIconEmoji"] svg {
                 display: none !important;
             }
 
