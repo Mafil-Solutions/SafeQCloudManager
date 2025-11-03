@@ -93,10 +93,10 @@ def apply_modern_styling_compact(rtl=False):
             transition: none !important;
 }}
 
-/* אם Streamlit מכניס display:none בשלב כלשהו */
-[data-testid="stSidebar"] [data-testid="stIconMaterial"] {
-    display: inline-block !important;
-}
+        /* אם Streamlit מכניס display:none בשלב כלשהו */
+        [data-testid="stSidebar"] [data-testid="stIconMaterial"] {{
+            display: inline-block !important;
+        }}
 </style>
 
         /* תוכן הראשי יתחיל מצד שמאל כשה-sidebar בימין */
