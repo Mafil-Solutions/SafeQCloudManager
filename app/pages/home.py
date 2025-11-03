@@ -104,7 +104,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
 
             with col2:
                 with st.container():
-                    st.markdown("** הוספת משתמש**")
+                    st.markdown("** ➕ הוספת משתמש**")
                     st.caption("יצירת משתמש חדש במערכת SafeQ Cloud")
                     st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", use_container_width=True)
 
