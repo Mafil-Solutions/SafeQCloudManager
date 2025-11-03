@@ -274,15 +274,10 @@ def apply_modern_styling_compact(rtl=False):
             box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
         }}
         
-         /* Secondary button */
-        .stButton > button[kind="secondary"] {{
-            background: linear-gradient(45deg,{secondary_color}, #FF6B6B) !important;
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-        }}
-
-        .stButton > button[kind="secondary"]:hover {{
-            background: linear-gradient(45deg, #FF6B6B, {secondary_color}) !important;
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
+         /* צמצום Secondary Buttons */
+        secondary [data-testid="stBaseButton-secondary""] {{
+            background-color: wheat;
+            height: 0rem !important;
         }}
 
         /* Tables */
