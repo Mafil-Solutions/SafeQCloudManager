@@ -277,15 +277,11 @@ def apply_modern_styling_compact(rtl=False):
          /* Secondary Buttons */
         button[data-testid="stBaseButton-secondary"] {{
         background-color: inherit !important;
-        color: white !important;
-        border-radius: 10px !important;
-        border: none !important;
-        padding: 0.5em 1em !important;
-        transition: 0.3s;
+        transition:border-radius 200ms cubic-bezier(0.23, 1, 0.32, 1) 300ms, background-color 150ms;
         }}
 
 button[data-testid="stBaseButton-secondary"]:hover {{
-    background-color: #fb8c00 !important;
+    background-color: cubic-bezier(0.23, 1, 0.32, 1) !important;
         }}
 
         /* Tables */
