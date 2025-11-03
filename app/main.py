@@ -281,7 +281,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
 
 button[data-testid="stBaseButton-secondary"]:hover {{
-    background-color: cubic-bezier(0.23, 1, 0.32, 1) !important;
+    background-color: rgba(151, 166, 195, 0.15) !important;
         }}
 
         /* Tables */
