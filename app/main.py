@@ -99,14 +99,13 @@ def apply_modern_styling_compact(rtl=False):
 
         /* 2. עיצוב החץ במצב פתוח (כשהקטגוריה פתוחה)*/
         [data-testid="stSidebar"] details[open] summary [data-testid="stIconMaterial"] {{
-            /* הכלל הקיים שלך לצבע */
-            color: #333 !important; 
             /* ✨ פקודת הסיבוב: הופך את החץ למעלה */
             transform: rotate(270deg) !important; 
             /* מוודא שהנראות נשמרת גם במצב פתוח */
             visibility: visible !important;
             opacity: 1 !important;
             transition: none !important;
+            color: gainsboro;
         }}
         [data-testid="stSidebar"] details[open] summary span[data-testid="stIconMaterial"],
         [data-testid="stSidebar"] details[open] summary div span[data-testid="stIconMaterial"] {{
