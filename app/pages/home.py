@@ -59,7 +59,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                margin: 0 !important;
                border-radius:0.9rem ;
                transition: none !important;
-               background: none;
+               background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             }
 
             .stPageLink:hover,
