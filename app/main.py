@@ -190,6 +190,31 @@ def apply_modern_styling_compact(rtl=False):
             visibility: hidden !important;
         }}
 
+        /* הסתרת App Creator Avatar ואלמנטים תחתונים */
+        [data-testid="appCreatorAvatar"] {{
+            display: none !important;
+            visibility: hidden !important;
+        }}
+
+        div[class*="_profileContainer"] {{
+            display: none !important;
+            visibility: hidden !important;
+        }}
+
+        div[class*="_profilePreview"] {{
+            display: none !important;
+            visibility: hidden !important;
+        }}
+
+        /* הסתרת כל האלמנטים התחתונים ב-Streamlit Cloud */
+        [class*="viewerBadge"] {{
+            display: none !important;
+        }}
+
+        div[class*="stApp"] > div:last-child {{
+            display: none !important;
+        }}
+
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
