@@ -51,12 +51,13 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
                 color: white;
+                backgroud: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             }
 
            div[data-testid="stPageLink"] {
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
-               border-radius:0.5rem ;
+               border-radius:0.9rem ;
                transition: none !important;
                background: none;
             }
