@@ -93,6 +93,8 @@ def apply_modern_styling_compact(rtl=False):
             opacity: 1 !important;
             transition: none !important;
             color: gainsboro;
+            /* ✨ פקודת הסיבוב: הופך את החץ שמאלה */
+            transform: rotate(180deg) !important;
 }}
         [data-testid="stSidebar"] details[open] summary span[data-testid="stIconMaterial"],
         [data-testid="stSidebar"] details[open] summary div span[data-testid="stIconMaterial"] {{
