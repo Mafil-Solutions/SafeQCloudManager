@@ -58,7 +58,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 color: white !important;
-                padding: 0.0rem 0.0rem !important;
+                padding: 0.1rem 0.2rem !important
                 border-radius: 0.9rem !important;
                 font-weight: 600 !important;
                 border: none !important;
