@@ -82,7 +82,15 @@ def apply_modern_styling_compact(rtl=False):
         section[data-testid="stSidebar"][aria-expanded="false"] {{
             transform: translateX(100%) !important;' if rtl else 'transform: translateX(-100%) !important;
             width: 0 !important;
-            display: none;
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            opacity: 0 !important;
+            pointer-events: none !important; /* לא מאפשר אינטראקציה */
+            overflow: hidden !important;
+            border: none !important;
+            box-shadow: none !important;
+            transition: all 0.35s ease-in-out !important;
         }}
 
         section[data-testid="stSidebar"][aria-expanded="true"] {{
