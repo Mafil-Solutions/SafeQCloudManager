@@ -137,7 +137,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* צמצום header */
         header[data-testid="stHeader"] {{
-            background-color: #ffff;
+            background-color: inherit;
             height: 1rem !important;
         }}
         /* מסובב את החיצים בהדר העליון של Streamlit */
