@@ -158,7 +158,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
         
         /*מסתיר את לוגו של ה- Fork Streamlit */
-        span[data-testid="stToolbarActionButtonIcon"] {{
+        div[data-testid="stToolbarActionButtonIcon"] {{
             visibility: hidden !important;
             pointer-events: none !important;
         }}
