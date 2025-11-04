@@ -13,29 +13,15 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
     def show():
         """הצגת דף סקירה לניהול משתמשים"""
 
-        # CSS לכפתורים - page_link מעוצב כמו button
+        # CSS לכפתורים - מעוצבים בדיוק כמו home
         st.markdown("""
         <style>
-            /* כפתורי סקירה */
-            .stButton > button {
-                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
-                color: white !important;
-                padding: 0.5rem 1rem !important;
-                border-radius: 0.5rem !important;
-                font-weight: 600 !important;
-                border: none !important;
-            }
-
-            .stButton > button:hover {
-                opacity: 0.9 !important;
-            }
-
             /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 color: white !important;
-                padding: 0.5rem 1rem !important;
-                border-radius: 0.5rem !important;
+                padding: 0.3rem 0.4rem !important;
+                border-radius: 0.9rem !important;
                 font-weight: 600 !important;
                 border: none !important;
                 text-decoration: none !important;
@@ -43,15 +29,19 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 width: 100% !important;
                 box-sizing: border-box !important;
                 text-align: center !important;
-                line-height: 1.6 !important;
+                line-height: 1.5 !important;
             }
-
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
+                color: white;
+                transform: translateY(-2px);
+                transition: all 0.3s ease;
+                background: linear-gradient(45deg, #FF6B6B, #C41E3A ) !important;
+                box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
             }
 
-            /* הסתרת האייקון של page_link */
-            a[data-testid="stPageLink-NavLink"] svg {
+             /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
+            a[data-testid="stPageLink-NavLink"] > span:first-child {
                 display: none !important;
             }
 
@@ -85,7 +75,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - סינון לפי מחלקות
                 - ייצוא CSV
                 """)
-                st.page_link(users_list_page, label="➡️ עבור לרשימת משתמשים", use_container_width=True)
+                st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
 
             st.markdown("---")
 
@@ -101,7 +91,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - קוד PIN
                 - הרשאות ומחלקות
                 """)
-                st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", use_container_width=True)
+                st.page_link(users_add_page, label="➕➡️ עבור להוספת משתמש", use_container_width=True)
 
         with col2:
             # כרטיס 3: חיפוש ועריכה
@@ -116,7 +106,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - עריכת פרטי משתמש
                 - מחיקת משתמש (admin)
                 """)
-                st.page_link(users_search_page, label="➡️ עבור לחיפוש ועריכה", use_container_width=True)
+                st.page_link(users_search_page, label="🔍➡️ עבור לחיפוש ועריכה", use_container_width=True)
 
             st.markdown("---")
 
@@ -132,7 +122,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - הוספת/הסרת משתמשים
                 - הגדרות הרשאות
                 """)
-                st.page_link(users_groups_page, label="➡️ עבור לניהול קבוצות", use_container_width=True)
+                st.page_link(users_groups_page, label="👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
 
         st.markdown("---")
 
