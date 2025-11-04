@@ -51,7 +51,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
                 color: white;
-                backgroud: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
+                background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             }
 
            div[data-testid="stPageLink"] {
