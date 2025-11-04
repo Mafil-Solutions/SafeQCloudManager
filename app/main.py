@@ -88,7 +88,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
         
         /* הפוך את כל החיצים בסיידבר לגלויים תמיד */
-        [data-testid="stSidebar"] summary [data-testid="stIconMaterial"] {{
+        [data-testid="stSidebar"] [data-testid="stIconMaterial"] {{
             visibility: visible !important;
             opacity: 1 !important;
             transition: none !important;
