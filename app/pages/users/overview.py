@@ -144,4 +144,3 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
     return st.Page(show, title="סקירה", icon="👥", url_path="users_overview")
 
 if __name__ == "__main__":
-    show()
