@@ -40,7 +40,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 padding: 0.0rem 0.0rem !important;
                 border-radius: 0.9rem !important;
                 font-weight: 600 !important;
-                border: none !important;
+               /* border: none !important; */
                 text-decoration: none !important;
                 display: inline-block !important;
                 width: 100% !important;
