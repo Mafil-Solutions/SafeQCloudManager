@@ -211,10 +211,6 @@ def apply_modern_styling_compact(rtl=False):
             display: none !important;
         }}
 
-        div[class*="stApp"] > div:last-child {{
-            display: none !important;
-        }}
-
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
