@@ -40,7 +40,7 @@ def show():
         show_entra = False  # אחרים לא רואים Entra בכלל
 
     # שורה שנייה: משתמשים להצגה
-      col_spacer2, col_max_max_users = st.columns([1, 4])
+    col_spacer2, col_max_max_users = st.columns([1, 4])
     with col_max_users:
         pass  # עמודה ריקה משמאל
     with col_spacer2:
