@@ -61,7 +61,8 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                background: none;
             }
 
-            .stPageLink:hover {
+            .stPageLink:hover,
+            div[data-testid="stPageLink"]:hover {
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
                border: none !important ;
