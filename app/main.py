@@ -163,6 +163,33 @@ def apply_modern_styling_compact(rtl=False):
             visibility: hidden !important;
             pointer-events: none !important;
         }}
+
+        /* הסתרת פוטר Streamlit */
+        footer {{
+            visibility: hidden !important;
+            height: 0 !important;
+            pointer-events: none !important;
+        }}
+
+        footer::before {{
+            display: none !important;
+        }}
+
+        footer::after {{
+            display: none !important;
+        }}
+
+        div[data-testid="stStatusWidget"] {{
+            visibility: hidden !important;
+            height: 0 !important;
+            pointer-events: none !important;
+        }}
+
+        /* הסתרת "Made with Streamlit" */
+        #MainMenu {{
+            visibility: hidden !important;
+        }}
+
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
