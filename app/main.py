@@ -88,13 +88,13 @@ def apply_modern_styling_compact(rtl=False):
         }}
         
         /* הפוך את כל החיצים בסיידבר לגלויים תמיד */
-        [data-testid="stSidebar"] details:not([open]) summary [data-testid="stIconMaterial"] {{
+        [data-testid="stSidebar"] summary [data-testid="stIconMaterial"] {{
             visibility: visible !important;
             opacity: 1 !important;
             transition: none !important;
             color: gainsboro;
             /* ✨ פקודת הסיבוב: הופך את החץ שמאלה */
-            transform: rotate(90deg) !important;
+            transform: rotate(180deg) !important;
 }}
 
         /* 2. עיצוב החץ במצב פתוח (כשהקטגוריה פתוחה)*/
@@ -109,7 +109,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
         [data-testid="stSidebar"] details[open] summary span[data-testid="stIconMaterial"],
         [data-testid="stSidebar"] details[open] summary div span[data-testid="stIconMaterial"] {{
-            color: white !important;
+            color: #333 !important;
 }}
 
         /* אם Streamlit מכניס display:none בשלב כלשהו */
