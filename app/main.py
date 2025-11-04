@@ -94,7 +94,7 @@ def apply_modern_styling_compact(rtl=False):
             transition: none !important;
             color: gainsboro;
             /* ✨ פקודת הסיבוב: הופך את החץ שמאלה */
-            transform: rotate(180deg) !important;
+            transform: rotate(90deg) !important;
 }}
 
         /* 2. עיצוב החץ במצב פתוח (כשהקטגוריה פתוחה)*/
