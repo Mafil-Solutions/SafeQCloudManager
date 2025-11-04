@@ -145,15 +145,23 @@ def apply_modern_styling_compact(rtl=False):
             transform: rotate(180deg) !important;
             display: inline-block !important;
         }}
+        /*מסתיר את השלוש נקודות מההדר העליו ב Streamlit */
         span[data-testid="stMainMenu"] {{
             visibility: hidden !important;
             pointer-events: none !important;
             }}
+        
+        /*מסתיר את המילה - Fork Streamlit */
         span[data-testid="stToolbarActionButtonLabel"] {{
             visibility: hidden !important;
             pointer-events: none !important;
         }}
-            
+        
+        /*מסתיר את לוגו של ה- Fork Streamlit */
+        span[data-testid="stToolbarActionButtonIcon"] {{
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }}
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
