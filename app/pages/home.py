@@ -48,7 +48,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                transition: none !important;
                background: none;
                box-shadow:none;
-               }
+            }
             /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
@@ -68,6 +68,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 opacity: 0.9 !important;
                 color: white;
                 background: linear-gradient(45deg, #FF6B6B, #C41E3A ) !important;
+                box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
             }
             
              /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
