@@ -398,6 +398,13 @@ button[data-testid="stBaseButton-secondary"]:hover {{
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(74, 144, 226, 0.5);
         }}
+
+        footer {{
+            visibility: hidden !important;
+        }}
+        footer:empty {{
+            display: none !important;
+            }}
     </style>
     """, unsafe_allow_html=True)
 
