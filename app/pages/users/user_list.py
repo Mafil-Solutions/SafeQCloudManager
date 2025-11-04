@@ -39,15 +39,11 @@ def show():
     else:
         show_entra = False  # אחרים לא רואים Entra בכלל
 
-    # שורה שנייה: משתמשים להצגה וכפתור
-    col_num, col_btn = st.columns([2, 2])
+    # שורה שנייה: משתמשים להצגה
+    max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=200)
 
-    with col_num:
-        max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=200)
-
-    with col_btn:
-        st.write("")  # ריווח לגובה
-        load_button = st.button("🔄 טען משתמשים", type="primary", key="load_users_main", use_container_width=True)
+    # שורה שלישית: כפתור טעינה
+    load_button = st.button("🔄 טען משתמשים", type="primary", key="load_users_main", use_container_width=True)
 
     if load_button:
         user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
