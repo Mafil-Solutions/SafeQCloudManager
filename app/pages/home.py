@@ -40,7 +40,6 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                transition: none !important;
                background: none;
             }
-            .stPageLink:hover,
             div[data-testid="stPageLink"]:hover {
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
@@ -49,6 +48,10 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                background: none;
                box-shadow:none;
             }
+            .stPageLink:hover {
+                background: none !important;
+                transform: none;
+                box-shadow: none !important;
             /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
                 background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
