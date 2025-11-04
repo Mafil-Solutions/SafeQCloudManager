@@ -40,6 +40,10 @@ def show():
         show_entra = False  # אחרים לא רואים Entra בכלל
 
     # שורה שנייה: משתמשים להצגה
+      col_spacer2, col_max_max_users = st.columns([1, 4])
+    with col_max_users:
+        pass  # עמודה ריקה משמאל
+    with col_spacer2:
     max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=200)
 
     # שורה שלישית: כפתור טעינה
