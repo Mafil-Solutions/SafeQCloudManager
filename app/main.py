@@ -80,7 +80,7 @@ def apply_modern_styling_compact(rtl=False):
 
         /* אנימציית סגירה מימין לשמאל */
         section[data-testid="stSidebar"][aria-expanded="false"] {{
-            {'transform: translateX(100%) !important;' if rtl else 'transform: translateX(-100%) !important;'}
+            transform: translateX(100%) !important;' if rtl else 'transform: translateX(-100%) !important;
         }}
 
         section[data-testid="stSidebar"][aria-expanded="true"] {{
