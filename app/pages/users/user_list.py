@@ -44,7 +44,7 @@ def show():
     with col_max_users:
         pass  # עמודה ריקה משמאל
     with col_spacer2:
-    max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=200)
+        max_users = st.number_input("משתמשים להצגה", min_value=10, max_value=1000, value=200)
 
     # שורה שלישית: כפתור טעינה
     load_button = st.button("🔄 טען משתמשים", type="primary", key="load_users_main", use_container_width=True)
