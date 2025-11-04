@@ -138,8 +138,7 @@ def apply_modern_styling_compact(rtl=False):
         /* צמצום header */
         header[data-testid="stHeader"] {{
             background-color: #ffff;
-            height: 0rem !important;
-            visibility: hidden;
+            height: 1rem !important;
         }}
         /* מסובב את החיצים בהדר העליון של Streamlit */
         header [data-testid="stIconMaterial"] {{
