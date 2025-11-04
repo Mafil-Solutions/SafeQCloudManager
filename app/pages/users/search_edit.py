@@ -347,20 +347,22 @@ def show():
                 if 'user_checkbox_counter' not in st.session_state:
                     st.session_state.user_checkbox_counter = 0
 
-                # כפתור "בחר הכל" / "נקה בחירה"
+                # כפתור "בחר הכל" / "נקה בחירה" - תיקון: key אחיד למניעת flickering
                 col_select_all, col_count = st.columns([1, 2])
                 with col_select_all:
                     all_usernames = list(user_mapping.values())
-                    if st.session_state.selected_users and len(st.session_state.selected_users) == len(user_options):
-                        if st.button("❌ נקה בחירה", key="clear_all_users"):
+                    # בדיקה אם כל המשתמשים נבחרו
+                    all_selected = st.session_state.selected_users and len(st.session_state.selected_users) == len(user_options)
+
+                    # כפתור אחד עם key אחיד
+                    button_label = "❌ נקה בחירה" if all_selected else "✅ בחר הכל"
+                    if st.button(button_label, key="toggle_select_all_users", use_container_width=True):
+                        if all_selected:
                             st.session_state.selected_users = []
-                            st.session_state.user_checkbox_counter += 1
-                            st.rerun()
-                    else:
-                        if st.button("✅ בחר הכל", key="select_all_users"):
+                        else:
                             st.session_state.selected_users = all_usernames.copy()
-                            st.session_state.user_checkbox_counter += 1
-                            st.rerun()
+                        st.session_state.user_checkbox_counter += 1
+                        st.rerun()
 
                 with col_count:
                     num_selected = len(st.session_state.selected_users)
@@ -396,6 +398,11 @@ def show():
                     st.success(f"✅ משתמש נבחר: **{selected_user_for_actions}**")
                 elif len(st.session_state.selected_users) > 1:
                     selected_user_for_actions = None  # פעולות bulk
+                    # תיקון #1: סגירת טופס עריכה כשעוברים ל-bulk
+                    if 'user_to_edit' in st.session_state:
+                        del st.session_state.user_to_edit
+                    if 'edit_username' in st.session_state:
+                        del st.session_state.edit_username
                     st.info(f"🔀 מצב bulk: {len(st.session_state.selected_users)} משתמשים נבחרו")
                 else:
                     selected_user_for_actions = None
@@ -412,34 +419,46 @@ def show():
                 if role == 'viewer':
                     st.info("👁️ צפייה בלבד - אין הרשאת הוספה קבוצתית")
                 else:
-                    st.markdown("**➕ הוספה קבוצתית לקבוצה**")
+                    # תיקון #2: בדיקה אם פעולת bulk התחילה
+                    bulk_operation_in_progress = st.session_state.get('bulk_operation_in_progress', False)
 
-                    # טעינת קבוצות
-                    if st.button("📋 טען קבוצות זמינות", key="load_groups_bulk"):
-                        with st.spinner("טוען קבוצות..."):
-                            available_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
-                            if available_groups:
-                                allowed_departments = st.session_state.get('allowed_departments', [])
-                                filtered_groups = filter_groups_by_departments(available_groups, allowed_departments)
-                                group_names = [g.get('groupName') or g.get('name') or str(g) for g in filtered_groups
-                                             if not (g.get('groupName') == "Local Admins" and st.session_state.get('auth_method') != 'local')]
-                                st.session_state.available_groups = group_names
-                                st.success(f"נטענו {len(group_names)} קבוצות מורשות")
-                            else:
-                                st.warning("לא נמצאו קבוצות")
+                    if not bulk_operation_in_progress:
+                        st.markdown("**➕ הוספה קבוצתית לקבוצה**")
 
-                    # בחירת קבוצה
-                    if 'available_groups' in st.session_state and st.session_state.available_groups:
-                        target_group = st.selectbox("בחר קבוצה להוספה", options=st.session_state.available_groups, key="select_group_bulk")
-                    else:
-                        target_group = None
-                        st.text_input("שם קבוצה", disabled=True, placeholder="לחץ על 'טען קבוצות זמינות' תחילה", key="group_bulk_disabled")
+                        # טעינת קבוצות
+                        if st.button("📋 טען קבוצות זמינות", key="load_groups_bulk"):
+                            with st.spinner("טוען קבוצות..."):
+                                available_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+                                if available_groups:
+                                    allowed_departments = st.session_state.get('allowed_departments', [])
+                                    filtered_groups = filter_groups_by_departments(available_groups, allowed_departments)
+                                    group_names = [g.get('groupName') or g.get('name') or str(g) for g in filtered_groups
+                                                 if not (g.get('groupName') == "Local Admins" and st.session_state.get('auth_method') != 'local')]
+                                    st.session_state.available_groups = group_names
+                                    st.success(f"נטענו {len(group_names)} קבוצות מורשות")
+                                else:
+                                    st.warning("לא נמצאו קבוצות")
 
-                    # כפתור הוספה bulk
-                    if st.button(f"➕ הוסף {len(st.session_state.selected_users)} משתמשים לקבוצה",
-                               key="bulk_add_to_group",
-                               type="primary",
-                               disabled=not target_group):
+                        # בחירת קבוצה
+                        if 'available_groups' in st.session_state and st.session_state.available_groups:
+                            target_group = st.selectbox("בחר קבוצה להוספה", options=st.session_state.available_groups, key="select_group_bulk")
+                        else:
+                            target_group = None
+                            st.text_input("שם קבוצה", disabled=True, placeholder="לחץ על 'טען קבוצות זמינות' תחילה", key="group_bulk_disabled")
+
+                        # כפתור הוספה bulk
+                        if st.button(f"➕ הוסף {len(st.session_state.selected_users)} משתמשים לקבוצה",
+                                   key="bulk_add_to_group",
+                                   type="primary",
+                                   disabled=not target_group):
+                            # תיקון #2: סימון שהפעולה התחילה + שמירת הקבוצה שנבחרה
+                            st.session_state.bulk_operation_in_progress = True
+                            st.session_state.bulk_target_group = target_group
+                            st.rerun()
+
+                    # תיקון #2: הצגת התוצאות אחרי שהפעולה התחילה
+                    if bulk_operation_in_progress:
+                        target_group = st.session_state.get('bulk_target_group')
 
                         # תיקון #2: בדיקה מוקדמת - איזה משתמשים כבר בקבוצה
                         with st.spinner("בודק משתמשים קיימים בקבוצה..."):
@@ -536,6 +555,16 @@ def show():
                         # ניקוי בחירה לאחר הצגת התוצאות
                         if st.button("✓ אישור וניקוי בחירה", key="clear_selection_after_bulk", type="primary", use_container_width=True):
                             st.session_state.selected_users = []
+                            # תיקון #2: ניקוי flags של bulk operation
+                            if 'bulk_operation_in_progress' in st.session_state:
+                                del st.session_state.bulk_operation_in_progress
+                            if 'bulk_target_group' in st.session_state:
+                                del st.session_state.bulk_target_group
+                            # תיקון #1: ניקוי טופס עריכה
+                            if 'user_to_edit' in st.session_state:
+                                del st.session_state.user_to_edit
+                            if 'edit_username' in st.session_state:
+                                del st.session_state.edit_username
                             st.rerun()
 
             # ============ מצב SINGLE USER - משתמש אחד בלבד ============
@@ -580,10 +609,10 @@ def show():
                             for group in display_data['groups']:
                                 group_name = group.get('groupName') or group.get('name') or str(group)
 
-                                # שורה עם X אדום - רק ל-admin ו-superadmin
+                                # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון #3: קירוב X לשם הקבוצה
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([4, 1])
+                                    col_group, col_remove_btn = st.columns([20, 1])
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
