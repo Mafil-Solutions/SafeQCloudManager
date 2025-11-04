@@ -88,11 +88,12 @@ def apply_modern_styling_compact(rtl=False):
         }}
         
         /* הפוך את כל החיצים בסיידבר לגלויים תמיד */
-        [data-testid="stSidebar"] summary [data-testid="stIconMaterial"] {{
+        [data-testid="stSidebar"] [data-testid="stIconMaterial"] {{
             visibility: visible !important;
             opacity: 1 !important;
             transition: none !important;
             color: gainsboro;
+            transform: rotate(90deg) !important;  /* שמאלה */
         }}
 
         [data-testid="stSidebar"] details[open] summary span[data-testid="stIconMaterial"],
