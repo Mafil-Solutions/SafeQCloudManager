@@ -351,6 +351,92 @@ class SafeQAPI:
             st.warning(f"שגיאה בבדיקת שם משתמש: {str(e)}")
             return False, None
 
+    def get_user_groups(self, username):
+        """קבלת קבוצות של משתמש"""
+        try:
+            url = f"{self.server_url}/api/v1/users/{username}/groups"
+            response = requests.get(url, headers=self.headers, verify=False, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                # אם התגובה היא dictionary עם 'items', קח את הפריטים
+                if isinstance(data, dict) and 'items' in data:
+                    return data['items']
+                elif isinstance(data, list):
+                    return data
+                else:
+                    return []
+            return []
+        except Exception as e:
+            st.error(f"שגיאה בקבלת קבוצות משתמש: {str(e)}")
+            return []
+
+    def get_group_members(self, group_id):
+        """קבלת רשימת חברי קבוצה"""
+        try:
+            url = f"{self.server_url}/api/v1/groups/{group_id}/members"
+            response = requests.get(url, headers=self.headers, verify=False, timeout=10)
+            if response.status_code == 200:
+                return response.json()
+            return []
+        except Exception as e:
+            st.error(f"שגיאת חברי קבוצה: {str(e)}")
+            return []
+
+    def add_user_to_group(self, username, group_id):
+        """הוספת משתמש לקבוצה"""
+        try:
+            # על פי התיעוד: PUT /users/USERNAME/groups עם groupid בתור parameter
+            url = f"{self.server_url}/api/v1/users/{username}/groups"
+
+            # שליחת group_id כ-form data
+            data = {'groupid': group_id}
+
+            import urllib.parse
+            encoded_data = urllib.parse.urlencode(data)
+
+            response = requests.put(url, headers=self.headers, data=encoded_data, verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל בהוספת משתמש לקבוצה: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה בהוספת משתמש לקבוצה: {str(e)}")
+            return False
+
+    def remove_user_from_group(self, username, group_id):
+        """הסרת משתמש מקבוצה"""
+        try:
+            # על פי התיעוד: DELETE /users/USERNAME/groups עם groupid בתור parameter
+            url = f"{self.server_url}/api/v1/users/{username}/groups"
+
+            # שליחת group_id כ-parameter
+            params = {'groupid': group_id}
+
+            response = requests.delete(url, headers=self.headers, params=params, verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל בהסרת משתמש מקבוצה: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה בהסרת משתמש מקבוצה: {str(e)}")
+            return False
+
 def get_api_instance():
     """קבלת instance של SafeQAPI"""
     if 'api' not in st.session_state:
