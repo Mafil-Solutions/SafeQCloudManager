@@ -149,6 +149,11 @@ def apply_modern_styling_compact(rtl=False):
             visibility: hidden !important;
             pointer-events: none !important;
             }}
+        span[data-testid="stToolbarActionButtonLabel"] {{
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }}
+            
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
