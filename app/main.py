@@ -96,7 +96,7 @@ def apply_modern_styling_compact(rtl=False):
             transform: rotate(90deg) !important;  /* שמאלה */
         }}
 
-        [data-testid="stSidebar"] details[open] > summary [data-testid="stIconMaterial"] {{
+        [data-testid="stSidebar"] details[open] > [data-testid="stIconMaterial"] {{
             transform: rotate(270deg) !important; /* למעלה */
             color: #333 !important;  /* כהה יותר כשהוא פתוח */
         }}
