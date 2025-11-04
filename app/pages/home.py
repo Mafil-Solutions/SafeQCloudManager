@@ -48,6 +48,9 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                background: none;
                box-shadow:none;
             }
+            .stPageLink {
+            background:none;
+            }
             .stPageLink:hover {
                 background: none !important;
                 transform: none;
