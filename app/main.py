@@ -102,7 +102,7 @@ def apply_modern_styling_compact(rtl=False):
             visibility: visible !important;
             opacity: 1 !important;
             transition: none !important;
-            color: gainsboro;
+            color: #343436;
             transform: rotate(180deg) !important;  /* שמאלה */
         }}
 
