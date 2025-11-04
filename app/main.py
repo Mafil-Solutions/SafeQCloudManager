@@ -145,6 +145,10 @@ def apply_modern_styling_compact(rtl=False):
             transform: rotate(180deg) !important;
             display: inline-block !important;
         }}
+        span[data-testid="stMainMenu"] {{
+            visibility: hidden !important;
+            pointer-events: none !important;
+            }}
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
