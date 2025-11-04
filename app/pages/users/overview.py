@@ -13,6 +13,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
     def show():
         """הצגת דף סקירה לניהול משתמשים"""
 
+<<<<<<< HEAD
         # CSS לכפתורים - page_link מעוצב כמו button
         st.markdown("""
         <style>
@@ -63,6 +64,48 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
         </style>
         """, unsafe_allow_html=True)
 
+=======
+        # CSS לכפתורים - מעוצבים בדיוק כמו home
+        st.markdown("""
+        <style>
+            /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
+            a[data-testid="stPageLink-NavLink"] {
+                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+                color: white !important;
+                padding: 0.3rem 0.4rem !important;
+                border-radius: 0.9rem !important;
+                font-weight: 600 !important;
+                border: none !important;
+                text-decoration: none !important;
+                display: inline-block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+                line-height: 1.5 !important;
+            }
+            a[data-testid="stPageLink-NavLink"]:hover {
+                opacity: 0.9 !important;
+                color: white;
+                transform: translateY(-2px);
+                transition: all 0.3s ease;
+                background: linear-gradient(45deg, #FF6B6B, #C41E3A ) !important;
+                box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
+            }
+
+             /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
+            a[data-testid="stPageLink-NavLink"] > span:first-child {
+                display: none !important;
+            }
+
+            /* וידוא שהטקסט בתוך page_link לבן */
+            a[data-testid="stPageLink-NavLink"] span,
+            a[data-testid="stPageLink-NavLink"] p {
+                color: white !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+>>>>>>> origin/claude/overview-pagelink-styling-011CUhr74kwhst6M3TzEyA3g
         st.header("👥 ניהול משתמשים")
         st.caption("בחר פעולה מהאפשרויות למטה")
 
@@ -85,7 +128,11 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - סינון לפי מחלקות
                 - ייצוא CSV
                 """)
+<<<<<<< HEAD
                 st.page_link(users_list_page, label="➡️ עבור לרשימת משתמשים", use_container_width=True)
+=======
+                st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
+>>>>>>> origin/claude/overview-pagelink-styling-011CUhr74kwhst6M3TzEyA3g
 
             st.markdown("---")
 
@@ -101,7 +148,11 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - קוד PIN
                 - הרשאות ומחלקות
                 """)
+<<<<<<< HEAD
                 st.page_link(users_add_page, label="➡️ עבור להוספת משתמש", use_container_width=True)
+=======
+                st.page_link(users_add_page, label="➕➡️ עבור להוספת משתמש", use_container_width=True)
+>>>>>>> origin/claude/overview-pagelink-styling-011CUhr74kwhst6M3TzEyA3g
 
         with col2:
             # כרטיס 3: חיפוש ועריכה
@@ -116,7 +167,11 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - עריכת פרטי משתמש
                 - מחיקת משתמש (admin)
                 """)
+<<<<<<< HEAD
                 st.page_link(users_search_page, label="➡️ עבור לחיפוש ועריכה", use_container_width=True)
+=======
+                st.page_link(users_search_page, label="🔍➡️ עבור לחיפוש ועריכה", use_container_width=True)
+>>>>>>> origin/claude/overview-pagelink-styling-011CUhr74kwhst6M3TzEyA3g
 
             st.markdown("---")
 
@@ -132,7 +187,11 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 - הוספת/הסרת משתמשים
                 - הגדרות הרשאות
                 """)
+<<<<<<< HEAD
                 st.page_link(users_groups_page, label="➡️ עבור לניהול קבוצות", use_container_width=True)
+=======
+                st.page_link(users_groups_page, label="👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
+>>>>>>> origin/claude/overview-pagelink-styling-011CUhr74kwhst6M3TzEyA3g
 
         st.markdown("---")
 
@@ -144,3 +203,4 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
     return st.Page(show, title="סקירה", icon="👥", url_path="users_overview")
 
 if __name__ == "__main__":
+    st.info("This page requires Page objects from main.py")
