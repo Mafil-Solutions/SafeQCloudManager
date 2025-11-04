@@ -109,7 +109,7 @@ def apply_modern_styling_compact(rtl=False):
         }}
         [data-testid="stSidebar"] details[open] summary span[data-testid="stIconMaterial"],
         [data-testid="stSidebar"] details[open] summary div span[data-testid="stIconMaterial"] {{
-            color: #333 !important;
+            color: white !important;
 }}
 
         /* אם Streamlit מכניס display:none בשלב כלשהו */
