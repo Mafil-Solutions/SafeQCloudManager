@@ -93,7 +93,7 @@ def apply_modern_styling_compact(rtl=False):
             opacity: 1 !important;
             transition: none !important;
             color: gainsboro;
-            transform: rotate(90deg) !important;  /* שמאלה */
+            transform: rotate(180deg) !important;  /* שמאלה */
         }}
 
         [data-testid="stSidebar"] details[open] > [data-testid="stIconMaterial"] {{
