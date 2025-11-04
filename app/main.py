@@ -144,6 +144,7 @@ def apply_modern_styling_compact(rtl=False):
         header [data-testid="stIconMaterial"] {{
             transform: rotate(180deg) !important;
             display: inline-block !important;
+            color: black;
         }}
         /*מסתיר את השלוש נקודות מההדר העליו ב Streamlit */
         span[data-testid="stMainMenu"] {{
