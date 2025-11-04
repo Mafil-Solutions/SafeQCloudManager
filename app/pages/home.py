@@ -51,7 +51,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                }
             /* כפתורי st.page_link - מעוצבים בדיוק כמו st.button */
             a[data-testid="stPageLink-NavLink"] {
-                background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
+                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
                 color: white !important;
                 padding: 0.0rem 0.0rem !important;
                 border-radius: 0.9rem !important;
@@ -67,7 +67,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
                 color: white;
-                background: linear-gradient(45deg, #C41E3A ,#FF6B6B) !important;
+                background: linear-gradient(45deg, #FF6B6B, #C41E3A ) !important;
             }
             
              /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
