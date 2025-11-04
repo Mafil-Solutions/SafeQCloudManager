@@ -130,7 +130,11 @@ def apply_modern_styling_compact(rtl=False):
             background-color: #ffff;
             height: 0rem !important;
         }}
-
+        /* מסובב את החיצים בהדר העליון של Streamlit */
+        header [data-testid="stIconMaterial"] {{
+            transform: rotate(180deg) !important;
+            display: inline-block !important;
+        }}
         /* צמצום padding עליון של התוכן */
         .main .block-container {{
             padding-top: 1rem !important;
