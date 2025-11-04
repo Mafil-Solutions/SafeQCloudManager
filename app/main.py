@@ -338,7 +338,6 @@ button[data-testid="stBaseButton-secondary"]:hover {{
         
         .stTextInput > div > div, .stSelectbox > div > div, .stNumberInput > div > div {{
          background-color: white;
-         width: 100%;
          }}
         
         /* Navigation buttons with gradient */
