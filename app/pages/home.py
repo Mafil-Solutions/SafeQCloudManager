@@ -68,7 +68,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                margin: 0 !important;
                border: none !important ;
                transition: none !important;
-               background: none;
+               background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
                }
              /* הסתרת כל ה-span container שמכיל את האימוג'י - כך המקום ממש משתחרר */
             a[data-testid="stPageLink-NavLink"] > span:first-child {
