@@ -75,6 +75,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             a[data-testid="stPageLink-NavLink"]:hover {
                 opacity: 0.9 !important;
                 color: white;
+                transform: translateY(-2px);
                 background: linear-gradient(45deg, #FF6B6B, #C41E3A ) !important;
                 box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
             }
