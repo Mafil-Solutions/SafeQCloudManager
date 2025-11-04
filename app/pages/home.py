@@ -57,7 +57,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                padding: 0.0rem 0.0rem !important;
                margin: 0 !important;
                border-radius:0.5rem ;
-               transition: 0!important;
+               transition: none !important;
                background: none;
             }
 
