@@ -188,6 +188,169 @@ class SafeQAPI:
             st.error(f"שגיאת קבלת קבוצות: {str(e)}")
             return []
 
+    def get_single_user(self, username, provider_id=None):
+        """קבלת נתוני משתמש בודד"""
+        try:
+            url = f"{self.server_url}/api/v1/users"
+            params = {'username': username}
+            if provider_id:
+                params['providerid'] = provider_id
+
+            response = requests.get(url, headers=self.headers, params=params, verify=False, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, dict) and 'items' in data and data['items']:
+                    return data['items'][0]
+                elif isinstance(data, dict):
+                    return data
+            return None
+        except Exception as e:
+            st.error(f"שגיאה בקבלת משתמש: {str(e)}")
+            return None
+
+    def update_user_detail(self, username, detail_type, detail_data, provider_id=None):
+        """
+        עדכון פרט של משתמש
+        detail_type: 0=full name, 1=email, 3=password, 4=cardid, 5=shortid, 6=pin, 11=department
+        """
+        try:
+            url = f"{self.server_url}/api/v1/users/{username}"
+
+            data = {
+                'detailtype': detail_type,
+                'detaildata': detail_data
+            }
+
+            if provider_id:
+                data['providerid'] = provider_id
+
+            import urllib.parse
+            encoded_data = urllib.parse.urlencode(data)
+
+            response = requests.post(url, headers=self.headers, data=encoded_data, verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל בעדכון משתמש: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה בעדכון משתמש: {str(e)}")
+            return False
+
+    def delete_user(self, username, provider_id):
+        """מחיקת משתמש מהמערכת"""
+        try:
+            url = f"{self.server_url}/api/v1/users/{username}"
+            params = {'providerid': provider_id}
+
+            response = requests.delete(url, headers=self.headers, params=params, verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל במחיקת משתמש: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה במחיקת משתמש: {str(e)}")
+            return False
+
+    def create_user(self, username, provider_id, details):
+        """יצירת משתמש חדש"""
+        try:
+            url = f"{self.server_url}/api/v1/users"
+            form_data = [('username', username), ('providerid', str(provider_id))]
+
+            detail_types = {'fullname': 0, 'email': 1, 'password': 3, 'cardid': 4, 'shortid': 5, 'department': 11}
+
+            for key, value in details.items():
+                if key in detail_types and value:
+                    form_data.append(('detailtype', str(detail_types[key])))
+                    form_data.append(('detaildata', str(value)))
+
+            import urllib.parse
+            data = urllib.parse.urlencode(form_data)
+            response = requests.put(url, headers=self.headers, data=data, verify=False, timeout=10)
+            return response.status_code == 200
+        except Exception as e:
+            st.error(f"שגיאה ביצירת משתמש: {str(e)}")
+            return False
+
+    def check_pin_exists(self, pin_code, exclude_username=None):
+        """
+        בודק אם PIN code כבר קיים במערכת
+
+        Args:
+            pin_code: קוד PIN לבדיקה
+            exclude_username: שם משתמש להחרגה (לעריכת משתמש קיים)
+
+        Returns:
+            tuple: (exists: bool, username: str or None)
+        """
+        if not pin_code or not pin_code.strip():
+            return False, None
+
+        try:
+            # חיפוש בכל המשתמשים (Local + Entra)
+            for provider_id in [CONFIG['PROVIDERS']['LOCAL'], CONFIG['PROVIDERS']['ENTRA']]:
+                users = self.get_users(provider_id, max_records=1000)
+
+                for user in users:
+                    user_pin = user.get('shortId', '')
+                    user_name = user.get('userName') or user.get('username', '')
+
+                    # אם מצאנו PIN זהה
+                    if user_pin == pin_code.strip():
+                        # אם זה לא המשתמש שאנחנו עורכים
+                        if exclude_username is None or user_name != exclude_username:
+                            return True, user_name
+
+            return False, None
+        except Exception as e:
+            st.warning(f"שגיאה בבדיקת PIN: {str(e)}")
+            return False, None
+
+    def check_username_exists(self, username, exclude_username=None):
+        """
+        בדיקה האם שם משתמש כבר קיים במערכת
+        exclude_username: שם משתמש להחרגה (למשל בעריכה)
+        מחזיר: (קיים, provider_id) או (False, None)
+        """
+        if not username or not username.strip():
+            return False, None
+
+        try:
+            # חיפוש בכל המשתמשים (Local + Entra)
+            for provider_id in [CONFIG['PROVIDERS']['LOCAL'], CONFIG['PROVIDERS']['ENTRA']]:
+                users = self.get_users(provider_id, max_records=1000)
+
+                for user in users:
+                    user_name = user.get('userName') or user.get('username', '')
+
+                    # אם מצאנו username זהה
+                    if user_name and user_name.strip().lower() == username.strip().lower():
+                        # אם זה לא המשתמש שאנחנו עורכים
+                        if exclude_username is None or user_name != exclude_username:
+                            provider_name = "מקומי" if provider_id == CONFIG['PROVIDERS']['LOCAL'] else "Entra"
+                            return True, provider_name
+
+            return False, None
+        except Exception as e:
+            st.warning(f"שגיאה בבדיקת שם משתמש: {str(e)}")
+            return False, None
+
 def get_api_instance():
     """קבלת instance של SafeQAPI"""
     if 'api' not in st.session_state:

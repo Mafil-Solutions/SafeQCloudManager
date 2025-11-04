@@ -329,6 +329,13 @@ def show():
                 if selected_label and selected_label in user_mapping:
                     selected_username = user_mapping[selected_label]
 
+                    # קבלת נתוני המשתמש הנוכחיים
+                    provider_id = None
+                    for user in matching_users:
+                        if (user.get('userName') or user.get('username')) == selected_username:
+                            provider_id = user.get('providerId')
+                            break
+
                     # כפתורים לפעולות שונות
                     st.markdown("**פעולות זמינות:**")
 
@@ -336,20 +343,184 @@ def show():
 
                     with col_edit:
                         if st.button("✏️ ערוך פרטים", key="edit_user_btn", use_container_width=True):
-                            st.info(f"📝 עריכת פרטי משתמש: {selected_username}")
-                            st.warning("🔨 תכונת עריכה בפיתוח")
+                            st.session_state.edit_mode = True
+                            st.session_state.edit_username = selected_username
+                            st.session_state.edit_provider_id = provider_id
 
                     with col_delete:
                         # בדיקת הרשאות למחיקה
                         can_delete = role in ['admin', 'superadmin']
                         if st.button("🗑️ מחק משתמש", key="delete_user_btn", disabled=not can_delete, use_container_width=True):
-                            st.error(f"⚠️ מחיקת משתמש: {selected_username}")
-                            st.warning("🔨 תכונת מחיקה בפיתוח")
+                            st.session_state.delete_confirm = True
+                            st.session_state.delete_username = selected_username
+                            st.session_state.delete_provider_id = provider_id
 
                     with col_info:
                         if st.button("ℹ️ פרטים מלאים", key="view_user_info_btn", use_container_width=True):
-                            st.info(f"📋 צפייה במידע מלא על: {selected_username}")
-                            st.warning("🔨 תכונת הצגת פרטים מלאים בפיתוח")
+                            st.session_state.view_info = True
+                            st.session_state.view_username = selected_username
+                            st.session_state.view_provider_id = provider_id
+
+                    # ============ מצב עריכה ============
+                    if st.session_state.get('edit_mode') and st.session_state.get('edit_username') == selected_username:
+                        st.markdown("---")
+                        st.subheader(f"✏️ עריכת פרטי משתמש: {selected_username}")
+
+                        # קבלת נתוני המשתמש
+                        user_data = api.get_single_user(selected_username, provider_id)
+
+                        if user_data:
+                            # שדות לעריכה
+                            col_field1, col_field2 = st.columns(2)
+
+                            with col_field1:
+                                new_fullname = st.text_input("שם מלא", value=user_data.get('fullName', ''), key="edit_fullname")
+                                new_email = st.text_input("אימייל", value=user_data.get('email', ''), key="edit_email")
+
+                            with col_field2:
+                                # חילוץ department
+                                current_dept = user_data.get('department', '')
+                                if not current_dept:
+                                    for detail in user_data.get('details', []):
+                                        if isinstance(detail, dict) and detail.get('detailType') == 11:
+                                            current_dept = detail.get('detailData', '')
+                                            break
+
+                                new_department = st.text_input("מחלקה", value=current_dept, key="edit_department")
+                                new_pin = st.text_input("קוד PIN", value=user_data.get('shortId', ''), key="edit_pin")
+
+                            # כפתורי שמירה וביטול
+                            col_save, col_cancel = st.columns(2)
+
+                            with col_save:
+                                if st.button("💾 שמור שינויים", key="save_edit_btn", type="primary", use_container_width=True):
+                                    success_count = 0
+                                    total_changes = 0
+
+                                    # עדכון שם מלא
+                                    if new_fullname and new_fullname != user_data.get('fullName', ''):
+                                        total_changes += 1
+                                        if api.update_user_detail(selected_username, 0, new_fullname, provider_id):
+                                            success_count += 1
+
+                                    # עדכון אימייל
+                                    if new_email and new_email != user_data.get('email', ''):
+                                        total_changes += 1
+                                        if api.update_user_detail(selected_username, 1, new_email, provider_id):
+                                            success_count += 1
+
+                                    # עדכון מחלקה
+                                    if new_department != current_dept:
+                                        total_changes += 1
+                                        if api.update_user_detail(selected_username, 11, new_department, provider_id):
+                                            success_count += 1
+
+                                    # עדכון PIN
+                                    if new_pin and new_pin != user_data.get('shortId', ''):
+                                        # בדיקה אם PIN כבר קיים
+                                        pin_exists, existing_user = api.check_pin_exists(new_pin, selected_username)
+                                        if pin_exists:
+                                            st.error(f"⚠️ קוד PIN {new_pin} כבר בשימוש על ידי משתמש: {existing_user}")
+                                        else:
+                                            total_changes += 1
+                                            if api.update_user_detail(selected_username, 5, new_pin, provider_id):
+                                                success_count += 1
+
+                                    if total_changes > 0:
+                                        if success_count == total_changes:
+                                            st.success(f"✅ כל השינויים נשמרו בהצלחה! ({success_count}/{total_changes})")
+                                            logger.log_action(st.session_state.username, "Edit User",
+                                                            f"Updated {selected_username}: {success_count} fields",
+                                                            st.session_state.get('user_email', ''),
+                                                            ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]),
+                                                            True, st.session_state.get('access_level', 'viewer'))
+                                        else:
+                                            st.warning(f"⚠️ חלק מהשינויים נשמרו ({success_count}/{total_changes})")
+                                    else:
+                                        st.info("ℹ️ לא בוצעו שינויים")
+
+                                    # איפוס מצב עריכה
+                                    st.session_state.edit_mode = False
+                                    if 'search_results' in st.session_state:
+                                        del st.session_state.search_results
+                                    st.rerun()
+
+                            with col_cancel:
+                                if st.button("❌ ביטול", key="cancel_edit_btn", use_container_width=True):
+                                    st.session_state.edit_mode = False
+                                    st.rerun()
+
+                    # ============ אישור מחיקה ============
+                    if st.session_state.get('delete_confirm') and st.session_state.get('delete_username') == selected_username:
+                        st.markdown("---")
+                        st.error(f"⚠️ **אזהרה**: האם אתה בטוח שברצונך למחוק את המשתמש **{selected_username}**?")
+                        st.warning("פעולה זו אינה הפיכה!")
+
+                        col_confirm, col_cancel_delete = st.columns(2)
+
+                        with col_confirm:
+                            if st.button("🗑️ אשר מחיקה", key="confirm_delete_btn", type="primary", use_container_width=True):
+                                if api.delete_user(selected_username, provider_id):
+                                    st.success(f"✅ המשתמש {selected_username} נמחק בהצלחה")
+                                    logger.log_action(st.session_state.username, "Delete User",
+                                                    f"Deleted user: {selected_username}",
+                                                    st.session_state.get('user_email', ''),
+                                                    ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]),
+                                                    True, st.session_state.get('access_level', 'viewer'))
+
+                                    # איפוס מצב מחיקה ותוצאות חיפוש
+                                    st.session_state.delete_confirm = False
+                                    if 'search_results' in st.session_state:
+                                        del st.session_state.search_results
+                                    st.rerun()
+                                else:
+                                    st.error("❌ כשל במחיקת המשתמש")
+
+                        with col_cancel_delete:
+                            if st.button("❌ ביטול", key="cancel_delete_btn", use_container_width=True):
+                                st.session_state.delete_confirm = False
+                                st.rerun()
+
+                    # ============ הצגת פרטים מלאים ============
+                    if st.session_state.get('view_info') and st.session_state.get('view_username') == selected_username:
+                        st.markdown("---")
+                        st.subheader(f"ℹ️ פרטים מלאים: {selected_username}")
+
+                        user_data = api.get_single_user(selected_username, provider_id)
+
+                        if user_data:
+                            # יצירת טבלה מפורטת
+                            info_data = {
+                                "שדה": ["שם משתמש", "שם מלא", "אימייל", "מחלקה", "קוד PIN", "מזהה ספק"],
+                                "ערך": [
+                                    user_data.get('userName', user_data.get('username', '')),
+                                    user_data.get('fullName', ''),
+                                    user_data.get('email', ''),
+                                    user_data.get('department', ''),
+                                    user_data.get('shortId', ''),
+                                    user_data.get('providerId', '')
+                                ]
+                            }
+
+                            # חילוץ department מ-details אם לא קיים
+                            if not info_data["ערך"][3]:
+                                for detail in user_data.get('details', []):
+                                    if isinstance(detail, dict) and detail.get('detailType') == 11:
+                                        info_data["ערך"][3] = detail.get('detailData', '')
+                                        break
+
+                            df_info = pd.DataFrame(info_data)
+                            st.dataframe(df_info, use_container_width=True, hide_index=True)
+
+                            # הצגת JSON מלא (אופציונלי)
+                            with st.expander("🔍 הצג JSON מלא"):
+                                st.json(user_data)
+
+                            if st.button("✖️ סגור", key="close_info_btn", use_container_width=True):
+                                st.session_state.view_info = False
+                                st.rerun()
+                        else:
+                            st.error("❌ לא ניתן לטעון את נתוני המשתמש")
 
 if __name__ == "__main__":
     show()
