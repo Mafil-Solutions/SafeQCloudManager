@@ -93,46 +93,13 @@ def show():
             direction: rtl !important;
         }
 
-        /* עיצוב טבלת קבוצות עם X */
-        .group-table {
-            width: 100%;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .group-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            border-bottom: 1px solid #e0e0e0;
-            direction: rtl;
-        }
-
-        .group-row:last-child {
-            border-bottom: none;
-        }
-
-        .group-row:hover {
-            background-color: #f5f5f5;
-        }
-
-        .group-name {
-            flex: 1;
-            text-align: right;
-            font-size: 14px;
-        }
-
-        .group-remove-btn {
-            flex-shrink: 0;
-            margin-left: 10px;
-        }
-
-        /* עיצוב כפתור X */
-        .stButton > button[kind="secondary"] {
-            background-color: white !important;
+        /* תיקון #5: עיצוב כפתור X למחיקת קבוצה */
+        /* * אנחנו משתמשים בסלקטור תכונה (attribute selector)
+         * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
+         * מתחיל ב-"הסר מקבוצה"
+        */
+        .remove-group-button button[data-testid="stBaseButton-secondary"] {
+            background-color: 'white' !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
             padding: 2px 10px !important;
@@ -143,12 +110,11 @@ def show():
             line-height: 1 !important;
             border-radius: 4px !important;
         }
-
-        .stButton > button[kind="secondary"]:hover {
-            background-color: #ff4444 !important;
-            color: white !important;
+        
+        /* אפשר להוסיף גם עיצוב ל-hover אם רוצים */
+        .remove-group-button button[data-testid="stBaseButton-secondary"] {
+            opacity: 0.8 !important;
         }
-
         /* עיצוב כפתורים קטנים יותר */
         .small-button button {
             font-size: 14px !important;
@@ -676,14 +642,11 @@ def show():
 
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    # עמודות עם יחס מותאם - שם הקבוצה וכפתור הסרה
-                                    col_name, col_btn = st.columns([20, 1])
-
-                                    with col_name:
-                                        st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
-
-                                    with col_btn:
-                                        st.markdown('<div class="group-remove-btn">', unsafe_allow_html=True)
+                                    col_group, col_remove_btn = st.columns([1, 4], gap="small")
+                                    with col_group:
+                                        st.write(f"• {group_name}")
+                                    with col_remove_btn:
+                                        st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
                                                    help=f"הסר מקבוצה {group_name}",
                                                    type="secondary"):
@@ -693,7 +656,7 @@ def show():
                                                 'group': group_name
                                             }
                                             st.rerun()
-                                        st.markdown('</div>', unsafe_allow_html=True)
+                                     
                                 else:
                                     st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
 
