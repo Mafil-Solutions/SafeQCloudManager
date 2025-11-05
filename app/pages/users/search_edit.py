@@ -99,7 +99,7 @@ def show():
          * מתחיל ב-"הסר מקבוצה"
         */
         button[data-testid="stBaseButton-secondary"] {
-            background-color: black !important;
+            background-color: 'white' !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
             padding: 2px 8px !important;
