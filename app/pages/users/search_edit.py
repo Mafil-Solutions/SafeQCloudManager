@@ -106,7 +106,7 @@ def show():
             font-size: 14px !important;
             font-weight: bold !important;
             min-height: 25px !important;
-            height: 10px !important;
+            height: 25px !important;
         }
         
         /* אפשר להוסיף גם עיצוב ל-hover אם רוצים */
@@ -635,7 +635,7 @@ def show():
                                 # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון: קירוב X לשם הקבוצה
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([0.5, 1])
+                                    col_group, col_remove_btn = st.columns([1, 0.1], gap="small")
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
