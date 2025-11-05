@@ -635,7 +635,7 @@ def show():
                                 # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון: קירוב X לשם הקבוצה
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([10, 2], gap="small")
+                                    col_group, col_remove_btn = st.columns([1, 2], gap="small")
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
