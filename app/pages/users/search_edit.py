@@ -93,19 +93,58 @@ def show():
             direction: rtl !important;
         }
 
-        /* תיקון #5: עיצוב כפתור X למחיקת קבוצה */
-        .remove-group-button button {
+        /* עיצוב טבלת קבוצות עם X */
+        .group-table {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .group-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            direction: rtl;
+        }
+
+        .group-row:last-child {
+            border-bottom: none;
+        }
+
+        .group-row:hover {
+            background-color: #f5f5f5;
+        }
+
+        .group-name {
+            flex: 1;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .group-remove-btn {
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        /* עיצוב כפתור X */
+        .stButton > button[kind="secondary"] {
             background-color: white !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
-            padding: 2px 8px !important;
-            font-size: 14px !important;
+            padding: 2px 10px !important;
+            font-size: 16px !important;
             font-weight: bold !important;
-            min-height: 25px !important;
-            height: 25px !important;
+            min-height: 28px !important;
+            height: 28px !important;
+            line-height: 1 !important;
+            border-radius: 4px !important;
         }
 
-        .remove-group-button button:hover {
+        .stButton > button[kind="secondary"]:hover {
             background-color: #ff4444 !important;
             color: white !important;
         }
@@ -606,26 +645,42 @@ def show():
                         if display_data['username'] == selected_user_for_actions:
                             st.success(f"קבוצות עבור {selected_user_for_actions}:")
 
+                            # התחלת טבלת קבוצות
+                            st.markdown('<div class="group-table">', unsafe_allow_html=True)
+
                             for group in display_data['groups']:
                                 group_name = group.get('groupName') or group.get('name') or str(group)
 
-                                # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון #3: קירוב X לשם הקבוצה
+                                # כל שורה בטבלה
+                                st.markdown('<div class="group-row">', unsafe_allow_html=True)
+
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([20, 1])
-                                    with col_group:
-                                        st.write(f"• {group_name}")
-                                    with col_remove_btn:
+                                    # עמודות עם יחס מותאם - שם הקבוצה וכפתור הסרה
+                                    col_name, col_btn = st.columns([20, 1])
+
+                                    with col_name:
+                                        st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
+
+                                    with col_btn:
+                                        st.markdown('<div class="group-remove-btn">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
-                                                   help=f"הסר מקבוצה {group_name}"):
+                                                   help=f"הסר מקבוצה {group_name}",
+                                                   type="secondary"):
                                             # שמירת בקשת הסרה לאימות
                                             st.session_state.remove_from_group_request = {
                                                 'username': selected_user_for_actions,
                                                 'group': group_name
                                             }
                                             st.rerun()
+                                        st.markdown('</div>', unsafe_allow_html=True)
                                 else:
-                                    st.write(f"• {group_name}")
+                                    st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
+
+                                st.markdown('</div>', unsafe_allow_html=True)
+
+                            # סיום טבלת קבוצות
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                 with col2:
                     st.markdown("**➕ הוספה לקבוצה**")
