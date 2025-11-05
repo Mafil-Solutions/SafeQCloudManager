@@ -109,6 +109,14 @@ def show():
             background-color: #ff4444 !important;
             color: white !important;
         }
+
+        /* עיצוב כפתורים קטנים יותר */
+        .small-button button {
+            font-size: 14px !important;
+            padding: 8px 16px !important;
+            min-height: 38px !important;
+            height: 38px !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -260,7 +268,7 @@ def show():
         st.success(f"✅ נמצאו {len(matching_users)} משתמשים")
 
         df_data = []
-        for user in matching_users:
+        for idx, user in enumerate(matching_users, start=1):
             username = user.get('userName', user.get('username', ''))
             full_name = user.get('fullName', '')
             email = user.get('email', '')
@@ -274,38 +282,46 @@ def show():
 
             pin_code = user.get('shortId', '')
 
+            # סדר העמודות: מס' שורה, שם משתמש, שם מלא, אימייל, PIN, מחלקה, מקור
+            # ללא "מזהה ספק"
             df_data.append({
-                'Username': username, 'Full Name': full_name, 'Email': email,
-                'Department': department, 'PIN Code': pin_code, 'Provider ID': user.get('providerId', '')
+                '#': idx,
+                'שם משתמש': username,
+                'שם מלא': full_name,
+                'אימייל': email,
+                'PIN': pin_code,
+                'מחלקה': department
             })
 
         if df_data:
             df = pd.DataFrame(df_data)
-            df.rename(columns={
-                'Username': 'שם משתמש', 'Full Name': 'שם מלא', 'Email': 'אימייל',
-                'Department': 'מחלקה', 'PIN Code': 'קוד PIN', 'Provider ID': 'מזהה ספק'
-            }, inplace=True)
-            # תיקון #1: הסרת height parameter כדי שהטבלה תתאים למספר התוצאות בפועל
-            st.dataframe(df, use_container_width=True)
+            # הצגת הטבלה - RTL וללא height
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
-            # כפתורי פעולה - תיקון #7: השלמת השורה עד הסוף + רקע לכפתור
+            # כפתורי פעולה - הורד CSV ונקה, קטנים יותר
             col_csv, col_clear = st.columns(2)
             with col_csv:
                 csv = df.to_csv(index=False)
+                st.markdown('<div class="small-button">', unsafe_allow_html=True)
                 st.download_button(
-                    "💾 הורד CSV", csv.encode('utf-8-sig'),
+                    "💾 הורד CSV",
+                    csv.encode('utf-8-sig'),
                     f"search_results_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    "text/csv", key="download_search_results",
-                    type="primary",
+                    "text/csv",
+                    key="download_search_results",
                     use_container_width=True
                 )
+                st.markdown('</div>', unsafe_allow_html=True)
+
             with col_clear:
+                st.markdown('<div class="small-button">', unsafe_allow_html=True)
                 if st.button("🗑️ נקה", key="clear_search_results", use_container_width=True):
                     if 'search_results' in st.session_state:
                         del st.session_state.search_results
                         if 'selected_users' in st.session_state:
                             del st.session_state.selected_users
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown("---")
 
@@ -609,13 +625,14 @@ def show():
                             for group in display_data['groups']:
                                 group_name = group.get('groupName') or group.get('name') or str(group)
 
-                                # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון #3: קירוב X לשם הקבוצה
+                                # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון: קירוב X לשם הקבוצה
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([20, 1])
+                                    col_group, col_remove_btn = st.columns([10, 1])
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
+                                        st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
                                                    help=f"הסר מקבוצה {group_name}"):
                                             # שמירת בקשת הסרה לאימות
@@ -624,6 +641,7 @@ def show():
                                                 'group': group_name
                                             }
                                             st.rerun()
+                                        st.markdown('</div>', unsafe_allow_html=True)
                                 else:
                                     st.write(f"• {group_name}")
 
