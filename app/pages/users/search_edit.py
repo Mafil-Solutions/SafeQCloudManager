@@ -98,7 +98,7 @@ def show():
          * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
          * מתחיל ב-"הסר מקבוצה"
         */
-        button[data-testid="stBaseButton-secondary"] {
+        .remove-group-button button[data-testid="stBaseButton-secondary"] {
             background-color: 'white' !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
@@ -110,7 +110,7 @@ def show():
         }
         
         /* אפשר להוסיף גם עיצוב ל-hover אם רוצים */
-        .stButton > button[title^="הסר מקבוצה"]:hover {
+        .remove-group-button button[data-testid="stBaseButton-secondary"] {
             opacity: 0.8 !important;
         }
         /* עיצוב כפתורים קטנים יותר */
@@ -639,7 +639,7 @@ def show():
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
-                                        #st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
+                                        st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
                                                    help=f"הסר מקבוצה {group_name}"):
                                             # שמירת בקשת הסרה לאימות
