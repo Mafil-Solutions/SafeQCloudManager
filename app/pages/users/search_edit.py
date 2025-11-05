@@ -102,7 +102,7 @@ def show():
             font-size: 14px !important;
             font-weight: bold !important;
             min-height: 25px !important;
-            height: 25px !important;
+            height: 10px !important;
         }
 
         .remove-group-button button:hover {
