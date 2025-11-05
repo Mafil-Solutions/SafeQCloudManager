@@ -98,7 +98,7 @@ def show():
          * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
          * מתחיל ב-"הסר מקבוצה"
         */
-        .stButton > button[title^="הסר מקבוצה"] {
+        button[data-testid="stBaseButton-secondary"][title^="הסר מקבוצה"] {
             background-color: black !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
@@ -635,7 +635,7 @@ def show():
                                 # שורה עם X אדום - רק ל-admin ו-superadmin - תיקון: קירוב X לשם הקבוצה
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([1, 0.1], gap="small")
+                                    col_group, col_remove_btn = st.columns([0.5, 0.1], gap="small")
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
