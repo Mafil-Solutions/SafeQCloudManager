@@ -94,22 +94,25 @@ def show():
         }
 
         /* תיקון #5: עיצוב כפתור X למחיקת קבוצה */
-        .remove-group-button button {
+        /* * אנחנו משתמשים בסלקטור תכונה (attribute selector)
+         * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
+         * מתחיל ב-"הסר מקבוצה"
+        */
+        .stButton > button[title^="הסר מקבוצה"] {
             background-color: black !important;
-          /*  color: #ff4444 !important; */
+            color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
-            padding: 10px 8px !important;
+            padding: 2px 8px !important;
             font-size: 14px !important;
             font-weight: bold !important;
             min-height: 25px !important;
             height: 10px !important;
         }
-
-        .remove-group-button button:hover {
-            background-color: #ff4444 !important;
-            color: white !important;
+        
+        /* אפשר להוסיף גם עיצוב ל-hover אם רוצים */
+        .stButton > button[title^="הסר מקבוצה"]:hover {
+            opacity: 0.8 !important;
         }
-
         /* עיצוב כפתורים קטנים יותר */
         .small-button button {
             font-size: 14px !important;
@@ -632,7 +635,7 @@ def show():
                                     with col_group:
                                         st.write(f"• {group_name}")
                                     with col_remove_btn:
-                                        st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
+                                        #st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
                                                    help=f"הסר מקבוצה {group_name}"):
                                             # שמירת בקשת הסרה לאימות
@@ -641,7 +644,7 @@ def show():
                                                 'group': group_name
                                             }
                                             st.rerun()
-                                        st.markdown('</div>', unsafe_allow_html=True)
+                                     
                                 else:
                                     st.write(f"• {group_name}")
 
