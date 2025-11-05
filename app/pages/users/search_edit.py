@@ -295,6 +295,10 @@ def show():
 
         if df_data:
             df = pd.DataFrame(df_data)
+
+            # קביעת סדר עמודות מפורש: מס' שורה, שם משתמש, שם מלא, אימייל, PIN, מחלקה
+            df = df[['#', 'שם משתמש', 'שם מלא', 'אימייל', 'PIN', 'מחלקה']]
+
             # הצגת הטבלה - RTL וללא height
             st.dataframe(df, use_container_width=True, hide_index=True)
 
