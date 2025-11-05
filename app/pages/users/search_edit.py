@@ -98,7 +98,7 @@ def show():
          * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
          * מתחיל ב-"הסר מקבוצה"
         */
-        button[data-testid="stBaseButton-secondary"][title^="הסר מקבוצה"] {
+        .stButton > button[data-testid="stBaseButton-secondary"][title^="הסר מקבוצה"] {
             background-color: black !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
