@@ -95,7 +95,7 @@ def show():
 
         /* תיקון #5: עיצוב כפתור X למחיקת קבוצה */
         .remove-group-button button {
-            background-color: white !important;
+            background-color: black !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
             padding: 2px 8px !important;
