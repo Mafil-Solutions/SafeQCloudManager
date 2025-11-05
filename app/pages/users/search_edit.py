@@ -298,6 +298,10 @@ def show():
 
         if df_data:
             df = pd.DataFrame(df_data)
+
+            # קביעת סדר עמודות הפוך (RTL) - מימין לשמאל: #, שם משתמש, שם מלא, אימייל, PIN, מחלקה
+            df = df[['מחלקה', 'PIN', 'אימייל', 'שם מלא', 'שם משתמש', '#']]
+
             # הצגת הטבלה - RTL וללא height
             st.dataframe(df, use_container_width=True, hide_index=True)
 
