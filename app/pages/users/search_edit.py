@@ -183,7 +183,7 @@ def show():
         .stTextInput > div > div > input,
         .stSelectbox > div > div > select,
         .stNumberInput > div > div > input {
-            background-color: rgba(196, 30, 58, 0.03) !important;  /* אדום עדין מאוד */
+            background-color: white !important;  /* אדום עדין מאוד */
         }
     </style>
     """, unsafe_allow_html=True)
