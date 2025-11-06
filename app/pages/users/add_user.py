@@ -94,6 +94,7 @@ def show():
         button[data-testid="stBaseButton-primaryFormSubmit"] :hover {
             background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             color: white !important;
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
         }
     </style>
     """, unsafe_allow_html=True)
