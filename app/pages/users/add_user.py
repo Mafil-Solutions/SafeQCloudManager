@@ -83,13 +83,13 @@ def show():
         }
 
         /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
-        [data-testid="stButton"] > button[data-testid="stBaseButton-primary"] {
+        [data-testid="stButton"] > button[data-testid="stBaseButton-primaryFormSubmit"] {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
         }
 
-        [data-testid="stButton"] > button[data-testid="stBaseButton-primary"]:hover {
+        [data-testid="stButton"] > button[data-testid="stBaseButton-primaryFormSubmit"] {:hover {
             background-color: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             color: white !important;
         }
