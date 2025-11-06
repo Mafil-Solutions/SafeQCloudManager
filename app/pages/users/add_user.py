@@ -91,7 +91,7 @@ def show():
             border-radius: 25px;
         }
 
-        button[data-testid="stBaseButton-primaryFormSubmit"] :hover {
+       div[data-testid="stFormSubmitButton"] > button[kind="primaryFormSubmit"] :hover {
             background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             color: white !important;
             box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
