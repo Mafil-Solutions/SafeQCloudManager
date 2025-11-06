@@ -169,7 +169,7 @@ def show():
         with col_submit:
             submit = st.form_submit_button("➕ צור משתמש", type="primary", use_container_width=True)
         with col_cancel:
-            cancel = st.form_submit_button("❌ נקה טופס",type="secondary" use_container_width=True)
+            cancel = st.form_submit_button("❌ נקה טופס",type="secondary", use_container_width=True)
 
         if cancel:
             # ניקוי הטופס - גם state וגם reset key
