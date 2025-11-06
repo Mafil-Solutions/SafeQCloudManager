@@ -93,6 +93,45 @@ def show():
             direction: rtl !important;
         }
 
+        /* עיצוב טבלת קבוצות */
+        .group-table {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+            background-color: white;
+        }
+
+        .group-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            direction: rtl;
+        }
+
+        .group-row:last-child {
+            border-bottom: none;
+        }
+
+        .group-row:hover {
+            background-color: #f5f5f5;
+        }
+
+        .group-name {
+            flex: 1;
+            text-align: right;
+            font-size: 14px;
+            padding-right: 10px;
+        }
+
+        .group-remove-btn {
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
         /* עיצוב כפתור X למחיקת קבוצה */
         .remove-group-button button[data-testid="stBaseButton-secondary"] {
             background-color: white !important;
