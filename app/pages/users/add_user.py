@@ -84,7 +84,7 @@ def show():
 
         /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
         button[kind="primary"] {
-            background-color: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
         }
