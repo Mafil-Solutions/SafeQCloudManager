@@ -79,7 +79,7 @@ def show():
         .stTextInput > div > div > input,
         .stSelectbox > div > div > select,
         .stNumberInput > div > div > input {
-            background-color: rgba(196, 30, 58, 0.03) !important;  /* אדום עדין מאוד */
+            background-color: white !important;  /* אדום עדין מאוד */
         }
 
         /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
