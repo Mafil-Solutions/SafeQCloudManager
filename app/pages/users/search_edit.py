@@ -107,13 +107,9 @@ def show():
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-bottom: 1px solid #e0e0e0;
             direction: rtl;
-        }
-
-        .group-row:last-child {
-            border-bottom: none;
         }
 
         .group-row:hover {
@@ -124,12 +120,12 @@ def show():
             flex: 1;
             text-align: right;
             font-size: 14px;
-            padding-right: 10px;
+            padding-right: 5px;
         }
 
         .group-remove-btn {
             flex-shrink: 0;
-            margin-left: 10px;
+            margin-left: 5px;
         }
 
         /* עיצוב כפתור X למחיקת קבוצה */
@@ -137,18 +133,32 @@ def show():
             background-color: white !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
-            padding: 2px 10px !important;
+            padding: 2px 8px !important;
             font-size: 16px !important;
             font-weight: bold !important;
-            min-height: 28px !important;
-            height: 28px !important;
+            min-height: 26px !important;
+            height: 26px !important;
             line-height: 1 !important;
             border-radius: 4px !important;
+            min-width: auto !important;
+            width: auto !important;
         }
 
         .remove-group-button button[data-testid="stBaseButton-secondary"]:hover {
             background-color: #ff4444 !important;
             color: white !important;
+        }
+
+        /* תיקון ה-X שיישאר בתוך הריבוע */
+        .remove-group-button button[data-testid="stBaseButton-secondary"] div[data-testid="stMarkdownContainer"] {
+            max-width: none !important;
+            width: auto !important;
+        }
+
+        .remove-group-button button[data-testid="stBaseButton-secondary"] p {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: none !important;
         }
         /* עיצוב כפתורים קטנים יותר */
         .small-button button {
@@ -677,7 +687,7 @@ def show():
 
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([20, 1])
+                                    col_group, col_remove_btn = st.columns([10, 1])
                                     with col_group:
                                         st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
                                     with col_remove_btn:
