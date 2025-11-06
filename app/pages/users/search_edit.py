@@ -160,6 +160,17 @@ def show():
             padding: 0 !important;
             max-width: none !important;
         }
+
+        /* הקטנת gap בין שורות בטבלת קבוצות */
+        .group-row .stVerticalBlock {
+            gap: 0.5rem !important;
+        }
+        
+        /* או יותר ספציפי אם זה לא עובד: */
+        .group-row .stColumn .stVerticalBlock {
+            gap: 0.5rem !important;
+        }
+        
         /* עיצוב כפתורים קטנים יותר */
         .small-button button {
             font-size: 14px !important;
