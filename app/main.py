@@ -393,8 +393,8 @@ def apply_modern_styling_compact(rtl=False):
         transition:border-radius 200ms cubic-bezier(0.23, 1, 0.32, 1) 300ms, background-color 150ms;
         }}
 
-button[data-testid="stBaseButton-secondary"]:hover {{
-    background-color: rgba(151, 166, 195, 0.15) !important;
+        button[data-testid="stBaseButton-secondary"]:hover {{
+        background-color: rgba(151, 166, 195, 0.15) !important;
         }}
 
         /* Tables */
