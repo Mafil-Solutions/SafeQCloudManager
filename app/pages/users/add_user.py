@@ -40,7 +40,7 @@ def show():
     """הצגת דף הוספת משתמש"""
     check_authentication()
 
-    # RTL styling
+    # RTL styling + רקע עדין לשדות טקסט
     st.markdown("""
     <style>
         /* כל האפליקציה RTL */
@@ -74,6 +74,25 @@ def show():
             direction: rtl !important;
             text-align: right !important;
         }
+
+        /* רקע עדין בהיר לשדות טקסט - Primary/Secondary Color */
+        .stTextInput > div > div > input,
+        .stSelectbox > div > div > select,
+        .stNumberInput > div > div > input {
+            background-color: rgba(196, 30, 58, 0.03) !important;  /* אדום עדין מאוד */
+        }
+
+        /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
+        button[kind="primary"] {
+            background-color: #C41E3A !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        button[kind="primary"]:hover {
+            background-color: #A01730 !important;
+            color: white !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -105,8 +124,8 @@ def show():
         # עמודות מימין לשמאל - כמו בטופס עריכה
         col1, col2 = st.columns(2)
 
-        # עמודה ימנית (מופיעה ראשונה)
-        with col2:
+        # עמודה ימנית (col1 מופיע ראשון ב-RTL)
+        with col1:
             new_username = st.text_input("שם משתמש *", value=form_state.get('username', ''),
                                         help="שם משתמש ייחודי")
             new_first_name = st.text_input("שם פרטי", value=form_state.get('first_name', ''))
@@ -131,8 +150,8 @@ def show():
                                               help="לא נמצאו מחלקות זמינות")
                 st.error("⚠️ לא ניתן ליצור משתמש - אין מחלקות מורשות")
 
-        # עמודה שמאלית (מופיעה שנייה)
-        with col1:
+        # עמודה שמאלית (col2 מופיע שני ב-RTL)
+        with col2:
             new_password = st.text_input("סיסמה", type="password", value=form_state.get('password', ''),
                                         placeholder="Aa123456",
                                         help="אם לא מוזן - סיסמה ברירת מחדל: Aa123456")
@@ -149,9 +168,12 @@ def show():
             cancel = st.form_submit_button("❌ נקה טופס", use_container_width=True)
 
         if cancel:
-            # ניקוי הטופס
+            # ניקוי הטופס - גם state וגם reset key
             if 'add_user_form_state' in st.session_state:
                 del st.session_state.add_user_form_state
+            # עדכון form_reset_key כדי לאפס את הטופס
+            import time
+            st.session_state.form_reset_key = f"form_{int(time.time())}"
             st.rerun()
 
         if submit:
@@ -221,11 +243,12 @@ def show():
                 if success:
                     st.success("✅ המשתמש נוצר בהצלחה!")
                     st.balloons()
-                    # ניקוי הטופס
+                    # ניקוי הטופס - גם state וגם reset key
                     if 'add_user_form_state' in st.session_state:
                         del st.session_state.add_user_form_state
-                    # המתנה קצרה
+                    # עדכון form_reset_key כדי לאפס את הטופס
                     import time
+                    st.session_state.form_reset_key = f"form_{int(time.time())}"
                     time.sleep(1.5)
                     st.rerun()
                 else:

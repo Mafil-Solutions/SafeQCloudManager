@@ -410,20 +410,20 @@ button[data-testid="stBaseButton-secondary"]:hover {{
             border-radius: 0.3rem !important;
         }}
 
-        /* Text inputs */
+        /* Text inputs - רקע עדין בהיר */
         .stTextInput input, .stSelectbox select, .stNumberInput input {{
             border-radius: 0.5rem !important;
             border: 2px solid {secondary_color} !important;
-            background-color: white;
+            background-color: rgba(196, 30, 58, 0.03) !important;
         }}
 
         .stTextInput input:focus, .stSelectbox select:focus, .stNumberInput input:focus {{
             border-color: {accent_color} !important;
             box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
         }}
-        
+
         .stTextInput > div > div, .stSelectbox > div > div, .stNumberInput > div > div {{
-         background-color: white;
+         background-color: rgba(196, 30, 58, 0.03) !important;
          }}
         
         /* Navigation buttons with gradient */
