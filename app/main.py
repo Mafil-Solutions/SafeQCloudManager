@@ -706,7 +706,7 @@ def main():
     from pages.users.user_list import show as users_list_show
     from pages.users.search_edit import show as users_search_show
     from pages.users.add_user import show as users_add_show
-    from pages.users.groups import show as users_groups_show
+    from pages.groups.groups import show as users_groups_show
     from pages.printers import show as printers_show
     from pages.scanning import show as scanning_show
     from pages.reports import show as reports_show
