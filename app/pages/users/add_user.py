@@ -87,6 +87,8 @@ def show():
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+            border-radius: 25px;
         }
 
         button[data-testid="stBaseButton-primaryFormSubmit"] :hover {
