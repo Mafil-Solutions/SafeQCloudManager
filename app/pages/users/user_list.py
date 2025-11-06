@@ -20,6 +20,50 @@ def show():
     """הצגת דף רשימת משתמשים"""
     check_authentication()
 
+    # הוספת CSS ל-RTL וכפתורים
+    st.markdown("""
+    <style>
+        /* DataFrame RTL */
+        .stDataFrame {
+            direction: rtl !important;
+        }
+
+        /* הפוך את כל האפליקציה ל־RTL */
+        .stApp {
+            direction: rtl !important;
+        }
+
+        /* מיקום בלוק התוכן הראשי לימין */
+        .block-container {
+            text-align: right !important;
+            direction: rtl !important;
+        }
+
+        /* עמודות - RTL עם יישור ימינה */
+        div[data-testid="column"] {
+            direction: rtl !important;
+            text-align: right !important;
+            display: flex !important;
+            justify-content: flex-end !important;
+        }
+
+        /* כל אלמנטי הטופס - RTL חזק */
+        .stTextInput, .stSelectbox, .stNumberInput {
+            direction: rtl !important;
+            text-align: right !important;
+            width: 100% !important;
+        }
+
+        /* עיצוב כפתורים קטנים יותר */
+        .small-button button {
+            font-size: 14px !important;
+            padding: 8px 16px !important;
+            min-height: 38px !important;
+            height: 38px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     api = get_api_instance()
     logger = get_logger_instance()
 
@@ -91,51 +135,76 @@ def show():
                 else:
                     st.success(f"✅ נטענו {users_after_filter} משתמשים")
 
-                df_data = []
-                for user in filtered_users:
-                    if not isinstance(user, dict):
-                        st.error(f"פורמט נתוני משתמש לא תקין: {type(user)}")
-                        continue
+                # שמירה ב-session_state
+                st.session_state.user_list_data = filtered_users
 
-                    department = ""
-                    details = user.get('details', [])
-                    if isinstance(details, list):
-                        for detail in details:
-                            if isinstance(detail, dict) and detail.get('detailType') == 11:
-                                department = detail.get('detailData', '')
-                                break
+    # הצגת טבלה אם יש נתונים
+    if 'user_list_data' in st.session_state and st.session_state.user_list_data:
+        filtered_users = st.session_state.user_list_data
 
-                    pin_code = user.get('shortId', '')
+        df_data = []
+        for idx, user in enumerate(filtered_users, start=1):
+            if not isinstance(user, dict):
+                st.error(f"פורמט נתוני משתמש לא תקין: {type(user)}")
+                continue
 
-                    df_data.append({
-                        'Username': user.get('userName', user.get('username', '')),
-                        'Full Name': user.get('fullName', ''),
-                        'Email': user.get('email', ''),
-                        'PIN Code': pin_code,
-                        'Department': user.get('department', department),
-                        'Source': user.get('source', ''),
-                        'Provider ID': user.get('providerId', '')
-                    })
+            department = ""
+            details = user.get('details', [])
+            if isinstance(details, list):
+                for detail in details:
+                    if isinstance(detail, dict) and detail.get('detailType') == 11:
+                        department = detail.get('detailData', '')
+                        break
 
-                df = pd.DataFrame(df_data)
-                df.rename(columns={
-                    'Username': 'שם משתמש', 'Full Name': 'שם מלא', 'Email': 'אימייל',
-                    'PIN Code': 'קוד PIN', 'Department': 'מחלקה', 'Source': 'מקור',
-                    'Provider ID': 'מזהה ספק'
-                }, inplace=True)
-                st.dataframe(df, use_container_width=True)
+            pin_code = user.get('shortId', '')
 
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    "💾 הורד CSV", csv.encode('utf-8-sig'),
-                    f"users_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv", "text/csv"
-                )
+            # סדר העמודות: מס' שורה, שם משתמש, שם מלא, אימייל, PIN, מחלקה, מקור
+            # ללא "מזהה ספק"
+            df_data.append({
+                '#': idx,
+                'שם משתמש': user.get('userName', user.get('username', '')),
+                'שם מלא': user.get('fullName', ''),
+                'אימייל': user.get('email', ''),
+                'PIN': pin_code,
+                'מחלקה': user.get('department', department),
+                'מקור': user.get('source', '')
+            })
 
-                logger.log_action(st.session_state.username, "Users Loaded",
-                                f"Count: {users_before_filter}, Filtered: {users_after_filter}",
-                                st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
-        else:
-            st.warning("לא נמצאו משתמשים")
+        df = pd.DataFrame(df_data)
+
+        # קביעת סדר עמודות הפוך (RTL) - מימין לשמאל: #, שם משתמש, שם מלא, אימייל, PIN, מחלקה, מקור
+        df = df[['מקור', 'מחלקה', 'PIN', 'אימייל', 'שם מלא', 'שם משתמש', '#']]
+
+        # הצגת הטבלה - RTL וללא height
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+        # כפתורים - הורד CSV ונקה בשורה אחת, קטנים יותר
+        col_csv, col_clear = st.columns(2)
+        with col_csv:
+            csv = df.to_csv(index=False)
+            st.markdown('<div class="small-button">', unsafe_allow_html=True)
+            st.download_button(
+                "💾 הורד CSV",
+                csv.encode('utf-8-sig'),
+                f"users_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                "text/csv",
+                key="download_user_list",
+                use_container_width=True
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with col_clear:
+            st.markdown('<div class="small-button">', unsafe_allow_html=True)
+            if st.button("🗑️ נקה", key="clear_user_list", use_container_width=True):
+                if 'user_list_data' in st.session_state:
+                    del st.session_state.user_list_data
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+        logger.log_action(st.session_state.username, "Users Loaded",
+                        f"Count: {len(filtered_users)}",
+                        st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
 
 if __name__ == "__main__":
     show()

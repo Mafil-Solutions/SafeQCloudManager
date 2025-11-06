@@ -93,46 +93,13 @@ def show():
             direction: rtl !important;
         }
 
-        /* עיצוב טבלת קבוצות עם X */
-        .group-table {
-            width: 100%;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .group-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            border-bottom: 1px solid #e0e0e0;
-            direction: rtl;
-        }
-
-        .group-row:last-child {
-            border-bottom: none;
-        }
-
-        .group-row:hover {
-            background-color: #f5f5f5;
-        }
-
-        .group-name {
-            flex: 1;
-            text-align: right;
-            font-size: 14px;
-        }
-
-        .group-remove-btn {
-            flex-shrink: 0;
-            margin-left: 10px;
-        }
-
-        /* עיצוב כפתור X */
-        .stButton > button[kind="secondary"] {
-            background-color: white !important;
+        /* תיקון #5: עיצוב כפתור X למחיקת קבוצה */
+        /* * אנחנו משתמשים בסלקטור תכונה (attribute selector)
+         * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
+         * מתחיל ב-"הסר מקבוצה"
+        */
+        .remove-group-button button[data-testid="stBaseButton-secondary"] {
+            background-color: 'white' !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
             padding: 2px 10px !important;
@@ -143,10 +110,17 @@ def show():
             line-height: 1 !important;
             border-radius: 4px !important;
         }
-
-        .stButton > button[kind="secondary"]:hover {
-            background-color: #ff4444 !important;
-            color: white !important;
+        
+        /* אפשר להוסיף גם עיצוב ל-hover אם רוצים */
+        .remove-group-button button[data-testid="stBaseButton-secondary"] {
+            opacity: 0.8 !important;
+        }
+        /* עיצוב כפתורים קטנים יותר */
+        .small-button button {
+            font-size: 14px !important;
+            padding: 8px 16px !important;
+            min-height: 38px !important;
+            height: 38px !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -299,7 +273,7 @@ def show():
         st.success(f"✅ נמצאו {len(matching_users)} משתמשים")
 
         df_data = []
-        for user in matching_users:
+        for idx, user in enumerate(matching_users, start=1):
             username = user.get('userName', user.get('username', ''))
             full_name = user.get('fullName', '')
             email = user.get('email', '')
@@ -313,38 +287,50 @@ def show():
 
             pin_code = user.get('shortId', '')
 
+            # סדר העמודות: מס' שורה, שם משתמש, שם מלא, אימייל, PIN, מחלקה, מקור
+            # ללא "מזהה ספק"
             df_data.append({
-                'Username': username, 'Full Name': full_name, 'Email': email,
-                'Department': department, 'PIN Code': pin_code, 'Provider ID': user.get('providerId', '')
+                '#': idx,
+                'שם משתמש': username,
+                'שם מלא': full_name,
+                'אימייל': email,
+                'PIN': pin_code,
+                'מחלקה': department
             })
 
         if df_data:
             df = pd.DataFrame(df_data)
-            df.rename(columns={
-                'Username': 'שם משתמש', 'Full Name': 'שם מלא', 'Email': 'אימייל',
-                'Department': 'מחלקה', 'PIN Code': 'קוד PIN', 'Provider ID': 'מזהה ספק'
-            }, inplace=True)
-            # תיקון #1: הסרת height parameter כדי שהטבלה תתאים למספר התוצאות בפועל
-            st.dataframe(df, use_container_width=True)
 
-            # כפתורי פעולה - תיקון #7: השלמת השורה עד הסוף + רקע לכפתור
+            # קביעת סדר עמודות הפוך (RTL) - מימין לשמאל: #, שם משתמש, שם מלא, אימייל, PIN, מחלקה
+            df = df[['מחלקה', 'PIN', 'אימייל', 'שם מלא', 'שם משתמש', '#']]
+
+            # הצגת הטבלה - RTL וללא height
+            st.dataframe(df, use_container_width=True, hide_index=True)
+
+            # כפתורי פעולה - הורד CSV ונקה, קטנים יותר
             col_csv, col_clear = st.columns(2)
             with col_csv:
                 csv = df.to_csv(index=False)
+                st.markdown('<div class="small-button">', unsafe_allow_html=True)
                 st.download_button(
-                    "💾 הורד CSV", csv.encode('utf-8-sig'),
+                    "💾 הורד CSV",
+                    csv.encode('utf-8-sig'),
                     f"search_results_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    "text/csv", key="download_search_results",
-                    type="primary",
+                    "text/csv",
+                    key="download_search_results",
                     use_container_width=True
                 )
+                st.markdown('</div>', unsafe_allow_html=True)
+
             with col_clear:
+                st.markdown('<div class="small-button">', unsafe_allow_html=True)
                 if st.button("🗑️ נקה", key="clear_search_results", use_container_width=True):
                     if 'search_results' in st.session_state:
                         del st.session_state.search_results
                         if 'selected_users' in st.session_state:
                             del st.session_state.selected_users
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown("---")
 
@@ -656,14 +642,11 @@ def show():
 
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    # עמודות עם יחס מותאם - שם הקבוצה וכפתור הסרה
-                                    col_name, col_btn = st.columns([20, 1])
-
-                                    with col_name:
-                                        st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
-
-                                    with col_btn:
-                                        st.markdown('<div class="group-remove-btn">', unsafe_allow_html=True)
+                                    col_group, col_remove_btn = st.columns([1, 4], gap="small")
+                                    with col_group:
+                                        st.write(f"• {group_name}")
+                                    with col_remove_btn:
+                                        st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
                                                    help=f"הסר מקבוצה {group_name}",
                                                    type="secondary"):
@@ -673,7 +656,7 @@ def show():
                                                 'group': group_name
                                             }
                                             st.rerun()
-                                        st.markdown('</div>', unsafe_allow_html=True)
+                                     
                                 else:
                                     st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
 
