@@ -93,13 +93,9 @@ def show():
             direction: rtl !important;
         }
 
-        /* תיקון #5: עיצוב כפתור X למחיקת קבוצה */
-        /* * אנחנו משתמשים בסלקטור תכונה (attribute selector)
-         * שמחפש כפתור שה-title שלו (שנוצר ע"י help=)
-         * מתחיל ב-"הסר מקבוצה"
-        */
+        /* עיצוב כפתור X למחיקת קבוצה */
         .remove-group-button button[data-testid="stBaseButton-secondary"] {
-            background-color: 'white' !important;
+            background-color: white !important;
             color: #ff4444 !important;
             border: 1px solid #ff4444 !important;
             padding: 2px 10px !important;
@@ -110,10 +106,10 @@ def show():
             line-height: 1 !important;
             border-radius: 4px !important;
         }
-        
-        /* אפשר להוסיף גם עיצוב ל-hover אם רוצים */
-        .remove-group-button button[data-testid="stBaseButton-secondary"] {
-            opacity: 0.8 !important;
+
+        .remove-group-button button[data-testid="stBaseButton-secondary"]:hover {
+            background-color: #ff4444 !important;
+            color: white !important;
         }
         /* עיצוב כפתורים קטנים יותר */
         .small-button button {
@@ -642,9 +638,9 @@ def show():
 
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([1, 4], gap="small")
+                                    col_group, col_remove_btn = st.columns([20, 1])
                                     with col_group:
-                                        st.write(f"• {group_name}")
+                                        st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
                                     with col_remove_btn:
                                         st.markdown('<div class="remove-group-button">', unsafe_allow_html=True)
                                         if st.button("❌", key=f"remove_{selected_user_for_actions}_from_{group_name}",
@@ -656,7 +652,7 @@ def show():
                                                 'group': group_name
                                             }
                                             st.rerun()
-                                     
+                                        st.markdown('</div>', unsafe_allow_html=True)
                                 else:
                                     st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
 
