@@ -178,6 +178,13 @@ def show():
             min-height: 38px !important;
             height: 38px !important;
         }
+
+        /* רקע עדין בהיר לשדות טקסט - Primary/Secondary Color */
+        .stTextInput > div > div > input,
+        .stSelectbox > div > div > select,
+        .stNumberInput > div > div > input {
+            background-color: rgba(196, 30, 58, 0.03) !important;  /* אדום עדין מאוד */
+        }
     </style>
     """, unsafe_allow_html=True)
 
