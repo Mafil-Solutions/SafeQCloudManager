@@ -82,7 +82,7 @@ def show():
             background-color: white !important;  /* אדום עדין מאוד */
         }
 
-        /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
+        /* כפתור צור משתמש - צבע כמו כפתור "חפש" 
             div[data-testid="stBaseButton-primaryFormSubmit"] {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
@@ -95,7 +95,7 @@ def show():
             background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             color: white !important;
             box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
-        }
+        }*/
     </style>
     """, unsafe_allow_html=True)
 
