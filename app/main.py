@@ -419,7 +419,7 @@ button[data-testid="stBaseButton-secondary"]:hover {{
 
         .stTextInput input:focus, .stSelectbox select:focus, .stNumberInput input:focus {{
             border-color: {accent_color} !important;
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+           /* box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;*/
         }}
 
         .stTextInput > div > div, .stSelectbox > div > div, .stNumberInput > div > div {{
