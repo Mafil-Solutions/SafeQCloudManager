@@ -414,7 +414,7 @@ button[data-testid="stBaseButton-secondary"]:hover {{
         .stTextInput input, .stSelectbox select, .stNumberInput input {{
             border-radius: 0.5rem !important;
             border: 1px solid {secondary_color} !important;
-            background-color: rgba(196, 30, 58, 0.03) !important;
+            background-color: white !important;
         }}
 
         .stTextInput input:focus, .stSelectbox select:focus, .stNumberInput input:focus {{
