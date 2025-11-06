@@ -83,14 +83,14 @@ def show():
         }
 
         /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
-        button[kind="primary"] {
+        [data-testid="stButton"] > button[data-testid="stBaseButton-primary"] {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
         }
 
-        button[kind="primary"]:hover {
-            background-color: #A01730 !important;
+        [data-testid="stButton"] > button[data-testid="stBaseButton-primary"]:hover {
+            background-color: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             color: white !important;
         }
     </style>
