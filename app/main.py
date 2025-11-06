@@ -413,7 +413,7 @@ button[data-testid="stBaseButton-secondary"]:hover {{
         /* Text inputs - רקע עדין בהיר */
         .stTextInput input, .stSelectbox select, .stNumberInput input {{
             border-radius: 0.5rem !important;
-            border: 2px solid {secondary_color} !important;
+            border: 1px solid {secondary_color} !important;
             background-color: rgba(196, 30, 58, 0.03) !important;
         }}
 
