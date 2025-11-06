@@ -75,15 +75,15 @@ def show():
             text-align: right !important;
         }
 
-        /* רקע עדין בהיר לשדות טקסט - Primary/Secondary Color */
+        /* רקע לבן לשדות טקסט */
         .stTextInput > div > div > input,
         .stSelectbox > div > div > select,
         .stNumberInput > div > div > input {
-            background-color: white !important;  /* אדום עדין מאוד */
+            background-color: white !important;  
         }
 
         /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
-            div[data-testid="stFormSubmitButton"] > button[data-testid:"stBaseButton-primaryFormSubmit"] {
+            div[data-testid="stFormSubmitButton"] > div[data-testid:"stMarkdownContainer"] {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
