@@ -83,7 +83,7 @@ def show():
         }
 
         /* כפתור צור משתמש - צבע כמו כפתור "חפש" */
-        button[data-testid="stBaseButton-primaryFormSubmit"] {
+        div[data-testid="stBaseButton-primaryFormSubmit"] {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
