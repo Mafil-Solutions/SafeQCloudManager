@@ -89,7 +89,7 @@ def show():
             border: none !important;
         }
 
-        button[data-testid="stBaseButton-primaryFormSubmit"] {:hover {
+        button[data-testid="stBaseButton-primaryFormSubmit"] :hover {
             background-color: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             color: white !important;
         }
