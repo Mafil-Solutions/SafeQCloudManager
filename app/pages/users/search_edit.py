@@ -687,7 +687,7 @@ def show():
 
                                 role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
                                 if role in ['admin', 'superadmin']:
-                                    col_group, col_remove_btn = st.columns([1, 10])
+                                    col_group, col_remove_btn = st.columns([5, 5])
                                     with col_group:
                                         st.markdown(f'<div class="group-name">• {group_name}</div>', unsafe_allow_html=True)
                                     with col_remove_btn:
