@@ -63,18 +63,20 @@ def show():
             pointer-events: none !important;
         }
 
-        /* כפתורי קבוצות - רשימה פשוטה ללא רקע צבעוני */
-        .group-list-item {
-            padding: 8px 12px;
-            margin: 4px 0;
-            cursor: pointer;
-            border-right: 3px solid transparent;
-            transition: all 0.2s ease;
+        /* כפתורי קבוצות - עיצוב Secondary בהיר */
+        .group-button button {
+            background-color: inherit !important;
+            color: #2C3E50 !important;
+            border: 1px solid #ddd !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
         }
 
-        .group-list-item:hover {
-            background-color: #f5f5f5;
-            border-right-color: #C41E3A;
+        .group-button button:hover {
+            background-color: rgba(151, 166, 195, 0.15) !important;
+            border-color: #C41E3A !important;
         }
 
         /* Checkbox styling */
@@ -90,9 +92,9 @@ def show():
 
     st.header("👥 ניהול קבוצות")
 
-    # כפתור טען קבוצות - תמיד בראש
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
+    # כפתור טען קבוצות - תמיד בראש, מוצמד לימין
+    col1, col_spacer = st.columns([2, 2])
+    with col1:
         st.markdown('<div class="action-button">', unsafe_allow_html=True)
         if st.button("🔄 טען קבוצות", key="refresh_groups_btn"):
             user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
@@ -405,10 +407,10 @@ def show():
             if 'users_cart' not in st.session_state:
                 st.session_state.users_cart = []
 
-            # טופס חיפוש משתמש
+            # טופס חיפוש משתמש - שדות קטנים יותר
             st.markdown("**חפש משתמש להוספה:**")
 
-            col1, col2 = st.columns([2, 1])
+            col1, col2, col3, col_spacer = st.columns([1.5, 1.5, 0.8, 2.2])
 
             with col1:
                 search_type_map = {
@@ -420,9 +422,10 @@ def show():
                 search_type_he = st.selectbox("חיפוש לפי", list(search_type_map.keys()), key="add_user_search_type")
                 search_type = search_type_map[search_type_he]
 
+            with col2:
                 search_term = st.text_input(f"ערך לחיפוש", key="add_user_search_term")
 
-            with col2:
+            with col3:
                 st.write("")
                 st.write("")
                 st.markdown('<div class="action-button">', unsafe_allow_html=True)
@@ -471,9 +474,13 @@ def show():
                         st.error("נא להזין ערך לחיפוש")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # הצגת תוצאות חיפוש
+            # הצגת תוצאות חיפוש עם צ'קבוקסים
             if 'search_results_add' in st.session_state and st.session_state.search_results_add:
                 st.markdown("**תוצאות חיפוש:**")
+
+                # איתחול counter אם לא קיים
+                if 'user_search_checkbox_counter' not in st.session_state:
+                    st.session_state.user_search_checkbox_counter = 0
 
                 for user in st.session_state.search_results_add[:10]:  # הגבלה ל-10 תוצאות
                     username = user.get('userName', user.get('username', ''))
@@ -486,16 +493,18 @@ def show():
                     if department:
                         label += f" [{department}]"
 
-                    col_label, col_btn = st.columns([3, 1])
-                    with col_label:
-                        st.write(label)
-                    with col_btn:
-                        if username not in st.session_state.users_cart:
-                            if st.button("➕ הוסף למחסנית", key=f"add_to_cart_{username}"):
-                                st.session_state.users_cart.append(username)
-                                st.rerun()
-                        else:
-                            st.success("✓ במחסנית")
+                    # צ'קבוקס מצד ימין
+                    is_checked = username in st.session_state.users_cart
+                    checkbox_result = st.checkbox(label, value=is_checked,
+                                                 key=f"search_user_checkbox_{username}_{st.session_state.user_search_checkbox_counter}")
+
+                    # הוספה/הסרה אוטומטית למחסנית
+                    if checkbox_result and username not in st.session_state.users_cart:
+                        st.session_state.users_cart.append(username)
+                        st.rerun()
+                    elif not checkbox_result and username in st.session_state.users_cart:
+                        st.session_state.users_cart.remove(username)
+                        st.rerun()
 
             # הצגת מחסנית משתמשים
             if st.session_state.users_cart:
