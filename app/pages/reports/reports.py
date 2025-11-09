@@ -712,8 +712,8 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
         first_doc = documents[0]
         available_fields = list(first_doc.keys())
         # הפעל debug אם צריך: הסר את הסולמית (#) מהשורה הבאה
-        # st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
-        # st.json(first_doc)  # הצג את כל המסמך
+          st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
+          st.json(first_doc)  # הצג את כל המסמך
 
     for doc in documents:
         # המרת timestamp ל-datetime
