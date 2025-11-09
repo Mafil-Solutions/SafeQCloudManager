@@ -194,65 +194,67 @@ def show_history_report(api, logger, role, username):
     </div>
     """, unsafe_allow_html=True)
 
-    # טופס סינון
-    st.markdown("### 🔍 פרמטרי חיפוש")
+    # ====== טופס חיפוש מחודש ======
+    st.markdown("### ⚙️ הגדרות דוח")
 
-    col1, col2, col3 = st.columns(3)
+    # שורה 1: תאריכים
+    col_date1, col_date2 = st.columns(2)
 
-    with col1:
-        # טווח תאריכים
-        st.markdown("**טווח תאריכים:**")
-
+    with col_date1:
         # ברירות מחדל מ-session state או ערכים חדשים
-        if 'report_date_end' not in st.session_state:
-            st.session_state.report_date_end = datetime.now().date()
         if 'report_date_start' not in st.session_state:
             st.session_state.report_date_start = (datetime.now() - timedelta(days=1)).date()
 
-        date_end = st.date_input(
-            "תאריך סיום",
-            value=st.session_state.report_date_end,
-            key="history_date_end"
-        )
-
         date_start = st.date_input(
-            "תאריך התחלה",
+            "📅 תאריך התחלה",
             value=st.session_state.report_date_start,
             key="history_date_start"
         )
-
-        # עדכון session state
-        st.session_state.report_date_end = date_end
         st.session_state.report_date_start = date_start
 
-        # בדיקת תקינות
-        if date_start > date_end:
-            st.error("⚠️ תאריך ההתחלה חייב להיות לפני תאריך הסיום")
-            return
+    with col_date2:
+        if 'report_date_end' not in st.session_state:
+            st.session_state.report_date_end = datetime.now().date()
 
-        # הצגת מידע על הטווח שנבחר
-        date_diff = (date_end - date_start).days
-        if date_diff > 7:
-            num_weeks = (date_diff // 7) + 1
-            st.info(f"ℹ️ הדוח יבוצע ב-{num_weeks} קריאות API (שבוע לכל קריאה)")
+        date_end = st.date_input(
+            "📅 תאריך סיום",
+            value=st.session_state.report_date_end,
+            key="history_date_end"
+        )
+        st.session_state.report_date_end = date_end
 
-    with col2:
-        # סינון לפי משתמש
-        st.markdown("**סינון לפי משתמש:**")
+    # בדיקת תקינות תאריכים
+    if date_start > date_end:
+        st.error("⚠️ תאריך ההתחלה חייב להיות לפני תאריך הסיום")
+        return
+
+    # הצגת מידע על הטווח שנבחר
+    date_diff = (date_end - date_start).days
+    if date_diff > 7:
+        num_weeks = (date_diff // 7) + 1
+        st.info(f"ℹ️ הדוח יבוצע ב-{num_weeks} קריאות API (שבוע לכל קריאה)")
+
+    # שורה 2: סינון לפי משתמש/מדפסת
+    col_user, col_printer = st.columns(2)
+
+    with col_user:
         filter_username = st.text_input(
-            "שם משתמש (השאר ריק לכולם)",
+            "👤 סינון לפי משתמש (אופציונלי)",
+            placeholder="השאר ריק לכולם",
             key="history_filter_username"
         )
 
-        # סינון לפי מדפסת
+    with col_printer:
         filter_port = st.text_input(
-            "שם מדפסת (השאר ריק לכולם)",
+            "🖨️ סינון לפי מדפסת (אופציונלי)",
+            placeholder="השאר ריק לכולם",
             key="history_filter_port"
         )
 
-    with col3:
-        # סינון לפי סוג עבודה
-        st.markdown("**סוג עבודה:**")
+    # שורה 3: סוג עבודה/סטטוס
+    col_jobtype, col_status = st.columns(2)
+
+    with col_jobtype:
         job_types_map = {
             "הכל": None,
             "הדפסה": "PRINT",
@@ -261,14 +263,13 @@ def show_history_report(api, logger, role, username):
             "פקס": "FAX"
         }
         job_type_he = st.selectbox(
-            "בחר סוג",
+            "📋 סוג עבודה",
             list(job_types_map.keys()),
             key="history_job_type"
         )
         job_type = job_types_map[job_type_he]
 
-        # סינון לפי סטטוס
-        st.markdown("**סטטוס:**")
+    with col_status:
         status_map = {
             "הכל": None,
             "מוכן": [0],
@@ -279,7 +280,7 @@ def show_history_report(api, logger, role, username):
             "התקבל": [5]
         }
         status_he = st.selectbox(
-            "בחר סטטוס",
+            "⚡ סטטוס",
             list(status_map.keys()),
             key="history_status"
         )
@@ -419,21 +420,31 @@ def show_history_report(api, logger, role, username):
                 df = prepare_history_dataframe(documents)
 
                 # סינון וחיפוש
+                st.markdown("---")
                 st.markdown("#### 🔍 סינון נתונים")
-                filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
 
-                with filter_col1:
+                # שורה 1: חיפוש חופשי + מקור
+                filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
+
+                with filter_row1_col1:
                     search_text = st.text_input("חיפוש חופשי", placeholder="שם, מסמך, מדפסת...", key="history_search")
 
-                with filter_col2:
+                with filter_row1_col2:
                     source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
                     selected_source = st.selectbox("מקור", source_options, key="filter_source")
 
-                with filter_col3:
+                with filter_row1_col3:
+                    jobtype_options = ['הכל'] + sorted(df['סוג'].unique().tolist())
+                    selected_jobtype = st.selectbox("סוג עבודה", jobtype_options, key="filter_jobtype")
+
+                # שורה 2: סטטוס + מחלקה
+                filter_row2_col1, filter_row2_col2, filter_row2_col3 = st.columns(3)
+
+                with filter_row2_col1:
                     status_options = ['הכל'] + sorted(df['סטטוס'].unique().tolist())
                     selected_status = st.selectbox("סטטוס", status_options, key="filter_status")
 
-                with filter_col4:
+                with filter_row2_col2:
                     dept_options = ['הכל'] + sorted([d for d in df['מחלקה'].unique() if d], key=str)
                     selected_dept = st.selectbox("מחלקה", dept_options, key="filter_dept")
 
@@ -447,35 +458,43 @@ def show_history_report(api, logger, role, username):
                 if selected_source != 'הכל':
                     filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
 
+                if selected_jobtype != 'הכל':
+                    filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
+
                 if selected_status != 'הכל':
                     filtered_df = filtered_df[filtered_df['סטטוס'] == selected_status]
 
                 if selected_dept != 'הכל':
                     filtered_df = filtered_df[filtered_df['מחלקה'] == selected_dept]
 
-                # הצגת מונה תוצאות
-                if len(filtered_df) < len(df):
-                    st.info(f"מוצגים {len(filtered_df)} מתוך {len(df)} רשומות")
+                # הצגת מונה תוצאות וכפתור ייצוא
+                st.markdown("---")
+                result_col1, result_col2 = st.columns([3, 1])
 
-                # הצגת הטבלה
-                st.dataframe(
-                    filtered_df,
-                    use_container_width=True,
-                    hide_index=True
-                )
+                with result_col1:
+                    if len(filtered_df) < len(df):
+                        st.info(f"📊 מוצגים {len(filtered_df)} מתוך {len(df)} רשומות")
+                    else:
+                        st.info(f"📊 סה\"כ {len(df)} רשומות")
 
-                # כפתור ייצוא ל-Excel (מייצא את הנתונים המסוננים)
-                with col_export:
-                    st.markdown('<div class="export-button">', unsafe_allow_html=True)
+                with result_col2:
                     excel_data = export_to_excel(filtered_df, "history_report")
                     st.download_button(
                         label="📥 ייצא ל-Excel",
                         data=excel_data,
                         file_name=f"history_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key="export_history_btn"
+                        key="export_history_btn",
+                        use_container_width=True
                     )
-                    st.markdown('</div>', unsafe_allow_html=True)
+
+                # הצגת הטבלה (עד 20 שורות)
+                st.dataframe(
+                    filtered_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=min(len(filtered_df) * 35 + 38, 738)  # 20 שורות מקסימום (20*35 + 38 header)
+                )
 
             else:
                 st.warning("⚠️ לא נמצאו תוצאות עבור הפרמטרים שנבחרו")
@@ -688,6 +707,14 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
 
     rows = []
 
+    # Debug: הדפס את השדות הזמינים במסמך הראשון
+    if documents and len(documents) > 0:
+        first_doc = documents[0]
+        available_fields = list(first_doc.keys())
+        # הפעל debug אם צריך: הסר את הסולמית (#) מהשורה הבאה
+        # st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
+        # st.json(first_doc)  # הצג את כל המסמך
+
     for doc in documents:
         # המרת timestamp ל-datetime
         timestamp = doc.get('dateTime', 0)
@@ -722,9 +749,18 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
         username = doc.get('userName', '')
         source = 'Entra' if '@' in username else 'מקומי'
 
+        # ניסיון למצוא שם מלא - נסה מספר שדות אפשריים
+        full_name = (
+            doc.get('fullName', '') or
+            doc.get('userFullName', '') or
+            doc.get('displayName', '') or
+            doc.get('name', '') or
+            username
+        )
+
         row = {
             'תאריך': date_str,
-            'שם מלא': doc.get('fullName', '') or username,
+            'שם מלא': full_name.strip() if full_name else username,
             'משתמש': username,
             'מקור': source,
             'מחלקה': department_str,
