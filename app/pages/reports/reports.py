@@ -202,20 +202,33 @@ def show_history_report(api, logger, role, username):
     with col1:
         # טווח תאריכים
         st.markdown("**טווח תאריכים:**")
+
+        # ברירות מחדל מ-session state או ערכים חדשים
+        if 'report_date_end' not in st.session_state:
+            st.session_state.report_date_end = datetime.now().date()
+        if 'report_date_start' not in st.session_state:
+            st.session_state.report_date_start = (datetime.now() - timedelta(days=1)).date()
+
         date_end = st.date_input(
             "תאריך סיום",
-            value=datetime.now(),
+            value=st.session_state.report_date_end,
             key="history_date_end"
         )
 
-        # ברירת מחדל: 24 שעות אחורה
-        default_start = datetime.now() - timedelta(days=1)
         date_start = st.date_input(
             "תאריך התחלה",
-            value=default_start,
-            max_value=date_end,
+            value=st.session_state.report_date_start,
             key="history_date_start"
         )
+
+        # עדכון session state
+        st.session_state.report_date_end = date_end
+        st.session_state.report_date_start = date_start
+
+        # בדיקת תקינות
+        if date_start > date_end:
+            st.error("⚠️ תאריך ההתחלה חייב להיות לפני תאריך הסיום")
+            return
 
         # הצגת מידע על הטווח שנבחר
         date_diff = (date_end - date_start).days
