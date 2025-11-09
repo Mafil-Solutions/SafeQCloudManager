@@ -18,6 +18,33 @@ from config import config
 
 CONFIG = config.get()
 
+
+def split_date_range_to_weeks(start_date, end_date):
+    """
+    מפצל טווח תאריכים לשבועות (7 ימים לכל שבוע)
+
+    Args:
+        start_date: תאריך התחלה (date object)
+        end_date: תאריך סיום (date object)
+
+    Returns:
+        list of tuples: [(week1_start, week1_end), (week2_start, week2_end), ...]
+    """
+    weeks = []
+    current_start = start_date
+
+    while current_start <= end_date:
+        # חישוב סוף השבוע - 7 ימים או עד תאריך הסיום (הנמוך מבניהם)
+        current_end = min(current_start + timedelta(days=6), end_date)
+
+        weeks.append((current_start, current_end))
+
+        # המשך לשבוע הבא
+        current_start = current_end + timedelta(days=1)
+
+    return weeks
+
+
 def show():
     """הצגת דף הדוחות"""
     check_authentication()
@@ -163,7 +190,7 @@ def show_history_report(api, logger, role, username):
     st.markdown("""
     <div class="info-box">
     דוח זה מציג היסטוריה מפורטת של כל המסמכים במערכת.<br>
-    ניתן לסנן לפי טווח תאריכים (עד שבוע), משתמש, מדפסת, סטטוס וסוג עבודה.
+    ניתן לסנן לפי טווח תאריכים (ללא הגבלה), משתמש, מדפסת, סטטוס וסוג עבודה.
     </div>
     """, unsafe_allow_html=True)
 
@@ -173,7 +200,7 @@ def show_history_report(api, logger, role, username):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # טווח תאריכים (עד שבוע)
+        # טווח תאריכים
         st.markdown("**טווח תאריכים:**")
         date_end = st.date_input(
             "תאריך סיום",
@@ -190,10 +217,11 @@ def show_history_report(api, logger, role, username):
             key="history_date_start"
         )
 
-        # בדיקה שהטווח לא עולה על שבוע
+        # הצגת מידע על הטווח שנבחר
         date_diff = (date_end - date_start).days
         if date_diff > 7:
-            st.warning("⚠️ טווח התאריכים מוגבל לשבוע אחד בלבד")
+            num_weeks = (date_diff // 7) + 1
+            st.info(f"ℹ️ הדוח יבוצע ב-{num_weeks} קריאות API (שבוע לכל קריאה)")
 
     with col2:
         # סינון לפי משתמש
@@ -268,31 +296,96 @@ def show_history_report(api, logger, role, username):
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
-            with st.spinner("⏳ טוען נתונים..."):
-                # המרת תאריכים ל-ISO format
-                date_start_iso = datetime.combine(date_start, datetime.min.time()).isoformat() + "Z"
-                date_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+            # בדיקה אם צריך לפצל לשבועות
+            date_diff = (date_end - date_start).days
 
-                # קריאה ל-API
-                result = api.get_documents_history(
-                    datestart=date_start_iso,
-                    dateend=date_end_iso,
-                    username=filter_username if filter_username else None,
-                    portname=filter_port if filter_port else None,
-                    jobtype=job_type,
-                    status=status_filter,
-                    maxrecords=max_records
-                )
+            if date_diff <= 7:
+                # טווח קטן/שווה לשבוע - קריאה בודדת
+                with st.spinner("⏳ טוען נתונים..."):
+                    date_start_iso = datetime.combine(date_start, datetime.min.time()).isoformat() + "Z"
+                    date_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
 
-                if result:
-                    st.session_state.history_report_data = result
+                    result = api.get_documents_history(
+                        datestart=date_start_iso,
+                        dateend=date_end_iso,
+                        username=filter_username if filter_username else None,
+                        portname=filter_port if filter_port else None,
+                        jobtype=job_type,
+                        status=status_filter,
+                        maxrecords=max_records
+                    )
+
+                    if result:
+                        st.session_state.history_report_data = result
+                        logger.log_action(
+                            username=username,
+                            action="VIEW_HISTORY_REPORT",
+                            details=f"Filters: user={filter_username}, port={filter_port}, jobtype={job_type}, days={date_diff}"
+                        )
+                    else:
+                        st.error("❌ לא הצלחנו לקבל נתונים מהשרת")
+                        if 'history_report_data' in st.session_state:
+                            del st.session_state.history_report_data
+            else:
+                # טווח גדול - קריאות מרובות
+                all_documents = []
+
+                # פיצול לשבועות
+                week_ranges = split_date_range_to_weeks(date_start, date_end)
+                total_weeks = len(week_ranges)
+
+                st.info(f"📊 מבצע {total_weeks} קריאות API לטווח של {date_diff} ימים...")
+
+                # Progress bar
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+
+                success_count = 0
+                for idx, (week_start, week_end) in enumerate(week_ranges):
+                    status_text.text(f"⏳ טוען שבוע {idx + 1} מתוך {total_weeks}...")
+
+                    week_start_iso = datetime.combine(week_start, datetime.min.time()).isoformat() + "Z"
+                    week_end_iso = datetime.combine(week_end, datetime.max.time()).isoformat() + "Z"
+
+                    result = api.get_documents_history(
+                        datestart=week_start_iso,
+                        dateend=week_end_iso,
+                        username=filter_username if filter_username else None,
+                        portname=filter_port if filter_port else None,
+                        jobtype=job_type,
+                        status=status_filter,
+                        maxrecords=max_records
+                    )
+
+                    if result and 'documents' in result:
+                        all_documents.extend(result['documents'])
+                        success_count += 1
+
+                    # עדכון progress bar
+                    progress_bar.progress((idx + 1) / total_weeks)
+
+                # ניקוי progress bar
+                progress_bar.empty()
+                status_text.empty()
+
+                if all_documents:
+                    # יצירת אובייקט result מאוחד
+                    st.session_state.history_report_data = {
+                        'documents': all_documents,
+                        'recordsOnPage': len(all_documents),
+                        'dateStart': datetime.combine(date_start, datetime.min.time()).isoformat() + "Z",
+                        'dateEnd': datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+                    }
+
+                    st.success(f"✅ נטענו {len(all_documents)} מסמכים מ-{success_count} שבועות")
+
                     logger.log_action(
                         username=username,
                         action="VIEW_HISTORY_REPORT",
-                        details=f"Filters: user={filter_username}, port={filter_port}, jobtype={job_type}"
+                        details=f"Multi-week report: {total_weeks} weeks, {len(all_documents)} documents"
                     )
                 else:
-                    st.error("❌ לא הצלחנו לקבל נתונים מהשרת")
+                    st.error(f"❌ לא נמצאו נתונים עבור הטווח שנבחר ({success_count}/{total_weeks} שבועות הצליחו)")
                     if 'history_report_data' in st.session_state:
                         del st.session_state.history_report_data
 
