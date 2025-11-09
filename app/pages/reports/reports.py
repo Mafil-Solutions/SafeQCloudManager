@@ -44,21 +44,27 @@ def build_user_lookup_cache(api, usernames: List[str]) -> Dict[str, str]:
 
         # Local users
         try:
-            local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
+            st.info(f"🔄 מנסה לטעון משתמשים מקומיים (Provider {CONFIG['PROVIDERS']['LOCAL']})...")
+            local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
             if local_users:
                 all_users.extend(local_users)
+                st.success(f"✅ נטענו {len(local_users)} משתמשים מקומיים")
+            else:
+                st.warning("⚠️ לא נמצאו משתמשים מקומיים")
         except Exception as e:
-            # שקט - לא מציג שגיאה למשתמש
-            pass
+            st.error(f"❌ שגיאה בטעינת משתמשים מקומיים: {e}")
 
         # Entra users
         try:
-            entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=2000)
+            st.info(f"🔄 מנסה לטעון משתמשי Entra (Provider {CONFIG['PROVIDERS']['ENTRA']})...")
+            entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=500)
             if entra_users:
                 all_users.extend(entra_users)
+                st.success(f"✅ נטענו {len(entra_users)} משתמשי Entra")
+            else:
+                st.warning("⚠️ לא נמצאו משתמשי Entra")
         except Exception as e:
-            # שקט - לא מציג שגיאה למשתמש
-            pass
+            st.error(f"❌ שגיאה בטעינת משתמשי Entra: {e}")
 
         # בניית cache
         found_count = 0
@@ -502,9 +508,13 @@ def show_history_report(api, logger, role, username):
                 if data.get('nextPageToken'):
                     st.info(f"ℹ️ יש עוד תוצאות זמינות. מוצגים {data.get('recordsOnPage', 0)} רשומות בדף זה.")
 
-                # בניית cache של שמות משתמשים
-                usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
-                user_cache = build_user_lookup_cache(api, usernames)
+                # בניית cache של שמות משתמשים (רק פעם אחת)
+                if 'user_lookup_cache' not in st.session_state:
+                    with st.spinner("טוען מידע משתמשים..."):
+                        usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
+                        st.session_state.user_lookup_cache = build_user_lookup_cache(api, usernames)
+
+                user_cache = st.session_state.user_lookup_cache
 
                 # המרת הנתונים ל-DataFrame
                 df = prepare_history_dataframe(documents, user_cache)
@@ -805,13 +815,8 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
     """
     rows = []
 
-    # Debug: הדפס את השדות הזמינים במסמך הראשון
-    if documents and len(documents) > 0:
-        first_doc = documents[0]
-        available_fields = list(first_doc.keys())
-        # הפעל debug אם צריך: הסר את הסולמית (#) מהשורה הבאה
-        st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
-        st.json(first_doc)  # הצג את כל המסמך
+    if user_cache is None:
+        user_cache = {}
 
     for doc in documents:
         # המרת timestamp ל-datetime
