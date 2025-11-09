@@ -773,8 +773,13 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
     """
     rows = []
 
-    if user_cache is None:
-        user_cache = {}
+    # Debug: הדפס את השדות הזמינים במסמך הראשון
+    if documents and len(documents) > 0:
+        first_doc = documents[0]
+        available_fields = list(first_doc.keys())
+        # הפעל debug אם צריך: הסר את הסולמית (#) מהשורה הבאה
+        st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
+        st.json(first_doc)  # הצג את כל המסמך
 
     for doc in documents:
         # המרת timestamp ל-datetime
