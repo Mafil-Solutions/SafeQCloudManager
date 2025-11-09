@@ -437,6 +437,185 @@ class SafeQAPI:
             st.error(f"שגיאה בהסרת משתמש מקבוצה: {str(e)}")
             return False
 
+    def get_documents_history(self, datestart=None, dateend=None, username=None,
+                             portname=None, status=None, jobtype=None,
+                             maxrecords=200, pagetoken=None, domainname=None):
+        """
+        קבלת היסטוריית מסמכים
+
+        Parameters:
+            datestart: ISO-8601 formatted start date (default: last 24h)
+            dateend: ISO-8601 formatted end date (default: now)
+            username: filter by specific username
+            portname: filter by specific port/printer name
+            status: list of status codes (0=READY, 1=PRINTED, 2=DELETED, etc.)
+            jobtype: PRINT, COPY, SCAN, or FAX
+            maxrecords: max records per page (max 2000)
+            pagetoken: token for pagination
+            domainname: filter by domain
+
+        Returns:
+            dict with: documents, recordsOnPage, nextPageToken, etc.
+        """
+        try:
+            url = f"{self.server_url}/api/v1/documents/history"
+
+            params = {}
+
+            if datestart:
+                params['datestart'] = datestart
+            if dateend:
+                params['dateend'] = dateend
+            if username:
+                params['username'] = username
+            if portname:
+                params['portname'] = portname
+            if jobtype:
+                params['jobtype'] = jobtype
+            if domainname:
+                params['domainname'] = domainname
+            if pagetoken:
+                params['pagetoken'] = pagetoken
+            if maxrecords:
+                params['maxrecords'] = maxrecords
+
+            # status הוא list, צריך לשלוח אותו בצורה מיוחדת
+            if status and isinstance(status, list):
+                params['status'] = ','.join(map(str, status))
+
+            response = requests.get(url, headers=self.headers, params=params,
+                                  verify=False, timeout=300)  # 5 min timeout
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                st.error(f"כשל בקבלת היסטוריית מסמכים: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return None
+        except Exception as e:
+            st.error(f"שגיאה בקבלת היסטוריית מסמכים: {str(e)}")
+            return None
+
+    def get_user_documents(self, status=None, maxrecords=50):
+        """
+        קבלת רשימת מסמכים למשתמש
+
+        Note: דורש User Token (לא זמין ב-API Key authentication)
+
+        Parameters:
+            status: list of status codes (default: [0] for READY)
+            maxrecords: max records to retrieve (max 500)
+
+        Returns:
+            list of DocumentInfo or None
+        """
+        try:
+            url = f"{self.server_url}/api/v1/documents"
+
+            params = {}
+
+            if maxrecords:
+                params['maxRecords'] = maxrecords
+
+            # status הוא list
+            if status and isinstance(status, list):
+                params['status'] = ','.join(map(str, status))
+            elif status is None:
+                params['status'] = '0'  # default READY
+
+            response = requests.get(url, headers=self.headers, params=params,
+                                  verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                # יכול להיות list או dict עם items
+                if isinstance(data, dict) and 'items' in data:
+                    return data['items']
+                elif isinstance(data, list):
+                    return data
+                return []
+            else:
+                st.error(f"כשל בקבלת מסמכים: HTTP {response.status_code}")
+                return None
+        except Exception as e:
+            st.error(f"שגיאה בקבלת מסמכים: {str(e)}")
+            return None
+
+    def record_document_job(self, jobtype, username=None, providerid=None,
+                          totalpages=None, colorpages=None, papersize=None,
+                          duplex=None, title=None, serialnumber=None,
+                          address=None, datetime_str=None):
+        """
+        רישום עבודת הדפסה/העתקה/סריקה חדשה
+
+        Parameters:
+            jobtype: PRINT, COPY, SCAN, or FAX (required)
+            username: username (required if using device token)
+            providerid: provider id (required if using device token)
+            totalpages: total pages
+            colorpages: color pages
+            papersize: paper size
+            duplex: boolean (True = LONG, False = SHORT)
+            title: document title
+            serialnumber: serial number to find output port
+            address: address to find output port
+            datetime_str: datetime in format YYYY-MM-DDTHH:mm:ss+HH:mm
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            url = f"{self.server_url}/api/v1/documents/history"
+
+            data = {'jobtype': jobtype}
+
+            if username:
+                data['username'] = username
+            if providerid:
+                data['providerid'] = providerid
+            if totalpages is not None:
+                data['totalpages'] = str(totalpages)
+            if colorpages is not None:
+                data['colorpages'] = str(colorpages)
+            if papersize:
+                data['papersize'] = papersize
+            if duplex is not None:
+                data['duplex'] = 'true' if duplex else 'false'
+            if title:
+                data['title'] = title
+            if serialnumber:
+                data['serialnumber'] = serialnumber
+            if address:
+                data['address'] = address
+            if datetime_str:
+                data['datetime'] = datetime_str
+
+            import urllib.parse
+            encoded_data = urllib.parse.urlencode(data)
+
+            response = requests.post(url, headers=self.headers, data=encoded_data,
+                                   verify=False, timeout=10)
+
+            if response.status_code == 200:
+                return True
+            else:
+                st.error(f"כשל ברישום עבודה: HTTP {response.status_code}")
+                if response.text:
+                    try:
+                        error_detail = response.json()
+                        st.error(f"פרטי שגיאה: {error_detail}")
+                    except:
+                        st.error(f"פרטי שגיאה: {response.text}")
+                return False
+        except Exception as e:
+            st.error(f"שגיאה ברישום עבודה: {str(e)}")
+            return False
+
 def get_api_instance():
     """קבלת instance של SafeQAPI"""
     if 'api' not in st.session_state:

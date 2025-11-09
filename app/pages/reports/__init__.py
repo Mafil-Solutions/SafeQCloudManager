@@ -2,28 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 SafeQ Cloud Manager - Reports Module
-מודול דוחות - בפיתוח
+מודול דוחות
 """
 
-import streamlit as st
+from .reports import show
 
-def show():
-    """הצגת דף דוחות (placeholder)"""
-    st.header("📊 דוחות וסטטיסטיקות")
-
-    st.info("📌 מודול זה נמצא בפיתוח")
-
-    st.markdown("""
-    ### פיצ'רים מתוכננים:
-    - 📈 דוחות שימוש
-    - 💰 דוחות עלויות
-    - 👥 דוחות משתמשים
-    - 🖨️ דוחות מדפסות
-    - 📅 דוחות לפי תקופה
-    - 📥 ייצוא דוחות (PDF, Excel)
-    """)
-
-    st.warning("⏳ תכונה זו תהיה זמינה בגרסה הבאה")
-
-if __name__ == "__main__":
-    show()
+__all__ = ['show']
