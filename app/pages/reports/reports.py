@@ -42,23 +42,23 @@ def build_user_lookup_cache(api, usernames: List[str]) -> Dict[str, str]:
         # נסה לטעון משתמשים מקומיים ו-Entra (בשקט, בלי הודעות שגיאה)
         all_users = []
 
-        # Local users
+        # Local users (מגביל ל-1000 כדי למנוע שגיאות)
         try:
-            local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
+            local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
             if local_users:
                 all_users.extend(local_users)
         except Exception as e:
-            # שקט - לא מציג שגיאה למשתמש
-            pass
+            # שקט - לא מציג שגיאה למשתמש (אבל כן ל-console)
+            print(f"Warning: Could not load local users: {e}")
 
-        # Entra users
+        # Entra users (מגביל ל-1000 כדי למנוע שגיאות)
         try:
-            entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=2000)
+            entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=1000)
             if entra_users:
                 all_users.extend(entra_users)
         except Exception as e:
-            # שקט - לא מציג שגיאה למשתמש
-            pass
+            # שקט - לא מציג שגיאה למשתמש (אבל כן ל-console)
+            print(f"Warning: Could not load Entra users: {e}")
 
         # בניית cache
         found_count = 0
@@ -805,13 +805,8 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
     """
     rows = []
 
-    # Debug: הדפס את השדות הזמינים במסמך הראשון
-    if documents and len(documents) > 0:
-        first_doc = documents[0]
-        available_fields = list(first_doc.keys())
-        # הפעל debug אם צריך: הסר את הסולמית (#) מהשורה הבאה
-        st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
-        st.json(first_doc)  # הצג את כל המסמך
+    if user_cache is None:
+        user_cache = {}
 
     for doc in documents:
         # המרת timestamp ל-datetime
