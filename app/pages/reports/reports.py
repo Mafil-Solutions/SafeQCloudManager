@@ -371,7 +371,12 @@ def show_history_report(api, logger, role, username):
                 # טווח קטן/שווה לשבוע - קריאה בודדת
                 with st.spinner("⏳ טוען נתונים..."):
                     date_start_iso = datetime.combine(date_start, datetime.min.time()).isoformat() + "Z"
-                    date_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+
+                    # אם תאריך הסיום הוא היום, השתמש בזמן הנוכחי במקום סוף היום
+                    if date_end >= datetime.now().date():
+                        date_end_iso = datetime.now().isoformat() + "Z"
+                    else:
+                        date_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
 
                     result = api.get_documents_history(
                         datestart=date_start_iso,
@@ -413,7 +418,12 @@ def show_history_report(api, logger, role, username):
                     status_text.text(f"⏳ טוען שבוע {idx + 1} מתוך {total_weeks}...")
 
                     week_start_iso = datetime.combine(week_start, datetime.min.time()).isoformat() + "Z"
-                    week_end_iso = datetime.combine(week_end, datetime.max.time()).isoformat() + "Z"
+
+                    # אם תאריך הסיום הוא היום או בעתיד, השתמש בזמן הנוכחי
+                    if week_end >= datetime.now().date():
+                        week_end_iso = datetime.now().isoformat() + "Z"
+                    else:
+                        week_end_iso = datetime.combine(week_end, datetime.max.time()).isoformat() + "Z"
 
                     result = api.get_documents_history(
                         datestart=week_start_iso,
@@ -438,11 +448,17 @@ def show_history_report(api, logger, role, username):
 
                 if all_documents:
                     # יצירת אובייקט result מאוחד
+                    # תאריך סיום - אם זה היום או בעתיד, השתמש בזמן הנוכחי
+                    if date_end >= datetime.now().date():
+                        final_end_iso = datetime.now().isoformat() + "Z"
+                    else:
+                        final_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+
                     st.session_state.history_report_data = {
                         'documents': all_documents,
                         'recordsOnPage': len(all_documents),
                         'dateStart': datetime.combine(date_start, datetime.min.time()).isoformat() + "Z",
-                        'dateEnd': datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+                        'dateEnd': final_end_iso
                     }
 
                     st.success(f"✅ נטענו {len(all_documents)} מסמכים מ-{success_count} שבועות")
