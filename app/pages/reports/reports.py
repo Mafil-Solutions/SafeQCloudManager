@@ -673,15 +673,19 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
         }
         status = status_map.get(doc.get('status'), 'לא ידוע')
 
-        # איסוף tags
-        tags_str = ', '.join([
-            f"{tag.get('name', '')} ({'מחלקה' if tag.get('tagType') == 0 else 'קבוצה'})"
-            for tag in doc.get('tags', [])
-        ])
+        # הפרדת מחלקות מתגיות אחרות
+        tags = doc.get('tags', [])
+        departments = [tag.get('name', '') for tag in tags if tag.get('tagType') == 0]
+        other_tags = [tag.get('name', '') for tag in tags if tag.get('tagType') != 0]
+
+        department_str = ', '.join(departments) if departments else ''
+        tags_str = ', '.join(other_tags) if other_tags else ''
 
         row = {
             'תאריך': date_str,
+            'שם משתמש': doc.get('userFullName', '') or doc.get('userName', ''),
             'משתמש': doc.get('userName', ''),
+            'מחלקה': department_str,
             'שם מסמך': doc.get('documentName', ''),
             'סוג': doc.get('jobType', ''),
             'סטטוס': status,
