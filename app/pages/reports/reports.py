@@ -418,17 +418,56 @@ def show_history_report(api, logger, role, username):
                 # המרת הנתונים ל-DataFrame
                 df = prepare_history_dataframe(documents)
 
+                # סינון וחיפוש
+                st.markdown("#### 🔍 סינון נתונים")
+                filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
+
+                with filter_col1:
+                    search_text = st.text_input("חיפוש חופשי", placeholder="שם, מסמך, מדפסת...", key="history_search")
+
+                with filter_col2:
+                    source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
+                    selected_source = st.selectbox("מקור", source_options, key="filter_source")
+
+                with filter_col3:
+                    status_options = ['הכל'] + sorted(df['סטטוס'].unique().tolist())
+                    selected_status = st.selectbox("סטטוס", status_options, key="filter_status")
+
+                with filter_col4:
+                    dept_options = ['הכל'] + sorted([d for d in df['מחלקה'].unique() if d], key=str)
+                    selected_dept = st.selectbox("מחלקה", dept_options, key="filter_dept")
+
+                # החלת סינונים
+                filtered_df = df.copy()
+
+                if search_text:
+                    mask = filtered_df.astype(str).apply(lambda x: x.str.contains(search_text, case=False, na=False)).any(axis=1)
+                    filtered_df = filtered_df[mask]
+
+                if selected_source != 'הכל':
+                    filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+
+                if selected_status != 'הכל':
+                    filtered_df = filtered_df[filtered_df['סטטוס'] == selected_status]
+
+                if selected_dept != 'הכל':
+                    filtered_df = filtered_df[filtered_df['מחלקה'] == selected_dept]
+
+                # הצגת מונה תוצאות
+                if len(filtered_df) < len(df):
+                    st.info(f"מוצגים {len(filtered_df)} מתוך {len(df)} רשומות")
+
                 # הצגת הטבלה
                 st.dataframe(
-                    df,
+                    filtered_df,
                     use_container_width=True,
                     hide_index=True
                 )
 
-                # כפתור ייצוא ל-Excel
+                # כפתור ייצוא ל-Excel (מייצא את הנתונים המסוננים)
                 with col_export:
                     st.markdown('<div class="export-button">', unsafe_allow_html=True)
-                    excel_data = export_to_excel(df, "history_report")
+                    excel_data = export_to_excel(filtered_df, "history_report")
                     st.download_button(
                         label="📥 ייצא ל-Excel",
                         data=excel_data,
@@ -676,15 +715,18 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
         # הפרדת מחלקות מתגיות אחרות
         tags = doc.get('tags', [])
         departments = [tag.get('name', '') for tag in tags if tag.get('tagType') == 0]
-        other_tags = [tag.get('name', '') for tag in tags if tag.get('tagType') != 0]
 
         department_str = ', '.join(departments) if departments else ''
-        tags_str = ', '.join(other_tags) if other_tags else ''
+
+        # זיהוי מקור לפי username (אם יש @ זה Entra, אם לא Local)
+        username = doc.get('userName', '')
+        source = 'Entra' if '@' in username else 'מקומי'
 
         row = {
             'תאריך': date_str,
-            'שם משתמש': doc.get('userFullName', '') or doc.get('userName', ''),
-            'משתמש': doc.get('userName', ''),
+            'שם מלא': doc.get('fullName', '') or username,
+            'משתמש': username,
+            'מקור': source,
             'מחלקה': department_str,
             'שם מסמך': doc.get('documentName', ''),
             'סוג': doc.get('jobType', ''),
@@ -694,8 +736,7 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
             'עותקים': doc.get('copies', 1),
             'דופלקס': 'כן' if doc.get('duplex') else 'לא',
             'מדפסת': doc.get('outputPortName', ''),
-            'גודל נייר': doc.get('paperSize', ''),
-            'תגיות': tags_str
+            'גודל נייר': doc.get('paperSize', '')
         }
 
         rows.append(row)
