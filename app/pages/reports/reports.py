@@ -19,6 +19,60 @@ from config import config
 CONFIG = config.get()
 
 
+def build_user_lookup_cache(api, usernames: List[str]) -> Dict[str, str]:
+    """
+    בונה cache של username -> fullName
+
+    Args:
+        api: instance של SafeQAPI
+        usernames: רשימת usernames לחיפוש
+
+    Returns:
+        dict: {username: fullName}
+    """
+    user_cache = {}
+
+    if not usernames:
+        return user_cache
+
+    # הסרת כפילויות
+    unique_usernames = list(set(usernames))
+
+    try:
+        # נסה לטעון משתמשים מקומיים ו-Entra
+        with st.spinner(f"טוען מידע על {len(unique_usernames)} משתמשים..."):
+            all_users = []
+
+            # Local users
+            try:
+                local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
+                if local_users:
+                    all_users.extend(local_users)
+            except:
+                pass
+
+            # Entra users
+            try:
+                entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=2000)
+                if entra_users:
+                    all_users.extend(entra_users)
+            except:
+                pass
+
+            # בניית cache
+            for user in all_users:
+                username = user.get('userName', '') or user.get('username', '')
+                full_name = user.get('fullName', '') or user.get('displayName', '') or user.get('name', '')
+
+                if username and full_name:
+                    user_cache[username] = full_name
+
+    except Exception as e:
+        st.warning(f"⚠️ לא ניתן לטעון מידע משתמשים: {str(e)}")
+
+    return user_cache
+
+
 def split_date_range_to_weeks(start_date, end_date):
     """
     מפצל טווח תאריכים לשבועות (7 ימים לכל שבוע)
@@ -416,8 +470,12 @@ def show_history_report(api, logger, role, username):
                 if data.get('nextPageToken'):
                     st.info(f"ℹ️ יש עוד תוצאות זמינות. מוצגים {data.get('recordsOnPage', 0)} רשומות בדף זה.")
 
+                # בניית cache של שמות משתמשים
+                usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
+                user_cache = build_user_lookup_cache(api, usernames)
+
                 # המרת הנתונים ל-DataFrame
-                df = prepare_history_dataframe(documents)
+                df = prepare_history_dataframe(documents, user_cache)
 
                 # סינון וחיפוש
                 st.markdown("---")
@@ -702,18 +760,21 @@ def show_statistics_report(api, logger, role, username):
         st.info("ℹ️ אין מידע על מחלקות בנתונים")
 
 
-def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
-    """המרת נתוני היסטוריה ל-DataFrame"""
+def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] = None) -> pd.DataFrame:
+    """
+    המרת נתוני היסטוריה ל-DataFrame
 
+    Args:
+        documents: רשימת מסמכים מה-API
+        user_cache: dict של {username: fullName} (אופציונלי)
+
+    Returns:
+        pd.DataFrame
+    """
     rows = []
 
-    # Debug: הדפס את השדות הזמינים במסמך הראשון
-    if documents and len(documents) > 0:
-        first_doc = documents[0]
-        available_fields = list(first_doc.keys())
-        # הפעל debug אם צריך: הסר את הסולמית (#) מהשורה הבאה
-        # st.warning(f"🔍 DEBUG - שדות זמינים במסמך: {', '.join(sorted(available_fields))}")
-        # st.json(first_doc)  # הצג את כל המסמך
+    if user_cache is None:
+        user_cache = {}
 
     for doc in documents:
         # המרת timestamp ל-datetime
@@ -749,18 +810,25 @@ def prepare_history_dataframe(documents: List[Dict]) -> pd.DataFrame:
         username = doc.get('userName', '')
         source = 'Entra' if '@' in username else 'מקומי'
 
-        # ניסיון למצוא שם מלא - נסה מספר שדות אפשריים
-        full_name = (
-            doc.get('fullName', '') or
-            doc.get('userFullName', '') or
-            doc.get('displayName', '') or
-            doc.get('name', '') or
-            username
-        )
+        # חיפוש שם מלא - קודם ב-cache, אחר כך בשדות המסמך
+        full_name = user_cache.get(username, '')
+
+        if not full_name:
+            # נסיון למצוא שם מלא במסמך עצמו (למקרה שיש)
+            full_name = (
+                doc.get('fullName', '') or
+                doc.get('userFullName', '') or
+                doc.get('displayName', '') or
+                doc.get('name', '') or
+                ''
+            )
+
+        # אם עדיין אין שם מלא, השתמש ב-username
+        display_name = full_name.strip() if full_name else username
 
         row = {
             'תאריך': date_str,
-            'שם מלא': full_name.strip() if full_name else username,
+            'שם מלא': display_name,
             'משתמש': username,
             'מקור': source,
             'מחלקה': department_str,
