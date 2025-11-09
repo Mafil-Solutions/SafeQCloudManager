@@ -23,6 +23,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                border:none ;
                transition: none !important;
                background: none;
+               width:90% !important;
             }
             div[data-testid="stPageLink"]:hover {
                padding: 0.0rem 0.0rem !important;
