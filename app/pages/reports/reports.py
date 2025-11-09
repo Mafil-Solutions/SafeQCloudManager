@@ -39,36 +39,51 @@ def build_user_lookup_cache(api, usernames: List[str]) -> Dict[str, str]:
     unique_usernames = list(set(usernames))
 
     try:
-        # נסה לטעון משתמשים מקומיים ו-Entra
-        with st.spinner(f"טוען מידע על {len(unique_usernames)} משתמשים..."):
-            all_users = []
+        # נסה לטעון משתמשים מקומיים ו-Entra (בשקט, בלי הודעות שגיאה)
+        all_users = []
 
-            # Local users
-            try:
-                local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
-                if local_users:
-                    all_users.extend(local_users)
-            except:
-                pass
+        # Local users
+        try:
+            local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
+            if local_users:
+                all_users.extend(local_users)
+        except Exception as e:
+            # שקט - לא מציג שגיאה למשתמש
+            pass
 
-            # Entra users
-            try:
-                entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=2000)
-                if entra_users:
-                    all_users.extend(entra_users)
-            except:
-                pass
+        # Entra users
+        try:
+            entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=2000)
+            if entra_users:
+                all_users.extend(entra_users)
+        except Exception as e:
+            # שקט - לא מציג שגיאה למשתמש
+            pass
 
-            # בניית cache
-            for user in all_users:
-                username = user.get('userName', '') or user.get('username', '')
-                full_name = user.get('fullName', '') or user.get('displayName', '') or user.get('name', '')
+        # בניית cache
+        found_count = 0
+        missing_count = 0
 
-                if username and full_name:
+        for user in all_users:
+            username = user.get('userName', '') or user.get('username', '')
+            full_name = user.get('fullName', '') or user.get('displayName', '') or user.get('name', '')
+
+            if username:
+                if full_name:
                     user_cache[username] = full_name
+                    found_count += 1
+                else:
+                    missing_count += 1
+
+        # Debug: הצג כמה משתמשים נמצאו
+        if found_count > 0:
+            st.info(f"📋 נטענו {found_count} שמות משתמשים ({missing_count} ללא שם מלא)")
+        elif all_users:
+            st.warning(f"⚠️ נטענו {len(all_users)} משתמשים אך אף אחד אין לו שם מלא")
 
     except Exception as e:
-        st.warning(f"⚠️ לא ניתן לטעון מידע משתמשים: {str(e)}")
+        # שגיאה כללית - לא מציג למשתמש
+        pass
 
     return user_cache
 
@@ -284,7 +299,7 @@ def show_history_report(api, logger, role, username):
 
     # הצגת מידע על הטווח שנבחר
     date_diff = (date_end - date_start).days
-    if date_diff > 7:
+    if date_diff >= 7:  # 7 ימים ביניהם = 8 ימים כולל, צריך פיצול
         num_weeks = (date_diff // 7) + 1
         st.info(f"ℹ️ הדוח יבוצע ב-{num_weeks} קריאות API (שבוע לכל קריאה)")
 
@@ -365,9 +380,10 @@ def show_history_report(api, logger, role, username):
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
             # בדיקה אם צריך לפצל לשבועות
+            # date_diff מחשב ימים ביניהם, אז date_diff=6 זה 7 ימים (כולל התחלה)
             date_diff = (date_end - date_start).days
 
-            if date_diff <= 7:
+            if date_diff < 7:  # פחות מ-7 ימים ביניהם = מקסימום 7 ימים כולל
                 # טווח קטן/שווה לשבוע - קריאה בודדת
                 with st.spinner("⏳ טוען נתונים..."):
                     date_start_iso = datetime.combine(date_start, datetime.min.time()).isoformat() + "Z"
