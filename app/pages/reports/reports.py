@@ -502,11 +502,6 @@ def show_history_report(api, logger, role, username):
 
             if documents:
                 st.markdown("---")
-                st.markdown(f"### 📋 נמצאו {len(documents)} תוצאות")
-
-                # הצגת מידע על pagination
-                if data.get('nextPageToken'):
-                    st.info(f"ℹ️ יש עוד תוצאות זמינות. מוצגים {data.get('recordsOnPage', 0)} רשומות בדף זה.")
 
                 # בניית cache של שמות משתמשים (רק פעם אחת)
                 if 'user_lookup_cache' not in st.session_state:
@@ -516,8 +511,19 @@ def show_history_report(api, logger, role, username):
 
                 user_cache = st.session_state.user_lookup_cache
 
-                # המרת הנתונים ל-DataFrame
+                # המרת הנתונים ל-DataFrame (כולל סינון)
                 df = prepare_history_dataframe(documents, user_cache)
+
+                # הצגת מספר תוצאות אחרי סינון
+                st.markdown(f"### 📋 נמצאו {len(df)} תוצאות")
+
+                # הסבר על סינון אם יש הפרש
+                if len(df) < len(documents):
+                    st.info(f"ℹ️ סוננו {len(documents) - len(df)} רשומות (הדפסות לא הודפסו / סריקות נמחקו)")
+
+                # הצגת מידע על pagination
+                if data.get('nextPageToken'):
+                    st.info(f"ℹ️ יש עוד תוצאות זמינות מהשרת")
 
                 # סינון וחיפוש
                 st.markdown("---")
@@ -734,8 +740,8 @@ def show_statistics_report(api, logger, role, username):
             st.markdown(f"""
             <div class="stats-card">
                 <div class="stats-label">{display_name}</div>
-                <div class="stats-number">{count:,}</div>
-                <div class="stats-label">עבודות • {pages:,} עמודים</div>
+                <div><span class="stats-number">{count:,}</span> <span class="stats-label">עבודות</span></div>
+                <div><span class="stats-number">{pages:,}</span> <span class="stats-label">עמודים</span></div>
                 <div class="stats-label">{percentage:.1f}%</div>
             </div>
             """, unsafe_allow_html=True)
