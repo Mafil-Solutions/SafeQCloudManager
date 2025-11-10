@@ -636,6 +636,15 @@ def show_statistics_report(api, logger, role, username):
         st.warning("⚠️ אין נתונים להצגת סטטיסטיקות")
         return
 
+    # סינון: הדפסות רק עם סטטוס "הודפס"
+    filtered_documents = []
+    for doc in documents:
+        if doc.get('jobType') == 'PRINT' and doc.get('status') != 1:
+            continue  # דלג על הדפסות שלא הודפסו
+        filtered_documents.append(doc)
+
+    documents = filtered_documents
+
     st.markdown("### 📈 סיכום כללי")
 
     # חישוב סטטיסטיקות בסיסיות
@@ -643,11 +652,20 @@ def show_statistics_report(api, logger, role, username):
     total_pages = sum(doc.get('totalPages', 0) for doc in documents)
     total_color_pages = sum(doc.get('colorPages', 0) for doc in documents)
 
+    # תרגום סוגי עבודה לעברית
+    job_type_translation = {
+        'PRINT': 'הדפסה',
+        'COPY': 'העתקה',
+        'SCAN': 'סריקה',
+        'FAX': 'פקס'
+    }
+
     # סטטיסטיקות לפי סוג עבודה
     job_types_count = {}
     for doc in documents:
         job_type = doc.get('jobType', 'UNKNOWN')
-        job_types_count[job_type] = job_types_count.get(job_type, 0) + 1
+        job_type_he = job_type_translation.get(job_type, job_type)
+        job_types_count[job_type_he] = job_types_count.get(job_type_he, 0) + 1
 
     # הצגת כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
@@ -823,7 +841,7 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
         timestamp = doc.get('dateTime', 0)
         if timestamp:
             dt = datetime.fromtimestamp(timestamp / 1000)  # מילישניות לשניות
-            date_str = dt.strftime('%Y-%m-%d %H:%M:%S')
+            date_str = dt.strftime('%d/%m/%Y %H:%M:%S')  # פורמט dd/mm/yyyy
         else:
             date_str = ''
 
@@ -841,6 +859,16 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
             9: 'מאוחסן'
         }
         status = status_map.get(doc.get('status'), 'לא ידוע')
+
+        # תרגום סוג עבודה לעברית
+        job_type_en = doc.get('jobType', '')
+        job_type_map = {
+            'PRINT': 'הדפסה',
+            'COPY': 'העתקה',
+            'SCAN': 'סריקה',
+            'FAX': 'פקס'
+        }
+        job_type_he = job_type_map.get(job_type_en, job_type_en)
 
         # הפרדת מחלקות מתגיות אחרות
         tags = doc.get('tags', [])
@@ -868,6 +896,10 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
         # אם עדיין אין שם מלא, השתמש ב-username
         display_name = full_name.strip() if full_name else username
 
+        # סינון: אם סוג העבודה הוא הדפסה, הצג רק סטטוס "הודפס"
+        if job_type_en == 'PRINT' and doc.get('status') != 1:
+            continue  # דלג על תוצאות הדפסה שלא הודפסו
+
         row = {
             'תאריך': date_str,
             'שם מלא': display_name,
@@ -875,7 +907,7 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
             'מקור': source,
             'מחלקה': department_str,
             'שם מסמך': doc.get('documentName', ''),
-            'סוג': doc.get('jobType', ''),
+            'סוג': job_type_he,  # תרגום לעברית
             'סטטוס': status,
             'עמודים': doc.get('totalPages', 0),
             'צבע': doc.get('colorPages', 0),
