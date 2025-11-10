@@ -283,7 +283,8 @@ def show_history_report(api, logger, role, username):
         date_start = st.date_input(
             "📅 תאריך התחלה",
             value=st.session_state.report_date_start,
-            key="history_date_start"
+            key="history_date_start",
+            format="DD/MM/YYYY"
         )
         st.session_state.report_date_start = date_start
 
@@ -294,7 +295,8 @@ def show_history_report(api, logger, role, username):
         date_end = st.date_input(
             "📅 תאריך סיום",
             value=st.session_state.report_date_end,
-            key="history_date_end"
+            key="history_date_end",
+            format="DD/MM/YYYY"
         )
         st.session_state.report_date_end = date_end
 
