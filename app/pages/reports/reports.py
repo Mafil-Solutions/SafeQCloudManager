@@ -636,21 +636,27 @@ def show_statistics_report(api, logger, role, username):
         st.warning("⚠️ אין נתונים להצגת סטטיסטיקות")
         return
 
-    # סינון: הדפסות רק עם סטטוס "הודפס"
+    # סינון:
+    # - הדפסות: רק סטטוס "הודפס"
+    # - סריקות: הכל חוץ מ"נמחק"
     filtered_documents = []
     for doc in documents:
         if doc.get('jobType') == 'PRINT' and doc.get('status') != 1:
             continue  # דלג על הדפסות שלא הודפסו
+        if doc.get('jobType') == 'SCAN' and doc.get('status') == 2:
+            continue  # דלג על סריקות שנמחקו
         filtered_documents.append(doc)
 
     documents = filtered_documents
 
-    st.markdown("### 📈 סיכום כללי")
+    st.markdown("### 📈 סיכום הדפסות/צילומים")
 
-    # חישוב סטטיסטיקות בסיסיות
-    total_docs = len(documents)
-    total_pages = sum(doc.get('totalPages', 0) for doc in documents)
-    total_color_pages = sum(doc.get('colorPages', 0) for doc in documents)
+    # חישוב סטטיסטיקות - רק הדפסה וצילום (לא סריקה!)
+    print_copy_docs = [doc for doc in documents if doc.get('jobType') in ['PRINT', 'COPY']]
+
+    total_docs = len(print_copy_docs)
+    total_pages = sum(doc.get('totalPages', 0) for doc in print_copy_docs)
+    total_color_pages = sum(doc.get('colorPages', 0) for doc in print_copy_docs)
 
     # תרגום סוגי עבודה לעברית
     job_type_translation = {
@@ -661,11 +667,14 @@ def show_statistics_report(api, logger, role, username):
     }
 
     # סטטיסטיקות לפי סוג עבודה
-    job_types_count = {}
+    job_types_stats = {}
     for doc in documents:
         job_type = doc.get('jobType', 'UNKNOWN')
         job_type_he = job_type_translation.get(job_type, job_type)
-        job_types_count[job_type_he] = job_types_count.get(job_type_he, 0) + 1
+        if job_type_he not in job_types_stats:
+            job_types_stats[job_type_he] = {'count': 0, 'pages': 0}
+        job_types_stats[job_type_he]['count'] += 1
+        job_types_stats[job_type_he]['pages'] += doc.get('totalPages', 0)
 
     # הצגת כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
@@ -674,7 +683,7 @@ def show_statistics_report(api, logger, role, username):
         st.markdown(f"""
         <div class="stats-card">
             <div class="stats-number">{total_docs:,}</div>
-            <div class="stats-label">סה"כ מסמכים</div>
+            <div class="stats-label">סה"כ עבודות הדפסה/צילום</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -715,15 +724,18 @@ def show_statistics_report(api, logger, role, username):
         'FAX': '📠 פקס'
     }
 
-    cols = st.columns(len(job_types_count))
-    for idx, (job_type, count) in enumerate(job_types_count.items()):
+    cols = st.columns(len(job_types_stats))
+    for idx, (job_type, stats) in enumerate(job_types_stats.items()):
         with cols[idx]:
             display_name = job_type_names.get(job_type, job_type)
+            count = stats['count']
+            pages = stats['pages']
             percentage = (count / total_docs * 100) if total_docs > 0 else 0
             st.markdown(f"""
             <div class="stats-card">
                 <div class="stats-label">{display_name}</div>
                 <div class="stats-number">{count:,}</div>
+                <div class="stats-label">עבודות • {pages:,} עמודים</div>
                 <div class="stats-label">{percentage:.1f}%</div>
             </div>
             """, unsafe_allow_html=True)
@@ -732,6 +744,14 @@ def show_statistics_report(api, logger, role, username):
 
     # סטטיסטיקות לפי משתמש (Top 10)
     st.markdown("### 👥 משתמשים מובילים (Top 10)")
+
+    # בדיקה אם יש user_cache ב-session state, אם לא - בניית cache
+    if 'user_lookup_cache' not in st.session_state:
+        with st.spinner("טוען מידע משתמשים..."):
+            usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
+            st.session_state.user_lookup_cache = build_user_lookup_cache(api, usernames)
+
+    user_cache = st.session_state.user_lookup_cache
 
     user_stats = {}
     for doc in documents:
@@ -746,12 +766,13 @@ def show_statistics_report(api, logger, role, username):
         user_stats[user]['pages'] += doc.get('totalPages', 0)
         user_stats[user]['color_pages'] += doc.get('colorPages', 0)
 
-    # מיון לפי מספר מסמכים
-    top_users = sorted(user_stats.items(), key=lambda x: x[1]['docs'], reverse=True)[:10]
+    # מיון לפי מספר עמודים (סדר יורד)
+    top_users = sorted(user_stats.items(), key=lambda x: x[1]['pages'], reverse=True)[:10]
 
-    # יצירת טבלה
+    # יצירת טבלה עם שם מלא
     user_df = pd.DataFrame([
         {
+            'שם מלא': user_cache.get(user, user),
             'משתמש': user,
             'מסמכים': stats['docs'],
             'עמודים': stats['pages'],
@@ -772,14 +793,18 @@ def show_statistics_report(api, logger, role, username):
     for doc in documents:
         port = doc.get('outputPortName', 'Unknown')
         if port and port != '':
-            port_stats[port] = port_stats.get(port, 0) + 1
+            if port not in port_stats:
+                port_stats[port] = {'docs': 0, 'pages': 0}
+            port_stats[port]['docs'] += 1
+            port_stats[port]['pages'] += doc.get('totalPages', 0)
 
     if port_stats:
-        top_ports = sorted(port_stats.items(), key=lambda x: x[1], reverse=True)[:10]
+        # מיון לפי מספר עמודים (סדר יורד)
+        top_ports = sorted(port_stats.items(), key=lambda x: x[1]['pages'], reverse=True)[:10]
 
         port_df = pd.DataFrame([
-            {'מדפסת': port, 'מסמכים': count}
-            for port, count in top_ports
+            {'מדפסת': port, 'מסמכים': stats['docs'], 'עמודים': stats['pages']}
+            for port, stats in top_ports
         ])
 
         st.dataframe(port_df, use_container_width=True, hide_index=True)
@@ -806,13 +831,14 @@ def show_statistics_report(api, logger, role, username):
                 dept_stats[dept_name]['pages'] += doc.get('totalPages', 0)
 
     if dept_stats:
+        # מיון לפי מספר עמודים (סדר יורד)
         dept_df = pd.DataFrame([
             {
                 'מחלקה': dept,
                 'מסמכים': stats['docs'],
                 'עמודים': stats['pages']
             }
-            for dept, stats in sorted(dept_stats.items(), key=lambda x: x[1]['docs'], reverse=True)
+            for dept, stats in sorted(dept_stats.items(), key=lambda x: x[1]['pages'], reverse=True)
         ])
 
         st.dataframe(dept_df, use_container_width=True, hide_index=True)
@@ -896,9 +922,13 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
         # אם עדיין אין שם מלא, השתמש ב-username
         display_name = full_name.strip() if full_name else username
 
-        # סינון: אם סוג העבודה הוא הדפסה, הצג רק סטטוס "הודפס"
+        # סינון:
+        # - הדפסה: רק סטטוס "הודפס" (1)
+        # - סריקה: הכל חוץ מ"נמחק" (2)
         if job_type_en == 'PRINT' and doc.get('status') != 1:
-            continue  # דלג על תוצאות הדפסה שלא הודפסו
+            continue  # דלג על הדפסות שלא הודפסו
+        if job_type_en == 'SCAN' and doc.get('status') == 2:
+            continue  # דלג על סריקות שנמחקו
 
         row = {
             'תאריך': date_str,
