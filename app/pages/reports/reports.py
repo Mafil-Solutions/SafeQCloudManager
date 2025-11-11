@@ -659,6 +659,12 @@ def show_statistics_report(api, logger, role, username):
 
     st.markdown("### 📈 סיכום הדפסות/צילומים")
 
+    # בדיקה אם יש נתונים לאחר סינון
+    if not documents:
+        st.warning("⚠️ אין עבודות שבוצעו בפועל בתוצאות שנבחרו")
+        st.info("💡 טיפ: הסטטיסטיקות מציגות רק עבודות עם סטטוס 'הודפס' או 'התקבל'. בחר 'עבודות שבוצעו בפועל' בסינון הדוח כדי לראות סטטיסטיקות.")
+        return
+
     # הסבר על סינון
     if len(documents) < original_count:
         st.info(f"ℹ️ הסטטיסטיקות מציגות רק עבודות שבוצעו בפועל ({len(documents)} מתוך {original_count} תוצאות)")
