@@ -20,6 +20,598 @@ from config import config
 CONFIG = config.get()
 
 
+def show_report_settings(api):
+    """
+    הגדרות דוח משותפות לכל הטאבים
+
+    Returns:
+        tuple: (date_start, date_end, filter_username, filter_port, job_type, status_filter_list, max_records, search_clicked)
+    """
+    with st.expander("⚙️ הגדרות דוח", expanded=True):
+
+        # שורה 0: פילטרים מהירים + איפוס
+        col_quick, col_reset = st.columns([3, 1])
+
+        with col_quick:
+            quick_filters = {
+                "בחר טווח...": None,
+                "📅 7 ימים אחרונים": 7,
+                "📅 30 ימים אחרונים": 30,
+                "📅 חודש נוכחי": "month"
+            }
+
+            quick_filter = st.selectbox(
+                "פילטר מהיר",
+                list(quick_filters.keys()),
+                key="quick_filter"
+            )
+
+            # החלת פילטר מהיר
+            if quick_filters[quick_filter] is not None:
+                if quick_filters[quick_filter] == "month":
+                    # חודש נוכחי
+                    today = datetime.now().date()
+                    st.session_state.report_date_start = today.replace(day=1)
+                    st.session_state.report_date_end = today
+                else:
+                    # X ימים אחרונים
+                    days = quick_filters[quick_filter]
+                    st.session_state.report_date_start = (datetime.now() - timedelta(days=days-1)).date()
+                    st.session_state.report_date_end = datetime.now().date()
+
+        with col_reset:
+            st.write("")  # spacing
+            st.write("")  # spacing
+            if st.button("🔄 איפוס", use_container_width=True):
+                # איפוס לברירות מחדל
+                st.session_state.report_date_start = (datetime.now() - timedelta(days=1)).date()
+                st.session_state.report_date_end = datetime.now().date()
+                st.session_state.history_filter_username = ""
+                st.session_state.history_filter_port = ""
+                if 'history_report_data' in st.session_state:
+                    del st.session_state.history_report_data
+                st.rerun()
+
+        # שורה 1: תאריכים
+        col_date1, col_date2, col_today = st.columns([5, 5, 2])
+
+        with col_date1:
+            # ברירות מחדל מ-session state או ערכים חדשים
+            if 'report_date_start' not in st.session_state:
+                st.session_state.report_date_start = (datetime.now() - timedelta(days=1)).date()
+
+            date_start = st.date_input(
+                "📅 תאריך התחלה",
+                value=st.session_state.report_date_start,
+                key="date_start_input",
+                format="DD/MM/YYYY"
+            )
+            st.session_state.report_date_start = date_start
+
+        with col_date2:
+            if 'report_date_end' not in st.session_state:
+                st.session_state.report_date_end = datetime.now().date()
+
+            date_end = st.date_input(
+                "📅 תאריך סיום",
+                value=st.session_state.report_date_end,
+                key="date_end_input",
+                format="DD/MM/YYYY"
+            )
+            st.session_state.report_date_end = date_end
+
+        with col_today:
+            st.write("")  # spacing
+            st.write("")  # spacing
+            if st.button("📍 היום", use_container_width=True):
+                st.session_state.report_date_start = datetime.now().date()
+                st.session_state.report_date_end = datetime.now().date()
+                st.rerun()
+
+        # בדיקת תקינות תאריכים
+        if date_start > date_end:
+            st.error("⚠️ תאריך ההתחלה חייב להיות לפני תאריך הסיום")
+            return None, None, None, None, None, None, None, False
+
+        # שורה 2: סינון לפי משתמש/מדפסת
+        col_user, col_printer = st.columns(2)
+
+        with col_user:
+            filter_username = st.text_input(
+                "👤 סינון לפי משתמש (אופציונלי)",
+                placeholder="השאר ריק לכולם",
+                key="history_filter_username"
+            )
+
+        with col_printer:
+            filter_port = st.text_input(
+                "🖨️ סינון לפי מדפסת (אופציונלי)",
+                placeholder="השאר ריק לכולם",
+                key="history_filter_port"
+            )
+
+        # שורה 3: סוג עבודה/סטטוס
+        col_jobtype, col_status = st.columns(2)
+
+        with col_jobtype:
+            job_types_map = {
+                "הכל": None,
+                "הדפסה": "PRINT",
+                "העתקה": "COPY",
+                "סריקה": "SCAN",
+                "פקס": "FAX"
+            }
+            job_type_he = st.selectbox(
+                "📋 סוג עבודה",
+                list(job_types_map.keys()),
+                key="history_job_type"
+            )
+            job_type = job_types_map[job_type_he]
+
+        with col_status:
+            status_map = {
+                "עבודות שבוצעו בפועל": [1, 5],  # הודפס, התקבל
+                "עבודות שלא בוצעו": [2, 3, 4],  # נמחק, פג תוקף, נכשל
+                "ממתינות": [0],  # מוכן
+            }
+            status_he = st.selectbox(
+                "⚡ סטטוס",
+                list(status_map.keys()),
+                key="history_status"
+            )
+            status_filter_list = status_map[status_he]
+
+        # שורה 4: מספר תוצאות + כפתור חיפוש
+        col_records, col_search = st.columns([1, 1])
+
+        with col_records:
+            max_records = st.number_input(
+                "תוצאות לדף",
+                min_value=50,
+                max_value=2000,
+                value=200,
+                step=50,
+                key="history_max_records"
+            )
+
+        with col_search:
+            st.write("")  # spacing
+            st.write("")  # spacing
+            search_clicked = st.button("🔍 הצג דוח", use_container_width=True, type="primary")
+
+    return date_start, date_end, filter_username, filter_port, job_type, status_filter_list, max_records, search_clicked
+
+
+def fetch_report_data(api, logger, username, date_start, date_end, filter_username,
+                     filter_port, job_type, status_filter_list, max_records):
+    """
+    קריאת נתונים מה-API ושמירה ב-session_state
+    """
+    date_diff = (date_end - date_start).days
+
+    if date_diff < 7:  # טווח קטן - קריאה בודדת
+        with st.spinner("⏳ טוען נתונים..."):
+            date_start_iso = datetime.combine(date_start, datetime.min.time()).isoformat() + "Z"
+
+            if date_end >= datetime.now().date():
+                date_end_iso = datetime.now().isoformat() + "Z"
+            else:
+                date_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+
+            result = api.get_documents_history(
+                datestart=date_start_iso,
+                dateend=date_end_iso,
+                username=filter_username if filter_username else None,
+                portname=filter_port if filter_port else None,
+                jobtype=job_type,
+                status=None,  # לא שולחים status ל-API
+                maxrecords=max_records
+            )
+
+            if result:
+                st.session_state.history_report_data = result
+                logger.log_action(
+                    username=username,
+                    action="VIEW_REPORT",
+                    details=f"Filters: user={filter_username}, port={filter_port}, jobtype={job_type}"
+                )
+            else:
+                st.error("❌ לא הצלחנו לקבל נתונים מהשרת")
+                if 'history_report_data' in st.session_state:
+                    del st.session_state.history_report_data
+    else:
+        # טווח גדול - קריאות מרובות
+        all_documents = []
+        week_ranges = split_date_range_to_weeks(date_start, date_end)
+        total_weeks = len(week_ranges)
+
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+
+        success_count = 0
+        for idx, (week_start, week_end) in enumerate(week_ranges):
+            status_text.text(f"⏳ טוען שבוע {idx + 1} מתוך {total_weeks}...")
+
+            week_start_iso = datetime.combine(week_start, datetime.min.time()).isoformat() + "Z"
+
+            if week_end >= datetime.now().date():
+                week_end_iso = datetime.now().isoformat() + "Z"
+            else:
+                week_end_iso = datetime.combine(week_end, datetime.max.time()).isoformat() + "Z"
+
+            result = api.get_documents_history(
+                datestart=week_start_iso,
+                dateend=week_end_iso,
+                username=filter_username if filter_username else None,
+                portname=filter_port if filter_port else None,
+                jobtype=job_type,
+                status=None,  # לא שולחים status ל-API
+                maxrecords=max_records
+            )
+
+            if result and 'documents' in result:
+                all_documents.extend(result['documents'])
+                success_count += 1
+
+            progress_bar.progress((idx + 1) / total_weeks)
+
+        # הצגת 100%
+        status_text.text(f"✅ הסתיים! נטענו {success_count} שבועות")
+        progress_bar.progress(1.0)
+        time.sleep(0.5)
+
+        progress_bar.empty()
+        status_text.empty()
+
+        if all_documents:
+            if date_end >= datetime.now().date():
+                final_end_iso = datetime.now().isoformat() + "Z"
+            else:
+                final_end_iso = datetime.combine(date_end, datetime.max.time()).isoformat() + "Z"
+
+            st.session_state.history_report_data = {
+                'documents': all_documents,
+                'recordsOnPage': len(all_documents),
+                'dateStart': datetime.combine(date_start, datetime.min.time()).isoformat() + "Z",
+                'dateEnd': final_end_iso
+            }
+
+            st.success(f"✅ נטענו {len(all_documents)} מסמכים מ-{success_count} שבועות")
+
+            logger.log_action(
+                username=username,
+                action="VIEW_REPORT",
+                details=f"Multi-week report: {total_weeks} weeks, {len(all_documents)} documents"
+            )
+        else:
+            st.error(f"❌ לא נמצאו נתונים עבור הטווח שנבחר ({success_count}/{total_weeks} שבועות הצליחו)")
+            if 'history_report_data' in st.session_state:
+                del st.session_state.history_report_data
+
+
+def show_dashboard_tab(api, status_filter_list):
+    """
+    דשבורד מבט על - סטטיסטיקות
+    """
+    if 'history_report_data' not in st.session_state:
+        st.info("ℹ️ לחץ על 'הצג דוח' כדי לטעון נתונים")
+        return
+
+    data = st.session_state.history_report_data
+    documents = data.get('documents', [])
+
+    if not documents:
+        st.warning("⚠️ אין נתונים להצגה")
+        return
+
+    # סינון לפי סטטוס
+    original_count = len(documents)
+    filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
+    documents = filtered_documents
+
+    st.markdown("## 📈 סיכום הדפסות/צילומים")
+
+    if len(documents) < original_count:
+        st.info(f"ℹ️ הסטטיסטיקות מציגות רק עבודות עם הסטטוס שנבחר ({len(documents)} מתוך {original_count} תוצאות)")
+
+    if not documents:
+        st.warning("⚠️ אין עבודות עם הסטטוס שנבחר")
+        st.info("💡 טיפ: שנה את סטטוס הסינון בהגדרות הדוח")
+        return
+
+    # חישוב סטטיסטיקות
+    print_copy_docs = [doc for doc in documents if doc.get('jobType') in ['PRINT', 'COPY']]
+    total_docs = len(print_copy_docs)
+    total_pages = sum(doc.get('totalPages', 0) for doc in print_copy_docs)
+    total_color_pages = sum(doc.get('colorPages', 0) for doc in print_copy_docs)
+
+    # כרטיסי סטטיסטיקה
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.markdown(f"""
+        <div class="stats-card">
+            <div class="stats-number">{total_docs:,}</div>
+            <div class="stats-label">סה"כ עבודות הדפסה/צילום</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div class="stats-card">
+            <div class="stats-number">{total_pages:,}</div>
+            <div class="stats-label">סה"כ עמודים</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+        <div class="stats-card">
+            <div class="stats-number">{total_color_pages:,}</div>
+            <div class="stats-label">עמודי צבע</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col4:
+        bw_pages = total_pages - total_color_pages
+        st.markdown(f"""
+        <div class="stats-card">
+            <div class="stats-number">{bw_pages:,}</div>
+            <div class="stats-label">עמודים ש/ל</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # פילוח לפי סוג עבודה
+    st.markdown("### 📋 פילוח לפי סוג עבודה")
+
+    job_type_translation = {
+        'PRINT': 'הדפסה',
+        'COPY': 'העתקה',
+        'SCAN': 'סריקה',
+        'FAX': 'פקס'
+    }
+
+    job_types_stats = {}
+    for doc in documents:
+        job_type = doc.get('jobType', 'UNKNOWN')
+        job_type_he = job_type_translation.get(job_type, job_type)
+        if job_type_he not in job_types_stats:
+            job_types_stats[job_type_he] = {'count': 0, 'pages': 0}
+        job_types_stats[job_type_he]['count'] += 1
+        job_types_stats[job_type_he]['pages'] += doc.get('totalPages', 0)
+
+    job_type_names = {
+        'PRINT': '🖨️ הדפסה',
+        'COPY': '📄 העתקה',
+        'SCAN': '📷 סריקה',
+        'FAX': '📠 פקס'
+    }
+
+    if job_types_stats:
+        cols = st.columns(len(job_types_stats))
+        for idx, (job_type, stats) in enumerate(job_types_stats.items()):
+            with cols[idx]:
+                display_name = job_type_names.get(job_type, job_type)
+                count = stats['count']
+                pages = stats['pages']
+                percentage = (count / len(documents) * 100) if documents else 0
+                st.markdown(f"""
+                <div class="stats-card">
+                    <div class="stats-label">{display_name}</div>
+                    <div><span class="stats-number">{count:,}</span> <span class="stats-label">עבודות</span></div>
+                    <div><span class="stats-number">{pages:,}</span> <span class="stats-label">עמודים</span></div>
+                    <div class="stats-label">{percentage:.1f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # TOP 10 משתמשים
+    st.markdown("### 👥 משתמשים מובילים (Top 10)")
+
+    if 'user_lookup_cache' not in st.session_state:
+        with st.spinner("טוען מידע משתמשים..."):
+            usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
+            st.session_state.user_lookup_cache = build_user_lookup_cache(api, usernames)
+
+    user_cache = st.session_state.user_lookup_cache
+
+    user_stats = {}
+    for doc in documents:
+        user = doc.get('userName', 'Unknown')
+        if user not in user_stats:
+            user_stats[user] = {'docs': 0, 'pages': 0, 'color_pages': 0}
+        user_stats[user]['docs'] += 1
+        user_stats[user]['pages'] += doc.get('totalPages', 0)
+        user_stats[user]['color_pages'] += doc.get('colorPages', 0)
+
+    top_users = sorted(user_stats.items(), key=lambda x: x[1]['pages'], reverse=True)[:10]
+
+    user_df = pd.DataFrame([
+        {
+            'שם מלא': user_cache.get(user, user),
+            'משתמש': user,
+            'מסמכים': stats['docs'],
+            'עמודים': stats['pages'],
+            'עמודי צבע': stats['color_pages'],
+            'ש/ל': stats['pages'] - stats['color_pages']
+        }
+        for user, stats in top_users
+    ])
+
+    st.dataframe(user_df, use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+
+    # TOP 10 מדפסות
+    st.markdown("### 🖨️ מדפסות פעילות (Top 10)")
+
+    port_stats = {}
+    for doc in documents:
+        port = doc.get('outputPortName', 'Unknown')
+        if port and port != '':
+            if port not in port_stats:
+                port_stats[port] = {'docs': 0, 'pages': 0}
+            port_stats[port]['docs'] += 1
+            port_stats[port]['pages'] += doc.get('totalPages', 0)
+
+    if port_stats:
+        top_ports = sorted(port_stats.items(), key=lambda x: x[1]['pages'], reverse=True)[:10]
+        port_df = pd.DataFrame([
+            {'מדפסת': port, 'מסמכים': stats['docs'], 'עמודים': stats['pages']}
+            for port, stats in top_ports
+        ])
+        st.dataframe(port_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("ℹ️ אין מידע על מדפסות בנתונים")
+
+    st.markdown("---")
+
+    # פילוח לפי מחלקות
+    st.markdown("### 🏢 פילוח לפי מחלקות")
+
+    dept_stats = {}
+    for doc in documents:
+        tags = doc.get('tags', [])
+        for tag in tags:
+            if tag.get('tagType') == 0:
+                dept_name = tag.get('name', 'Unknown')
+                if dept_name not in dept_stats:
+                    dept_stats[dept_name] = {'docs': 0, 'pages': 0}
+                dept_stats[dept_name]['docs'] += 1
+                dept_stats[dept_name]['pages'] += doc.get('totalPages', 0)
+
+    if dept_stats:
+        dept_df = pd.DataFrame([
+            {
+                'מחלקה': dept,
+                'מסמכים': stats['docs'],
+                'עמודים': stats['pages']
+            }
+            for dept, stats in sorted(dept_stats.items(), key=lambda x: x[1]['pages'], reverse=True)
+        ])
+        st.dataframe(dept_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("ℹ️ אין מידע על מחלקות בנתונים")
+
+
+def show_detailed_report_tab(api, status_filter_list):
+    """
+    דוח היסטוריה מפורט
+    """
+    if 'history_report_data' not in st.session_state:
+        st.info("ℹ️ לחץ על 'הצג דוח' כדי לטעון נתונים")
+        return
+
+    data = st.session_state.history_report_data
+    documents = data.get('documents', [])
+
+    if not documents:
+        st.warning("⚠️ אין נתונים להצגה")
+        return
+
+    # בניית cache של שמות משתמשים
+    if 'user_lookup_cache' not in st.session_state:
+        with st.spinner("טוען מידע משתמשים..."):
+            usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
+            st.session_state.user_lookup_cache = build_user_lookup_cache(api, usernames)
+
+    user_cache = st.session_state.user_lookup_cache
+
+    # סינון לפי סטטוס
+    filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
+
+    # המרת הנתונים ל-DataFrame
+    df = prepare_history_dataframe(filtered_documents, user_cache)
+
+    # הצגת מספר תוצאות
+    st.markdown(f"## 📋 נמצאו {len(df)} תוצאות")
+
+    if len(filtered_documents) < len(documents):
+        st.info(f"ℹ️ סוננו {len(documents) - len(filtered_documents)} רשומות לפי סטטוס")
+
+    if len(df) == 0:
+        st.warning("⚠️ אין תוצאות להצגה")
+        return
+
+    # סינון נתונים
+    st.markdown("---")
+    st.markdown("### 🔍 סינון נתונים")
+
+    filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
+
+    with filter_row1_col1:
+        search_text = st.text_input("חיפוש חופשי", placeholder="שם, מסמך, מדפסת...", key="detail_search")
+
+    with filter_row1_col2:
+        source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
+        selected_source = st.selectbox("מקור", source_options, key="detail_filter_source")
+
+    with filter_row1_col3:
+        jobtype_options = ['הכל'] + sorted(df['סוג'].unique().tolist())
+        selected_jobtype = st.selectbox("סוג עבודה", jobtype_options, key="detail_filter_jobtype")
+
+    filter_row2_col1, filter_row2_col2, filter_row2_col3 = st.columns(3)
+
+    with filter_row2_col1:
+        status_options = ['הכל'] + sorted(df['סטטוס'].unique().tolist())
+        selected_status = st.selectbox("סטטוס", status_options, key="detail_filter_status")
+
+    with filter_row2_col2:
+        dept_options = ['הכל'] + sorted([d for d in df['מחלקה'].unique() if d], key=str)
+        selected_dept = st.selectbox("מחלקה", dept_options, key="detail_filter_dept")
+
+    # החלת סינונים
+    filtered_df = df.copy()
+
+    if search_text:
+        mask = filtered_df.astype(str).apply(lambda x: x.str.contains(search_text, case=False, na=False)).any(axis=1)
+        filtered_df = filtered_df[mask]
+
+    if selected_source != 'הכל':
+        filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+
+    if selected_jobtype != 'הכל':
+        filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
+
+    if selected_status != 'הכל':
+        filtered_df = filtered_df[filtered_df['סטטוס'] == selected_status]
+
+    if selected_dept != 'הכל':
+        filtered_df = filtered_df[filtered_df['מחלקה'] == selected_dept]
+
+    # הצגת מונה וכפתור ייצוא
+    st.markdown("---")
+    result_col1, result_col2 = st.columns([3, 1])
+
+    with result_col1:
+        if len(filtered_df) < len(df):
+            st.info(f"📊 מוצגים {len(filtered_df)} מתוך {len(df)} רשומות")
+        else:
+            st.info(f"📊 סה\"כ {len(df)} רשומות")
+
+    with result_col2:
+        excel_data = export_to_excel(filtered_df, "history_report")
+        st.download_button(
+            label="📥 ייצא ל-Excel",
+            data=excel_data,
+            file_name=f"history_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="export_detail_btn",
+            use_container_width=True
+        )
+
+    # הצגת הטבלה
+    st.dataframe(
+        filtered_df,
+        use_container_width=True,
+        hide_index=True,
+        height=min(len(filtered_df) * 35 + 38, 738)
+    )
+
+
 def build_user_lookup_cache(api, usernames: List[str]) -> Dict[str, str]:
     """
     בונה cache של username -> fullName
@@ -237,24 +829,34 @@ def show():
     api = get_api_instance()
     logger = get_logger_instance()
 
-    # יצירת טאבים לסוגי דוחות שונים
-    tab1, tab2, tab3 = st.tabs([
-        "📜 דוח היסטוריה מפורט",
-        "📄 מסמכים לפי משתמש",
-        "📊 סטטיסטיקות"
+    # הגדרות דוח משותפות
+    settings_result = show_report_settings(api)
+
+    if settings_result[0] is None:  # אם יש שגיאה בתאריכים
+        return
+
+    date_start, date_end, filter_username, filter_port, job_type, status_filter_list, max_records, search_clicked = settings_result
+
+    # ביצוע החיפוש
+    if search_clicked or 'history_report_data' in st.session_state:
+        if search_clicked:
+            # קריאת נתונים מ-API
+            fetch_report_data(api, logger, username, date_start, date_end, filter_username,
+                            filter_port, job_type, status_filter_list, max_records)
+
+    # יצירת טאבים - רק 2 טאבים
+    tab1, tab2 = st.tabs([
+        "🏠 דשבורד מבט על",
+        "📜 דוח היסטוריה מפורט"
     ])
 
-    # ========== טאב 1: דוח היסטוריה מפורט ==========
+    # ========== טאב 1: דשבורד מבט על ==========
     with tab1:
-        show_history_report(api, logger, role, username)
+        show_dashboard_tab(api, status_filter_list)
 
-    # ========== טאב 2: מסמכים לפי משתמש ==========
+    # ========== טאב 2: דוח היסטוריה מפורט ==========
     with tab2:
-        show_user_documents_report(api, logger, role, username)
-
-    # ========== טאב 3: סטטיסטיקות ==========
-    with tab3:
-        show_statistics_report(api, logger, role, username)
+        show_detailed_report_tab(api, status_filter_list)
 
 
 def show_history_report(api, logger, role, username):
@@ -950,7 +1552,6 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
             'משתמש': username,
             'מקור': source,
             'מחלקה': department_str,
-            'שם מסמך': doc.get('documentName', ''),
             'סוג': job_type_he,  # תרגום לעברית
             'סטטוס': status,
             'עמודים': doc.get('totalPages', 0),
