@@ -358,7 +358,8 @@ def show_history_report(api, logger, role, username):
             list(status_map.keys()),
             key="history_status"
         )
-        status_filter = status_map[status_he]
+        status_filter_list = status_map[status_he]  # שומרים לסינון בצד לקוח
+        status_filter = None  # לא שולחים ל-API - נסנן בצד לקוח
 
     # מספר תוצאות לדף
     col_records, col_spacer = st.columns([1, 3])
@@ -517,15 +518,18 @@ def show_history_report(api, logger, role, username):
 
                 user_cache = st.session_state.user_lookup_cache
 
-                # המרת הנתונים ל-DataFrame (כולל סינון)
-                df = prepare_history_dataframe(documents, user_cache)
+                # סינון לפי סטטוס (בצד לקוח)
+                filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
+
+                # המרת הנתונים ל-DataFrame
+                df = prepare_history_dataframe(filtered_documents, user_cache)
 
                 # הצגת מספר תוצאות אחרי סינון
                 st.markdown(f"### 📋 נמצאו {len(df)} תוצאות")
 
-                # הסבר על סינון אם יש הפרש (לא אמור להיות כי הסינון עבר ל-API)
-                # if len(df) < len(documents):
-                #     st.info(f"ℹ️ סוננו {len(documents) - len(df)} רשומות")
+                # הסבר על סינון אם יש הפרש
+                if len(filtered_documents) < len(documents):
+                    st.info(f"ℹ️ סוננו {len(documents) - len(filtered_documents)} רשומות לפי סטטוס")
 
                 # הצגת מידע על pagination
                 if data.get('nextPageToken'):
