@@ -1552,6 +1552,7 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
             'משתמש': username,
             'מקור': source,
             'מחלקה': department_str,
+        #'שם מסמך': doc.get('documentName', ''),
             'סוג': job_type_he,  # תרגום לעברית
             'סטטוס': status,
             'עמודים': doc.get('totalPages', 0),
