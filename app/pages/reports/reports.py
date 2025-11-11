@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import json
 from typing import Dict, List, Optional
 import io
+import time
 
 from shared import get_api_instance, get_logger_instance, check_authentication
 from permissions import filter_users_by_departments
@@ -348,13 +349,9 @@ def show_history_report(api, logger, role, username):
 
     with col_status:
         status_map = {
-            "הכל": None,
-            "מוכן": [0],
-            "הודפס": [1],
-            "נמחק": [2],
-            "פג תוקף": [3],
-            "נכשל": [4],
-            "התקבל": [5]
+            "עבודות שבוצעו בפועל": [1, 5],  # הודפס, התקבל
+            "עבודות שלא בוצעו": [2, 3, 4],  # נמחק, פג תוקף, נכשל
+            "ממתינות": [0],  # מוכן
         }
         status_he = st.selectbox(
             "⚡ סטטוס",
@@ -466,6 +463,13 @@ def show_history_report(api, logger, role, username):
                     # עדכון progress bar
                     progress_bar.progress((idx + 1) / total_weeks)
 
+                # הצגת 100% לפני ניקוי
+                status_text.text(f"✅ הסתיים! נטענו {success_count} שבועות")
+                progress_bar.progress(1.0)
+
+                # המתנה קצרה לפני ניקוי
+                time.sleep(0.5)
+
                 # ניקוי progress bar
                 progress_bar.empty()
                 status_text.empty()
@@ -519,9 +523,9 @@ def show_history_report(api, logger, role, username):
                 # הצגת מספר תוצאות אחרי סינון
                 st.markdown(f"### 📋 נמצאו {len(df)} תוצאות")
 
-                # הסבר על סינון אם יש הפרש
-                if len(df) < len(documents):
-                    st.info(f"ℹ️ סוננו {len(documents) - len(df)} רשומות (הדפסות לא הודפסו / סריקות נמחקו)")
+                # הסבר על סינון אם יש הפרש (לא אמור להיות כי הסינון עבר ל-API)
+                # if len(df) < len(documents):
+                #     st.info(f"ℹ️ סוננו {len(documents) - len(df)} רשומות")
 
                 # הצגת מידע על pagination
                 if data.get('nextPageToken'):
@@ -644,20 +648,20 @@ def show_statistics_report(api, logger, role, username):
         st.warning("⚠️ אין נתונים להצגת סטטיסטיקות")
         return
 
-    # סינון:
-    # - הדפסות: רק סטטוס "הודפס"
-    # - סריקות: הכל חוץ מ"נמחק"
+    # סינון: רק עבודות שבוצעו בפועל (הודפס, התקבל)
+    original_count = len(documents)
     filtered_documents = []
     for doc in documents:
-        if doc.get('jobType') == 'PRINT' and doc.get('status') != 1:
-            continue  # דלג על הדפסות שלא הודפסו
-        if doc.get('jobType') == 'SCAN' and doc.get('status') == 2:
-            continue  # דלג על סריקות שנמחקו
-        filtered_documents.append(doc)
+        if doc.get('status') in [1, 5]:  # רק הודפס/התקבל
+            filtered_documents.append(doc)
 
     documents = filtered_documents
 
     st.markdown("### 📈 סיכום הדפסות/צילומים")
+
+    # הסבר על סינון
+    if len(documents) < original_count:
+        st.info(f"ℹ️ הסטטיסטיקות מציגות רק עבודות שבוצעו בפועל ({len(documents)} מתוך {original_count} תוצאות)")
 
     # חישוב סטטיסטיקות - רק הדפסה וצילום (לא סריקה!)
     print_copy_docs = [doc for doc in documents if doc.get('jobType') in ['PRINT', 'COPY']]
@@ -929,14 +933,6 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
 
         # אם עדיין אין שם מלא, השתמש ב-username
         display_name = full_name.strip() if full_name else username
-
-        # סינון:
-        # - הדפסה: רק סטטוס "הודפס" (1)
-        # - סריקה: הכל חוץ מ"נמחק" (2)
-        if job_type_en == 'PRINT' and doc.get('status') != 1:
-            continue  # דלג על הדפסות שלא הודפסו
-        if job_type_en == 'SCAN' and doc.get('status') == 2:
-            continue  # דלג על סריקות שנמחקו
 
         row = {
             'תאריך': date_str,
