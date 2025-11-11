@@ -27,86 +27,122 @@ def show_report_settings(api):
     Returns:
         tuple: (date_start, date_end, filter_username, filter_port, job_type, status_filter_list, max_records, search_clicked)
     """
-    with st.expander("⚙️ הגדרות דוח", expanded=True):
+    # CSS להבלטת expander
+    st.markdown("""
+    <style>
+        .streamlit-expanderHeader {
+            background-color: rgba(74, 144, 226, 0.1) !important;
+            border: 2px solid rgba(196, 30, 58, 0.3) !important;
+            border-radius: 8px !important;
+            font-size: 1.1em !important;
+            font-weight: 600 !important;
+            padding: 0.8rem !important;
+        }
+        .streamlit-expanderHeader:hover {
+            background-color: rgba(74, 144, 226, 0.15) !important;
+            border-color: rgba(196, 30, 58, 0.5) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-        # שורה 0: פילטרים מהירים + איפוס
+    with st.expander("⚙️ הגדרות דוח (לחץ להסתרה/הרחבה)", expanded=True):
+
+        # שורה 0: פילטר מהיר + איפוס
         col_quick, col_reset = st.columns([3, 1])
 
         with col_quick:
-            quick_filters = {
-                "בחר טווח...": None,
-                "📅 7 ימים אחרונים": 7,
-                "📅 30 ימים אחרונים": 30,
-                "📅 חודש נוכחי": "month"
-            }
+            quick_filters_options = [
+                "📅 7 ימים אחרונים",
+                "📅 30 ימים אחרונים",
+                "📅 חודש נוכחי",
+                "🎯 טווח מותאם אישית"
+            ]
+
+            # ברירת מחדל
+            if 'quick_filter_selection' not in st.session_state:
+                st.session_state.quick_filter_selection = "📅 7 ימים אחרונים"
 
             quick_filter = st.selectbox(
                 "פילטר מהיר",
-                list(quick_filters.keys()),
-                key="quick_filter"
+                quick_filters_options,
+                index=quick_filters_options.index(st.session_state.quick_filter_selection) if st.session_state.quick_filter_selection in quick_filters_options else 0,
+                key="quick_filter_select"
             )
 
-            # החלת פילטר מהיר
-            if quick_filters[quick_filter] is not None:
-                if quick_filters[quick_filter] == "month":
-                    # חודש נוכחי
-                    today = datetime.now().date()
-                    st.session_state.report_date_start = today.replace(day=1)
-                    st.session_state.report_date_end = today
-                else:
-                    # X ימים אחרונים
-                    days = quick_filters[quick_filter]
-                    st.session_state.report_date_start = (datetime.now() - timedelta(days=days-1)).date()
-                    st.session_state.report_date_end = datetime.now().date()
+            st.session_state.quick_filter_selection = quick_filter
 
         with col_reset:
             st.write("")  # spacing
             st.write("")  # spacing
             if st.button("🔄 איפוס", use_container_width=True):
-                # איפוס לברירות מחדל
-                st.session_state.report_date_start = (datetime.now() - timedelta(days=1)).date()
+                # איפוס מלא
+                st.session_state.quick_filter_selection = "📅 7 ימים אחרונים"
+                st.session_state.report_date_start = (datetime.now() - timedelta(days=6)).date()
                 st.session_state.report_date_end = datetime.now().date()
                 st.session_state.history_filter_username = ""
                 st.session_state.history_filter_port = ""
                 if 'history_report_data' in st.session_state:
                     del st.session_state.history_report_data
+                if 'user_lookup_cache' in st.session_state:
+                    del st.session_state.user_lookup_cache
                 st.rerun()
 
-        # שורה 1: תאריכים
-        col_date1, col_date2, col_today = st.columns([5, 5, 2])
-
-        with col_date1:
-            # ברירות מחדל מ-session state או ערכים חדשים
-            if 'report_date_start' not in st.session_state:
-                st.session_state.report_date_start = (datetime.now() - timedelta(days=1)).date()
-
-            date_start = st.date_input(
-                "📅 תאריך התחלה",
-                value=st.session_state.report_date_start,
-                key="date_start_input",
-                format="DD/MM/YYYY"
-            )
+        # חישוב תאריכים לפי פילטר מהיר
+        if quick_filter == "📅 7 ימים אחרונים":
+            date_start = (datetime.now() - timedelta(days=6)).date()
+            date_end = datetime.now().date()
             st.session_state.report_date_start = date_start
-
-        with col_date2:
+            st.session_state.report_date_end = date_end
+            show_dates = False
+        elif quick_filter == "📅 30 ימים אחרונים":
+            date_start = (datetime.now() - timedelta(days=29)).date()
+            date_end = datetime.now().date()
+            st.session_state.report_date_start = date_start
+            st.session_state.report_date_end = date_end
+            show_dates = False
+        elif quick_filter == "📅 חודש נוכחי":
+            today = datetime.now().date()
+            date_start = today.replace(day=1)
+            date_end = today
+            st.session_state.report_date_start = date_start
+            st.session_state.report_date_end = date_end
+            show_dates = False
+        else:  # טווח מותאם אישית
+            show_dates = True
+            # ברירות מחדל אם לא קיימות
+            if 'report_date_start' not in st.session_state:
+                st.session_state.report_date_start = (datetime.now() - timedelta(days=6)).date()
             if 'report_date_end' not in st.session_state:
                 st.session_state.report_date_end = datetime.now().date()
 
-            date_end = st.date_input(
-                "📅 תאריך סיום",
-                value=st.session_state.report_date_end,
-                key="date_end_input",
-                format="DD/MM/YYYY"
-            )
-            st.session_state.report_date_end = date_end
+            date_start = st.session_state.report_date_start
+            date_end = st.session_state.report_date_end
 
-        with col_today:
-            st.write("")  # spacing
-            st.write("")  # spacing
-            if st.button("📍 היום", use_container_width=True):
-                st.session_state.report_date_start = datetime.now().date()
-                st.session_state.report_date_end = datetime.now().date()
-                st.rerun()
+        # הצגת תאריכים רק אם בחרנו "טווח מותאם אישית"
+        if show_dates:
+            st.markdown("##### 📅 בחירת טווח תאריכים")
+            col_date1, col_date2 = st.columns(2)
+
+            with col_date1:
+                date_start = st.date_input(
+                    "תאריך התחלה",
+                    value=st.session_state.report_date_start,
+                    key="date_start_input",
+                    format="DD/MM/YYYY"
+                )
+                st.session_state.report_date_start = date_start
+
+            with col_date2:
+                date_end = st.date_input(
+                    "תאריך סיום",
+                    value=st.session_state.report_date_end,
+                    key="date_end_input",
+                    format="DD/MM/YYYY"
+                )
+                st.session_state.report_date_end = date_end
+        else:
+            # הצגת טווח התאריכים שנבחר
+            st.info(f"📆 טווח נבחר: {date_start.strftime('%d/%m/%Y')} - {date_end.strftime('%d/%m/%Y')}")
 
         # בדיקת תקינות תאריכים
         if date_start > date_end:
@@ -169,7 +205,7 @@ def show_report_settings(api):
                 "תוצאות לדף",
                 min_value=50,
                 max_value=2000,
-                value=200,
+                value=1000,
                 step=50,
                 key="history_max_records"
             )
