@@ -313,20 +313,22 @@ def get_department_options(allowed_departments: list, local_groups: list) -> lis
     return allowed_departments
 
 
-def authenticate_local_cloud_user(api, username: str, config: dict) -> dict:
+def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict) -> dict:
     """
     אימות משתמש מקומי מול הענן - לגישה לדוחות בלבד
 
     תהליך:
     1. בדוק אם המשתמש קיים בענן (SafeQ Cloud)
-    2. בדוק אם שייך לקבוצה "Reports-View"
-    3. שלוף את הקבוצות שלו (בתי הספר)
-    4. מפה קבוצות → departments
-    5. החזר role + allowed_departments
+    2. בדוק אם Card ID תואם
+    3. בדוק אם שייך לקבוצה "Reports-View"
+    4. שלוף את הקבוצות שלו (בתי הספר)
+    5. מפה קבוצות → departments
+    6. החזר role + allowed_departments
 
     Args:
         api: SafeQAPI instance
         username: שם משתמש מקומי
+        card_id: מזהה כרטיס (משמש כסיסמה)
         config: הגדרות מ-config.py
 
     Returns:
@@ -357,7 +359,24 @@ def authenticate_local_cloud_user(api, username: str, config: dict) -> dict:
             )
             return result
 
-        # 2. שלוף קבוצות
+        # 2. בדוק Card ID (משמש כסיסמה)
+        user_card_id = cloud_user.get('cardId', '')
+
+        if not user_card_id:
+            result['error_message'] = (
+                f"❌ למשתמש '{username}' אין מזהה כרטיס מוגדר במערכת.\n\n"
+                "נדרש להגדיר מזהה כרטיס במערכת SafeQ לצורך התחברות."
+            )
+            return result
+
+        if user_card_id != card_id:
+            result['error_message'] = (
+                "❌ מזהה כרטיס שגוי.\n\n"
+                "אנא וודא שהזנת את מזהה הכרטיס הנכון."
+            )
+            return result
+
+        # 3. שלוף קבוצות
         user_groups = api.get_user_groups(username)
 
         if not user_groups:
@@ -369,7 +388,7 @@ def authenticate_local_cloud_user(api, username: str, config: dict) -> dict:
 
         result['user_groups'] = user_groups
 
-        # 3. בדוק אם שייך ל-"Reports-View"
+        # 4. בדוק אם שייך ל-"Reports-View"
         reports_view_group = config.get('REPORTS_VIEW_GROUP', 'Reports-View')
         group_names = [g.get('groupName') or g.get('name') or str(g) for g in user_groups]
 
@@ -381,7 +400,7 @@ def authenticate_local_cloud_user(api, username: str, config: dict) -> dict:
             )
             return result
 
-        # 4. חלץ departments מהקבוצות (מחלקות = קבוצות)
+        # 5. חלץ departments מהקבוצות (מחלקות = קבוצות)
         departments = extract_departments_from_groups(user_groups)
 
         if not departments:
@@ -392,7 +411,7 @@ def authenticate_local_cloud_user(api, username: str, config: dict) -> dict:
             )
             return result
 
-        # 5. הצלחה!
+        # 6. הצלחה!
         result['success'] = True
         result['role'] = 'school_manager'
         result['allowed_departments'] = departments

@@ -824,32 +824,29 @@ def show_login_page():
             #st.markdown("#### 🔑 Local Admin Login")
             with st.form("local_login_form"):
                 username = st.text_input("👤 שם משתמש")
-                password = st.text_input("🔒 סיסמה", type="password")
+                card_id = st.text_input("🔐 מזהה כרטיס", type="password", help="הזן את מזהה הכרטיס שהוגדר במערכת")
                 login_button = st.form_submit_button("🚀 התחבר", use_container_width=True)
-            
+
             if login_button:
-                if not username or not password:
-                    st.error("❌ אנא הזן שם משתמש וסיסמה")
+                if not username or not card_id:
+                    st.error("❌ אנא הזן שם משתמש ומזהה כרטיס")
                 else:
                     logger = AuditLogger()
-
-                    # בדיקה אם יש משתמשי חירום מוגדרים
-                    if not CONFIG.get('LOCAL_USERS'):
-                        st.error("❌ אין משתמשים מקומיים מוגדרים במערכת")
-                        st.info("💡 הוסף משתמשים ב-Settings → Secrets → [LOCAL_USERS]")
-                        st.stop()
-
-                    # בדיקה אם סיסמה נכונה
-                    if username not in CONFIG['LOCAL_USERS'] or CONFIG['LOCAL_USERS'][username] != password:
-                        logger.log_action(username, "Login Failed", "Invalid local credentials", "", "", False)
-                        st.error("❌ שם משתמש או סיסמה שגויים")
-                        st.stop()
-
-                    # סיסמה נכונה - עכשיו קבע את סוג ההרשאה
                     local_admin = CONFIG.get('LOCAL_ADMIN_USERNAME', 'Admin')
 
                     # מקרה 1: Admin מקומי = SuperAdmin (גישה מלאה)
+                    # Admin מאומת מול secrets.toml
                     if username == local_admin:
+                        # Admin מאומת מול secrets.toml (לא מול הענן)
+                        if not CONFIG.get('LOCAL_USERS'):
+                            st.error("❌ אין משתמש Admin מוגדר ב-secrets")
+                            st.info("💡 הוסף Admin ב-Settings → Secrets → [LOCAL_USERS]")
+                            st.stop()
+
+                        if username not in CONFIG['LOCAL_USERS'] or CONFIG['LOCAL_USERS'][username] != card_id:
+                            logger.log_action(username, "Login Failed", "Invalid admin credentials", "", "", False)
+                            st.error("❌ שם משתמש או מזהה כרטיס שגויים")
+                            st.stop()
                         st.session_state.logged_in = True
                         st.session_state.username = username
                         st.session_state.user_email = f"{username}@local"
@@ -876,7 +873,7 @@ def show_login_page():
 
                         with st.spinner(f"מאמת את המשתמש '{username}' מול הענן..."):
                             api = SafeQAPI(CONFIG['SERVER_URL'], CONFIG['API_KEY'])
-                            auth_result = authenticate_local_cloud_user(api, username, CONFIG)
+                            auth_result = authenticate_local_cloud_user(api, username, card_id, CONFIG)
 
                         if not auth_result['success']:
                             # אימות נכשל
