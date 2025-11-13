@@ -350,7 +350,7 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
 
     try:
         # 1. בדוק אם המשתמש קיים בענן
-        cloud_user = api.get_user(username)
+        cloud_user = api.get_single_user(username)
 
         if not cloud_user:
             result['error_message'] = (
