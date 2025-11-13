@@ -384,6 +384,9 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
         # 3. שלוף קבוצות
         user_groups = api.get_user_groups(username)
 
+        # DEBUG: הצגת הקבוצות שחזרו
+        st.info(f"🐛 DEBUG - User groups: {user_groups}")
+
         if not user_groups:
             result['error_message'] = (
                 f"❌ המשתמש '{username}' לא משויך לאף קבוצה.\n\n"
@@ -397,6 +400,9 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
         reports_view_group = config.get('REPORTS_VIEW_GROUP', 'Reports-View')
         group_names = [g.get('groupName') or g.get('name') or str(g) for g in user_groups]
 
+        # DEBUG: הצגת שמות הקבוצות
+        st.info(f"🐛 DEBUG - Group names extracted: {group_names}")
+
         if reports_view_group not in group_names:
             result['error_message'] = (
                 f"❌ אין לך הרשאה לגשת למערכת.\n\n"
@@ -407,6 +413,9 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
 
         # 5. חלץ departments מהקבוצות (מחלקות = קבוצות)
         departments = extract_departments_from_groups(user_groups)
+
+        # DEBUG: הצגת departments שחולצו
+        st.info(f"🐛 DEBUG - Departments extracted: {departments}")
 
         if not departments:
             result['error_message'] = (
