@@ -40,7 +40,11 @@ def show():
         }
 
         /* כפתורי פעולות - עיצוב בולט כמו "צור משתמש" */
-        .action-button button {
+        .action-button button,
+        .action-button button:hover,
+        .action-button button:active,
+        .action-button button:focus,
+        .action-button button:visited {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
@@ -52,33 +56,36 @@ def show():
             padding: 0.5rem 1.5rem !important;
             cursor: pointer !important;
             user-select: none !important;
-            pointer-events: auto !important;
-            transition: none !important;
-            transform: none !important;
-            animation: none !important;
-        }
 
-        /* ביטול מוחלט של כל אפקטי hover ואנימציות */
-        .action-button button:hover,
-        .action-button button:active,
-        .action-button button:focus {
-            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
-            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
-            border: none !important;
+            /* ביטול כל אנימציות ואפקטים */
             transition: none !important;
             transform: none !important;
             animation: none !important;
             outline: none !important;
+            opacity: 1 !important;
+            filter: none !important;
+            will-change: auto !important;
+
+            /* נעילת מיקום - אפס תזוזה */
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            margin: 0 !important;
+            vertical-align: baseline !important;
         }
 
-        /* תיקון hover issue - הוספת pointer-events */
-        .action-button button,
-        .action-button button * {
-            pointer-events: auto !important;
+        /* ביטול pointer-events tricks שגורמים לריצוד */
+        .action-button button *,
+        .action-button button::before,
+        .action-button button::after {
+            pointer-events: none !important;
         }
 
         .action-button {
-            pointer-events: auto !important;
+            display: inline-block !important;
+            line-height: 1 !important;
         }
 
         /* כפתורי קבוצות - עיצוב Secondary בהיר */
@@ -104,44 +111,18 @@ def show():
             pointer-events: auto !important;
         }
 
-        /* Checkbox styling */
+        /* Checkbox styling - פשוט וללא מסגרות מסביב */
         .stCheckbox {
             direction: rtl !important;
             text-align: right !important;
         }
 
-        /* רשימת משתמשים נגללת - CSS שמשנה את הקונטיינר של Streamlit */
-        /* מזהה קונטיינרים שמכילים יותר מ-10 checkboxes */
-        [data-testid="stVerticalBlock"] > div:has(> div [data-testid="stCheckbox"]):has(> div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"] ~ div [data-testid="stCheckbox"]) {
-            max-height: 450px !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            padding: 20px !important;
-            border: 3px solid #C41E3A !important;
-            border-radius: 15px !important;
-            background: linear-gradient(to bottom, #ffffff, #f8f9fa) !important;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(196, 30, 58, 0.15) !important;
-            margin: 15px 0 !important;
-            width: 90% !important;
-        }
-
-        /* שורת משתמש - הרחבת אזור הלחיצה */
-        [data-testid="stCheckbox"] label {
-            width: 100% !important;
-            padding: 12px 18px !important;
-            margin: 4px 0 !important;
-            border-radius: 10px !important;
+        .stCheckbox label {
             cursor: pointer !important;
-            background-color: white !important;
-            border: 2px solid #e8e8e8 !important;
-            display: block !important;
-            transition: all 0.2s ease !important;
         }
 
-        [data-testid="stCheckbox"] label:hover {
-            background: linear-gradient(to right, rgba(196, 30, 58, 0.05), rgba(255, 107, 107, 0.05)) !important;
-            border-color: #C41E3A !important;
-            box-shadow: 0 2px 8px rgba(196, 30, 58, 0.15) !important;
+        .stCheckbox label:hover {
+            background-color: rgba(196, 30, 58, 0.05) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -319,29 +300,31 @@ def show():
 
             temp_selections = []
 
-            for member in group_data['members']:
-                username = member.get('userName', member.get('username', ''))
-                full_name = member.get('fullName', '')
-                department = member.get('department', '')
+            # שימוש ב-container עם גובה קבוע ליצירת סקרול אוטומטי
+            with st.container(height=400, border=True):
+                for member in group_data['members']:
+                    username = member.get('userName', member.get('username', ''))
+                    full_name = member.get('fullName', '')
+                    department = member.get('department', '')
 
-                if not department:
-                    for detail in member.get('details', []):
-                        if isinstance(detail, dict) and detail.get('detailType') == 11:
-                            department = detail.get('detailData', '')
-                            break
+                    if not department:
+                        for detail in member.get('details', []):
+                            if isinstance(detail, dict) and detail.get('detailType') == 11:
+                                department = detail.get('detailData', '')
+                                break
 
-                label = f"{username}"
-                if full_name:
-                    label += f" ({full_name})"
-                if department:
-                    label += f" [{department}]"
+                    label = f"{username}"
+                    if full_name:
+                        label += f" ({full_name})"
+                    if department:
+                        label += f" [{department}]"
 
-                is_checked = username in st.session_state.selected_group_members
-                checkbox_result = st.checkbox(label, value=is_checked,
-                                             key=f"member_checkbox_{username}_{group_data['group_name']}_{st.session_state.group_checkbox_counter}")
+                    is_checked = username in st.session_state.selected_group_members
+                    checkbox_result = st.checkbox(label, value=is_checked,
+                                                 key=f"member_checkbox_{username}_{group_data['group_name']}_{st.session_state.group_checkbox_counter}")
 
-                if checkbox_result:
-                    temp_selections.append(username)
+                    if checkbox_result:
+                        temp_selections.append(username)
 
             # עדכון הסטייט
             if temp_selections != st.session_state.selected_group_members:
@@ -629,43 +612,47 @@ def show():
                             st.rerun()
                     st.markdown('</div>', unsafe_allow_html=True)
 
-                for user in st.session_state.search_results_add[:500]:  # הגבלה ל-500 תוצאות
-                    username = user.get('userName', user.get('username', ''))
-                    full_name = user.get('fullName', '')
-                    department = user.get('department', '')
+                # שימוש ב-container עם גובה קבוע ליצירת סקרול אוטומטי
+                with st.container(height=400, border=True):
+                    for user in st.session_state.search_results_add[:500]:  # הגבלה ל-500 תוצאות
+                        username = user.get('userName', user.get('username', ''))
+                        full_name = user.get('fullName', '')
+                        department = user.get('department', '')
 
-                    label = f"{username}"
-                    if full_name:
-                        label += f" - {full_name}"
-                    if department:
-                        label += f" [{department}]"
+                        label = f"{username}"
+                        if full_name:
+                            label += f" - {full_name}"
+                        if department:
+                            label += f" [{department}]"
 
-                    # צ'קבוקס מצד ימין
-                    is_checked = username in st.session_state.users_cart
-                    checkbox_result = st.checkbox(label, value=is_checked,
-                                                 key=f"search_user_checkbox_{username}_{st.session_state.user_search_checkbox_counter}")
+                        # צ'קבוקס מצד ימין
+                        is_checked = username in st.session_state.users_cart
+                        checkbox_result = st.checkbox(label, value=is_checked,
+                                                     key=f"search_user_checkbox_{username}_{st.session_state.user_search_checkbox_counter}")
 
-                    # הוספה/הסרה אוטומטית למחסנית
-                    if checkbox_result and username not in st.session_state.users_cart:
-                        st.session_state.users_cart.append(username)
-                        st.rerun()
-                    elif not checkbox_result and username in st.session_state.users_cart:
-                        st.session_state.users_cart.remove(username)
-                        st.rerun()
+                        # הוספה/הסרה אוטומטית למחסנית
+                        if checkbox_result and username not in st.session_state.users_cart:
+                            st.session_state.users_cart.append(username)
+                            st.rerun()
+                        elif not checkbox_result and username in st.session_state.users_cart:
+                            st.session_state.users_cart.remove(username)
+                            st.rerun()
 
             # הצגת מחסנית משתמשים
             if st.session_state.users_cart:
                 st.markdown("---")
                 st.markdown(f"**📦 מחסנית משתמשים ({len(st.session_state.users_cart)}):**")
 
-                for username in st.session_state.users_cart:
-                    col_name, col_remove = st.columns([3, 1])
-                    with col_name:
-                        st.write(f"• {username}")
-                    with col_remove:
-                        if st.button("❌", key=f"remove_from_cart_{username}"):
-                            st.session_state.users_cart.remove(username)
-                            st.rerun()
+                # שימוש ב-container עם גובה קבוע ליצירת סקרול אוטומטי
+                with st.container(height=300, border=True):
+                    for username in st.session_state.users_cart:
+                        col_name, col_remove = st.columns([3, 1])
+                        with col_name:
+                            st.write(f"• {username}")
+                        with col_remove:
+                            if st.button("❌", key=f"remove_from_cart_{username}"):
+                                st.session_state.users_cart.remove(username)
+                                st.rerun()
 
                 # כפתור הוספה
                 col_add, col_spacer = st.columns([1, 3])
