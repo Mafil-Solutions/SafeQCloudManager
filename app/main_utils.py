@@ -832,21 +832,17 @@ def show_login_page():
                     st.error("❌ אנא הזן שם משתמש ומזהה כרטיס")
                 else:
                     logger = AuditLogger()
-                    local_admin = CONFIG.get('LOCAL_ADMIN_USERNAME', 'Admin')
 
-                    # מקרה 1: Admin מקומי = SuperAdmin (גישה מלאה)
-                    # Admin מאומת מול secrets.toml
-                    if username == local_admin:
-                        # Admin מאומת מול secrets.toml (לא מול הענן)
-                        if not CONFIG.get('LOCAL_USERS'):
-                            st.error("❌ אין משתמש Admin מוגדר ב-secrets")
-                            st.info("💡 הוסף Admin ב-Settings → Secrets → [LOCAL_USERS]")
-                            st.stop()
-
-                        if username not in CONFIG['LOCAL_USERS'] or CONFIG['LOCAL_USERS'][username] != card_id:
-                            logger.log_action(username, "Login Failed", "Invalid admin credentials", "", "", False)
+                    # מקרה 1: משתמש חירום (Emergency User) = SuperAdmin (גישה מלאה)
+                    # בודקים אם המשתמש קיים ב-EMERGENCY_USERS (מאומת מול secrets.toml בלבד)
+                    if CONFIG.get('LOCAL_USERS') and username in CONFIG['LOCAL_USERS']:
+                        # משתמש חירום - אימות מקומי בלבד (לא מול הענן)
+                        if CONFIG['LOCAL_USERS'][username] != card_id:
+                            logger.log_action(username, "Login Failed", "Invalid emergency user credentials", "", "", False)
                             st.error("❌ שם משתמש או מזהה כרטיס שגויים")
                             st.stop()
+
+                        # אימות הצליח - משתמש חירום
                         st.session_state.logged_in = True
                         st.session_state.username = username
                         st.session_state.user_email = f"{username}@local"
@@ -855,14 +851,14 @@ def show_login_page():
                         st.session_state.login_time = datetime.now()
                         st.session_state.auth_method = 'local'
 
-                        # שדות hybrid auth - Admin מקבל גישה לכל
+                        # שדות hybrid auth - משתמש חירום מקבל גישה לכל
                         st.session_state.role = 'superadmin'
                         st.session_state.allowed_departments = ["ALL"]
                         st.session_state.local_username = username
                         st.session_state.entra_username = None
                         st.session_state.local_groups = []
 
-                        logger.log_action(username, "Login Success", "Local admin auth",
+                        logger.log_action(username, "Login Success", "Emergency user local auth",
                                         st.session_state.user_email, "SuperAdmin", True, 'superadmin')
                         st.success(f"✅ ברוך הבא, {username}!")
                         st.rerun()
