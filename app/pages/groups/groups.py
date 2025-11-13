@@ -58,7 +58,6 @@ def show():
         .action-button button:hover {
             background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
             box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
-            transform: translateY(-2px) !important;
         }
 
         /* תיקון hover issue - הוספת pointer-events */
@@ -206,27 +205,40 @@ def show():
 
         role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
 
-        # 2 כפתורים: הסרה והוספה
-        if role not in ['viewer'] and group_data['count'] > 0:
-            col_btn1, col_btn2, col_spacer = st.columns([1, 1, 2])
+        # כפתורים: הסרה (רק אם יש משתמשים) והוספה (תמיד)
+        if role not in ['viewer']:
+            # אם יש משתמשים - 2 כפתורים, אם אין - רק כפתור הוספה
+            if group_data['count'] > 0:
+                col_btn1, col_btn2, col_spacer = st.columns([1, 1, 2])
 
-            with col_btn1:
-                st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                if st.button("🗑️ הסרת משתמשים", key="show_remove_btn"):
-                    st.session_state.show_remove_section = True
-                    if 'show_add_section' in st.session_state:
-                        del st.session_state.show_add_section
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                with col_btn1:
+                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
+                    if st.button("🗑️ הסרת משתמשים", key="show_remove_btn"):
+                        st.session_state.show_remove_section = True
+                        if 'show_add_section' in st.session_state:
+                            del st.session_state.show_add_section
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-            with col_btn2:
-                st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                if st.button("➕ הוספת משתמשים", key="show_add_btn"):
-                    st.session_state.show_add_section = True
-                    if 'show_remove_section' in st.session_state:
-                        del st.session_state.show_remove_section
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                with col_btn2:
+                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
+                    if st.button("➕ הוספת משתמשים", key="show_add_btn"):
+                        st.session_state.show_add_section = True
+                        if 'show_remove_section' in st.session_state:
+                            del st.session_state.show_remove_section
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                # קבוצה ריקה - רק כפתור הוספה
+                col_btn, col_spacer = st.columns([1, 3])
+                with col_btn:
+                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
+                    if st.button("➕ הוספת משתמשים", key="show_add_btn"):
+                        st.session_state.show_add_section = True
+                        if 'show_remove_section' in st.session_state:
+                            del st.session_state.show_remove_section
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
         # === טופס הסרה ===
         if st.session_state.get('show_remove_section', False):
