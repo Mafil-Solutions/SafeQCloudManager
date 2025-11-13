@@ -50,6 +50,9 @@ def show():
             transition: all 0.3s ease !important;
             width: auto !important;
             max-width: 300px !important;
+            padding: 0.5rem 1.5rem !important;
+            cursor: pointer !important;
+            user-select: none !important;
         }
 
         .action-button button:hover {
@@ -59,8 +62,13 @@ def show():
         }
 
         /* תיקון hover issue - הוספת pointer-events */
+        .action-button button,
         .action-button button * {
-            pointer-events: none !important;
+            pointer-events: auto !important;
+        }
+
+        .action-button {
+            pointer-events: auto !important;
         }
 
         /* כפתורי קבוצות - עיצוב Secondary בהיר */
@@ -72,11 +80,18 @@ def show():
             padding: 8px 16px !important;
             font-weight: 500 !important;
             transition: all 0.2s ease !important;
+            cursor: pointer !important;
+            user-select: none !important;
         }
 
         .group-button button:hover {
             background-color: rgba(151, 166, 195, 0.15) !important;
             border-color: #C41E3A !important;
+        }
+
+        .group-button button,
+        .group-button button * {
+            pointer-events: auto !important;
         }
 
         /* Checkbox styling */
@@ -432,44 +447,100 @@ def show():
                 if st.button("🔍 חפש", key="search_users_to_add", use_container_width=True):
                     if search_term:
                         with st.spinner("מחפש משתמשים..."):
-                            all_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
+                            try:
+                                # נסה תחילה עם 1000, אם נכשל נרד ל-500
+                                all_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
 
-                            # סינון לפי סוג חיפוש
-                            matching_users = []
-                            search_lower = search_term.lower()
+                                if not all_users:
+                                    st.warning("לא נמצאו משתמשים במערכת")
+                                    st.session_state.search_results_add = []
+                                    st.rerun()
+                                    st.stop()
 
-                            for user in all_users:
-                                if not isinstance(user, dict):
-                                    continue
+                                # סינון לפי סוג חיפוש
+                                matching_users = []
+                                search_lower = search_term.lower()
 
-                                match_found = False
-                                user_field = ""
+                                for user in all_users:
+                                    if not isinstance(user, dict):
+                                        continue
 
-                                if search_type == "Username":
-                                    user_field = user.get('userName', user.get('username', '')).lower()
-                                elif search_type == "Full Name":
-                                    user_field = user.get('fullName', '').lower()
-                                elif search_type == "Department":
-                                    user_field = user.get('department', '').lower()
-                                elif search_type == "Email":
-                                    user_field = user.get('email', '').lower()
+                                    match_found = False
+                                    user_field = ""
 
-                                if search_lower in user_field:
-                                    match_found = True
+                                    if search_type == "Username":
+                                        user_field = user.get('userName', user.get('username', '')).lower()
+                                    elif search_type == "Full Name":
+                                        user_field = user.get('fullName', '').lower()
+                                    elif search_type == "Department":
+                                        user_field = user.get('department', '').lower()
+                                    elif search_type == "Email":
+                                        user_field = user.get('email', '').lower()
 
-                                if match_found:
-                                    matching_users.append(user)
+                                    if search_lower in user_field:
+                                        match_found = True
 
-                            # סינון משתמשים שכבר בקבוצה
-                            current_member_usernames = [m.get('userName', m.get('username', '')) for m in group_data['members']]
-                            matching_users = [u for u in matching_users if u.get('userName', u.get('username', '')) not in current_member_usernames]
+                                    if match_found:
+                                        matching_users.append(user)
 
-                            # סינון לפי מחלקות מורשות
-                            allowed_departments = st.session_state.get('allowed_departments', [])
-                            matching_users = filter_users_by_departments(matching_users, allowed_departments)
+                                # סינון משתמשים שכבר בקבוצה
+                                current_member_usernames = [m.get('userName', m.get('username', '')) for m in group_data['members']]
+                                matching_users = [u for u in matching_users if u.get('userName', u.get('username', '')) not in current_member_usernames]
 
-                            st.session_state.search_results_add = matching_users
-                            st.rerun()
+                                # סינון לפי מחלקות מורשות
+                                allowed_departments = st.session_state.get('allowed_departments', [])
+                                matching_users = filter_users_by_departments(matching_users, allowed_departments)
+
+                                st.session_state.search_results_add = matching_users
+                                st.rerun()
+
+                            except Exception as e:
+                                st.error(f"❌ שגיאה בחיפוש משתמשים: {str(e)}")
+                                st.info("💡 ניסיון חיפוש עם כמות מוגבלת יותר...")
+
+                                try:
+                                    # נסיון שני עם 500 רשומות
+                                    all_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+
+                                    if not all_users:
+                                        st.warning("לא נמצאו משתמשים במערכת")
+                                        st.session_state.search_results_add = []
+                                    else:
+                                        # אותו סינון כמו למעלה
+                                        matching_users = []
+                                        search_lower = search_term.lower()
+
+                                        for user in all_users:
+                                            if not isinstance(user, dict):
+                                                continue
+
+                                            user_field = ""
+                                            if search_type == "Username":
+                                                user_field = user.get('userName', user.get('username', '')).lower()
+                                            elif search_type == "Full Name":
+                                                user_field = user.get('fullName', '').lower()
+                                            elif search_type == "Department":
+                                                user_field = user.get('department', '').lower()
+                                            elif search_type == "Email":
+                                                user_field = user.get('email', '').lower()
+
+                                            if search_lower in user_field:
+                                                matching_users.append(user)
+
+                                        current_member_usernames = [m.get('userName', m.get('username', '')) for m in group_data['members']]
+                                        matching_users = [u for u in matching_users if u.get('userName', u.get('username', '')) not in current_member_usernames]
+
+                                        allowed_departments = st.session_state.get('allowed_departments', [])
+                                        matching_users = filter_users_by_departments(matching_users, allowed_departments)
+
+                                        st.session_state.search_results_add = matching_users
+                                        st.success(f"✓ החיפוש הושלם בהצלחה (מוגבל ל-500 משתמשים)")
+
+                                    st.rerun()
+
+                                except Exception as e2:
+                                    st.error(f"❌ החיפוש נכשל: {str(e2)}")
+                                    st.session_state.search_results_add = []
                     else:
                         st.error("נא להזין ערך לחיפוש")
                 st.markdown('</div>', unsafe_allow_html=True)
