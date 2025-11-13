@@ -340,6 +340,17 @@ def show_dashboard_tab(api, status_filter_list):
         st.warning("⚠️ אין נתונים להצגה")
         return
 
+    # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
+    allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
+    if allowed_departments != ["ALL"]:
+        original_count_before_dept = len(documents)
+        documents = [
+            doc for doc in documents
+            if doc.get('department') in allowed_departments
+        ]
+        if len(documents) < original_count_before_dept:
+            st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
+
     # סינון לפי סטטוס
     original_count = len(documents)
     filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
@@ -547,6 +558,17 @@ def show_detailed_report_tab(api, status_filter_list):
     if not documents:
         st.warning("⚠️ אין נתונים להצגה")
         return
+
+    # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
+    allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
+    if allowed_departments != ["ALL"]:
+        original_count_before_dept = len(documents)
+        documents = [
+            doc for doc in documents
+            if doc.get('department') in allowed_departments
+        ]
+        if len(documents) < original_count_before_dept:
+            st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
 
     # בניית cache של שמות משתמשים
     if 'user_lookup_cache' not in st.session_state:

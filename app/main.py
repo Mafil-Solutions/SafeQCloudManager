@@ -582,11 +582,20 @@ def show_sidebar_info():
             'viewer': '👁️',
             'support': '🛠️',
             'admin': '👑',
-            'superadmin': '⭐'
+            'superadmin': '⭐',
+            'school_manager': '🏫'
+        }
+        role_names = {
+            'viewer': 'צופה',
+            'support': 'תמיכה',
+            'admin': 'מנהל',
+            'superadmin': 'מנהל על',
+            'school_manager': 'מנהל בית ספר'
         }
         access_icon = role_icons.get(role, '👤')
+        role_name = role_names.get(role, role)
 
-        st.info(f"{access_icon} {st.session_state.get('username', 'N/A')}")
+        st.info(f"{access_icon} {st.session_state.get('username', 'N/A')} ({role_name})")
 
         # אימייל עם expander
         with st.expander("📧 פרטים נוספים"):
@@ -595,18 +604,29 @@ def show_sidebar_info():
             if st.session_state.get('local_username'):
                 st.write(f"**משתמש לוקאלי:** {st.session_state.local_username}")
 
-            auth_text = "Entra ID" if st.session_state.get('auth_method') == 'entra_id' else "מקומי"
+            auth_text = {
+                'entra_id': 'Entra ID',
+                'local': 'מקומי (Admin)',
+                'local_cloud': 'מקומי (מאומת בענן)'
+            }.get(st.session_state.get('auth_method'), 'לא ידוע')
             st.write(f"**אימות:** {auth_text}")
 
-        # הרשאות
+        # הרשאות - הצגה מורחבת למשתמשי school_manager
         if st.session_state.get('allowed_departments'):
             if st.session_state.allowed_departments == ["ALL"]:
-                st.success("📁 כל המחלקות")
+                st.success("📁 גישה לכל המחלקות")
             else:
                 dept_count = len(st.session_state.allowed_departments)
-                with st.expander(f"📁 {dept_count} מחלקות"):
+                # עבור school_manager - הצג בולט יותר
+                if role == 'school_manager':
+                    st.markdown("### 🏫 בתי הספר שלך")
+                    st.info(f"גישה ל-{dept_count} בתי ספר")
                     for dept in st.session_state.allowed_departments:
-                        st.write(f"• {dept}")
+                        st.write(f"✅ {dept}")
+                else:
+                    with st.expander(f"📁 {dept_count} מחלקות"):
+                        for dept in st.session_state.allowed_departments:
+                            st.write(f"• {dept}")
 
 
 def main():
@@ -734,15 +754,24 @@ def main():
     from pages.home import create_home_page
     home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page)
 
-    # יצירת ניווט עם קבוצות היררכיות
-    nav = st.navigation({
-        "ראשי": [home_page],
-        "👥 משתמשים": [users_overview_page, users_list_page, users_search_page, users_add_page, users_groups_page],
-        "🖨️ מדפסות": [printers_page],
-        "📄 סריקה": [scanning_page],
-        "📊 דוחות": [reports_page],
-        "📋פעילות": [my_activity_page]
-    })
+    # יצירת ניווט עם קבוצות היררכיות - מותאם לפי סוג משתמש
+    role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
+
+    if role == 'school_manager':
+        # משתמשי school_manager רואים רק דוחות
+        nav = st.navigation({
+            "📊 דוחות": [reports_page]
+        })
+    else:
+        # כל השאר רואים את כל התפריט
+        nav = st.navigation({
+            "ראשי": [home_page],
+            "👥 משתמשים": [users_overview_page, users_list_page, users_search_page, users_add_page, users_groups_page],
+            "🖨️ מדפסות": [printers_page],
+            "📄 סריקה": [scanning_page],
+            "📊 דוחות": [reports_page],
+            "📋פעילות": [my_activity_page]
+        })
 
     # בדיקת חיבור בסיידבר
     with st.sidebar:

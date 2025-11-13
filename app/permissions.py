@@ -311,3 +311,94 @@ def get_department_options(allowed_departments: list, local_groups: list) -> lis
 
     # פשוט מחזיר את allowed_departments (שהם כבר השמות המלאים מהקבוצות)
     return allowed_departments
+
+
+def authenticate_local_cloud_user(api, username: str, config: dict) -> dict:
+    """
+    אימות משתמש מקומי מול הענן - לגישה לדוחות בלבד
+
+    תהליך:
+    1. בדוק אם המשתמש קיים בענן (SafeQ Cloud)
+    2. בדוק אם שייך לקבוצה "Reports-View"
+    3. שלוף את הקבוצות שלו (בתי הספר)
+    4. מפה קבוצות → departments
+    5. החזר role + allowed_departments
+
+    Args:
+        api: SafeQAPI instance
+        username: שם משתמש מקומי
+        config: הגדרות מ-config.py
+
+    Returns:
+        dict: {
+            'success': bool,
+            'error_message': str,
+            'role': str ('school_manager' או None),
+            'allowed_departments': list,
+            'user_groups': list
+        }
+    """
+    result = {
+        'success': False,
+        'error_message': '',
+        'role': None,
+        'allowed_departments': [],
+        'user_groups': []
+    }
+
+    try:
+        # 1. בדוק אם המשתמש קיים בענן
+        cloud_user = api.get_user(username)
+
+        if not cloud_user:
+            result['error_message'] = (
+                f"❌ המשתמש '{username}' לא נמצא במערכת הענן.\n\n"
+                "רק משתמשים שקיימים בענן יכולים להתחבר."
+            )
+            return result
+
+        # 2. שלוף קבוצות
+        user_groups = api.get_user_groups(username)
+
+        if not user_groups:
+            result['error_message'] = (
+                f"❌ המשתמש '{username}' לא משויך לאף קבוצה.\n\n"
+                "נדרשת שיוך לקבוצה 'Reports-View' לצורך גישה למערכת."
+            )
+            return result
+
+        result['user_groups'] = user_groups
+
+        # 3. בדוק אם שייך ל-"Reports-View"
+        reports_view_group = config.get('REPORTS_VIEW_GROUP', 'Reports-View')
+        group_names = [g.get('groupName') or g.get('name') or str(g) for g in user_groups]
+
+        if reports_view_group not in group_names:
+            result['error_message'] = (
+                f"❌ אין לך הרשאה לגשת למערכת.\n\n"
+                f"נדרשת שיוך לקבוצה '{reports_view_group}'.\n"
+                f"הקבוצות שלך: {', '.join(group_names)}"
+            )
+            return result
+
+        # 4. חלץ departments מהקבוצות (מחלקות = קבוצות)
+        departments = extract_departments_from_groups(user_groups)
+
+        if not departments:
+            result['error_message'] = (
+                "❌ לא נמצאו בתי ספר משוייכים למשתמש זה.\n\n"
+                "המשתמש צריך להיות משויך לפחות לקבוצת בית ספר אחת.\n"
+                "פורמט: 'שם בית ספר - מספר' (לדוגמא: 'צפת - 240324')"
+            )
+            return result
+
+        # 5. הצלחה!
+        result['success'] = True
+        result['role'] = 'school_manager'
+        result['allowed_departments'] = departments
+
+        return result
+
+    except Exception as e:
+        result['error_message'] = f"❌ שגיאה באימות משתמש: {str(e)}"
+        return result
