@@ -343,27 +343,21 @@ def show_dashboard_tab(api, status_filter_list):
     # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
     allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
 
-    # DEBUG: הצגת המחלקות המורשות
-    st.info(f"🐛 DEBUG - Allowed departments: {allowed_departments}")
-
     if allowed_departments != ["ALL"]:
         original_count_before_dept = len(documents)
 
-        # DEBUG: הצגת דוגמת department מהדוחות
-        if documents:
-            sample_depts = [doc.get('department') for doc in documents[:5]]
-            st.info(f"🐛 DEBUG - Sample departments from documents: {sample_depts}")
-            # הצגת כל המפתחות של דוקומנט ראשון
-            if documents:
-                st.info(f"🐛 DEBUG - First document keys: {list(documents[0].keys())}")
-                st.info(f"🐛 DEBUG - First document userName: {documents[0].get('userName')}")
+        # פונקציה עזר לבדיקה אם דוקומנט שייך למחלקה מורשית
+        def doc_has_allowed_department(doc):
+            tags = doc.get('tags', [])
+            for tag in tags:
+                if tag.get('tagType') == 0:  # Department tag
+                    dept_name = tag.get('name', '')
+                    if dept_name in allowed_departments:
+                        return True
+            return False
 
-        documents = [
-            doc for doc in documents
-            if doc.get('department') in allowed_departments
-        ]
-
-        st.info(f"🐛 DEBUG - Documents after filtering: {len(documents)} (was {original_count_before_dept})")
+        # סינון דוקומנטים לפי מחלקות מורשות
+        documents = [doc for doc in documents if doc_has_allowed_department(doc)]
 
         if len(documents) < original_count_before_dept:
             st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
@@ -579,23 +573,21 @@ def show_detailed_report_tab(api, status_filter_list):
     # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
     allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
 
-    # DEBUG: הצגת המחלקות המורשות
-    st.info(f"🐛 DEBUG (Detailed) - Allowed departments: {allowed_departments}")
-
     if allowed_departments != ["ALL"]:
         original_count_before_dept = len(documents)
 
-        # DEBUG: הצגת דוגמת department מהדוחות
-        if documents:
-            sample_depts = [doc.get('department') for doc in documents[:5]]
-            st.info(f"🐛 DEBUG (Detailed) - Sample departments from documents: {sample_depts}")
+        # פונקציה עזר לבדיקה אם דוקומנט שייך למחלקה מורשית
+        def doc_has_allowed_department(doc):
+            tags = doc.get('tags', [])
+            for tag in tags:
+                if tag.get('tagType') == 0:  # Department tag
+                    dept_name = tag.get('name', '')
+                    if dept_name in allowed_departments:
+                        return True
+            return False
 
-        documents = [
-            doc for doc in documents
-            if doc.get('department') in allowed_departments
-        ]
-
-        st.info(f"🐛 DEBUG (Detailed) - Documents after filtering: {len(documents)} (was {original_count_before_dept})")
+        # סינון דוקומנטים לפי מחלקות מורשות
+        documents = [doc for doc in documents if doc_has_allowed_department(doc)]
 
         if len(documents) < original_count_before_dept:
             st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
