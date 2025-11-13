@@ -410,7 +410,7 @@ def show():
             # טופס חיפוש משתמש - שדות קטנים יותר
             st.markdown("**חפש משתמש להוספה:**")
 
-            col1, col2, col3, col_spacer = st.columns([1.5, 1.5, 0.8, 2.2])
+            col1, col2, col3, col_spacer = st.columns([1.5, 1.5, 1.2, 1.8])
 
             with col1:
                 search_type_map = {
@@ -426,13 +426,13 @@ def show():
                 search_term = st.text_input(f"ערך לחיפוש", key="add_user_search_term")
 
             with col3:
-                st.write("")
-                st.write("")
+                # רווח אנכי כדי ליישר את הכפתור עם השדות
+                st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
                 st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                if st.button("🔍 חפש", key="search_users_to_add"):
+                if st.button("🔍 חפש", key="search_users_to_add", use_container_width=True):
                     if search_term:
                         with st.spinner("מחפש משתמשים..."):
-                            all_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+                            all_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=2000)
 
                             # סינון לפי סוג חיפוש
                             matching_users = []
@@ -476,13 +476,31 @@ def show():
 
             # הצגת תוצאות חיפוש עם צ'קבוקסים
             if 'search_results_add' in st.session_state and st.session_state.search_results_add:
-                st.markdown("**תוצאות חיפוש:**")
+                st.markdown(f"**תוצאות חיפוש ({len(st.session_state.search_results_add)} נמצאו):**")
 
                 # איתחול counter אם לא קיים
                 if 'user_search_checkbox_counter' not in st.session_state:
                     st.session_state.user_search_checkbox_counter = 0
 
-                for user in st.session_state.search_results_add[:10]:  # הגבלה ל-10 תוצאות
+                # כפתור בחר הכל / נקה בחירה
+                all_search_usernames = [u.get('userName', u.get('username', '')) for u in st.session_state.search_results_add]
+
+                col_select_search, col_spacer_search = st.columns([1, 3])
+                with col_select_search:
+                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
+                    if st.session_state.users_cart and len(st.session_state.users_cart) == len(all_search_usernames):
+                        if st.button("❌ נקה בחירה", key="clear_all_search_users"):
+                            st.session_state.users_cart = []
+                            st.session_state.user_search_checkbox_counter += 1
+                            st.rerun()
+                    else:
+                        if st.button("✅ בחר הכל", key="select_all_search_users"):
+                            st.session_state.users_cart = all_search_usernames.copy()
+                            st.session_state.user_search_checkbox_counter += 1
+                            st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                for user in st.session_state.search_results_add[:500]:  # הגבלה ל-500 תוצאות
                     username = user.get('userName', user.get('username', ''))
                     full_name = user.get('fullName', '')
                     department = user.get('department', '')
