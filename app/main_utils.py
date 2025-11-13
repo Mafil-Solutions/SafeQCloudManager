@@ -824,12 +824,12 @@ def show_login_page():
             #st.markdown("#### 🔑 Local Admin Login")
             with st.form("local_login_form"):
                 username = st.text_input("👤 שם משתמש")
-                card_id = st.text_input("🔐 מזהה כרטיס", type="password", help="הזן את מזהה הכרטיס שהוגדר במערכת")
+                card_id = st.text_input("🔐 סיסמא", type="password", help="הזן את הסיסמא שהוגדרה במערכת")
                 login_button = st.form_submit_button("🚀 התחבר", use_container_width=True)
 
             if login_button:
                 if not username or not card_id:
-                    st.error("❌ אנא הזן שם משתמש ומזהה כרטיס")
+                    st.error("❌ אנא הזן שם משתמש וסיסמא")
                 else:
                     logger = AuditLogger()
 
