@@ -44,10 +44,10 @@ def show():
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
-            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
             border-radius: 25px;
             font-weight: 600 !important;
-            transition: all 0.3s ease !important;
+            transition: background 0.2s ease !important;
             width: auto !important;
             max-width: 300px !important;
             padding: 0.5rem 1.5rem !important;
@@ -57,7 +57,6 @@ def show():
 
         .action-button button:hover {
             background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
-            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
         }
 
         /* תיקון hover issue - הוספת pointer-events */
@@ -97,6 +96,30 @@ def show():
         .stCheckbox {
             direction: rtl !important;
             text-align: right !important;
+        }
+
+        /* רשימת משתמשים נגללת */
+        .scrollable-user-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+
+        /* שורת משתמש - הרחבת אזור הלחיצה */
+        .stCheckbox label {
+            width: 100% !important;
+            padding: 8px 12px !important;
+            margin: 2px 0 !important;
+            border-radius: 6px !important;
+            transition: background-color 0.15s ease !important;
+            cursor: pointer !important;
+        }
+
+        .stCheckbox label:hover {
+            background-color: rgba(196, 30, 58, 0.08) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -271,6 +294,10 @@ def show():
 
             # רשימת משתמשים
             st.markdown("**בחר משתמשים:**")
+
+            # עטיפת הרשימה ב-container נגלל
+            st.markdown('<div class="scrollable-user-list">', unsafe_allow_html=True)
+
             temp_selections = []
 
             for member in group_data['members']:
@@ -296,6 +323,8 @@ def show():
 
                 if checkbox_result:
                     temp_selections.append(username)
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
             # עדכון הסטייט
             if temp_selections != st.session_state.selected_group_members:
@@ -583,6 +612,9 @@ def show():
                             st.rerun()
                     st.markdown('</div>', unsafe_allow_html=True)
 
+                # עטיפת רשימת תוצאות החיפוש ב-container נגלל
+                st.markdown('<div class="scrollable-user-list">', unsafe_allow_html=True)
+
                 for user in st.session_state.search_results_add[:500]:  # הגבלה ל-500 תוצאות
                     username = user.get('userName', user.get('username', ''))
                     full_name = user.get('fullName', '')
@@ -607,10 +639,15 @@ def show():
                         st.session_state.users_cart.remove(username)
                         st.rerun()
 
+                st.markdown('</div>', unsafe_allow_html=True)
+
             # הצגת מחסנית משתמשים
             if st.session_state.users_cart:
                 st.markdown("---")
                 st.markdown(f"**📦 מחסנית משתמשים ({len(st.session_state.users_cart)}):**")
+
+                # עטיפת המחסנית ב-container נגלל
+                st.markdown('<div class="scrollable-user-list">', unsafe_allow_html=True)
 
                 for username in st.session_state.users_cart:
                     col_name, col_remove = st.columns([3, 1])
@@ -620,6 +657,8 @@ def show():
                         if st.button("❌", key=f"remove_from_cart_{username}"):
                             st.session_state.users_cart.remove(username)
                             st.rerun()
+
+                st.markdown('</div>', unsafe_allow_html=True)
 
                 # כפתור הוספה
                 col_add, col_spacer = st.columns([1, 3])
