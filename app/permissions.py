@@ -363,7 +363,12 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
             return result
 
         # 2. בדוק Card ID (משמש כסיסמה)
-        user_card_id = cloud_user.get('cardId', '')
+        # Card ID נמצא ב-details array עם detailType=4
+        user_card_id = next(
+            (d.get('detailData', '') for d in cloud_user.get('details', [])
+             if isinstance(d, dict) and d.get('detailType') == 4),
+            ""
+        )
 
         if not user_card_id:
             result['error_message'] = (
