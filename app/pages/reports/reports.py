@@ -353,6 +353,10 @@ def show_dashboard_tab(api, status_filter_list):
         if documents:
             sample_depts = [doc.get('department') for doc in documents[:5]]
             st.info(f"🐛 DEBUG - Sample departments from documents: {sample_depts}")
+            # הצגת כל המפתחות של דוקומנט ראשון
+            if documents:
+                st.info(f"🐛 DEBUG - First document keys: {list(documents[0].keys())}")
+                st.info(f"🐛 DEBUG - First document userName: {documents[0].get('userName')}")
 
         documents = [
             doc for doc in documents
