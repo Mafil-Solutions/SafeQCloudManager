@@ -45,18 +45,20 @@ def show():
             color: white !important;
             border: none !important;
             box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
-            border-radius: 25px;
+            border-radius: 25px !important;
             font-weight: 600 !important;
-            transition: background 0.2s ease !important;
             width: auto !important;
             max-width: 300px !important;
             padding: 0.5rem 1.5rem !important;
             cursor: pointer !important;
             user-select: none !important;
+            pointer-events: auto !important;
         }
 
+        /* ביטול לגמרי של אפקט hover */
         .action-button button:hover {
-            background: linear-gradient(45deg, #FF6B6B, #C41E3A) !important;
+            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
         }
 
         /* תיקון hover issue - הוספת pointer-events */
@@ -98,28 +100,61 @@ def show():
             text-align: right !important;
         }
 
-        /* רשימת משתמשים נגללת */
-        .scrollable-user-list {
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #fafafa;
+        /* רשימת משתמשים נגללת - תופס את ה-container */
+        div[data-testid="stVerticalBlock"]:has(> div > div > .scrollable-checkbox-area) {
+            max-height: 400px !important;
+            overflow-y: auto !important;
+            padding: 15px !important;
+            border: 2px solid #C41E3A !important;
+            border-radius: 12px !important;
+            background-color: #f8f9fa !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            margin: 10px 0 !important;
+        }
+
+        /* גישה חלופית - סימון הרשימה עצמה */
+        .user-list-container {
+            max-height: 400px !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding: 15px !important;
+            border: 2px solid #C41E3A !important;
+            border-radius: 12px !important;
+            background-color: #f8f9fa !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            margin: 10px 0 !important;
+            width: 95% !important;
         }
 
         /* שורת משתמש - הרחבת אזור הלחיצה */
-        .stCheckbox label {
+        .user-list-container .stCheckbox label,
+        .scrollable-checkbox-area .stCheckbox label {
             width: 100% !important;
-            padding: 8px 12px !important;
-            margin: 2px 0 !important;
-            border-radius: 6px !important;
-            transition: background-color 0.15s ease !important;
+            padding: 10px 15px !important;
+            margin: 3px 0 !important;
+            border-radius: 8px !important;
             cursor: pointer !important;
+            background-color: white !important;
+            border: 1px solid #e0e0e0 !important;
         }
 
-        .stCheckbox label:hover {
+        .user-list-container .stCheckbox label:hover,
+        .scrollable-checkbox-area .stCheckbox label:hover {
             background-color: rgba(196, 30, 58, 0.08) !important;
+            border-color: #C41E3A !important;
+        }
+
+        /* עיצוב שורות במחסנית (ללא checkboxes) */
+        .user-list-container [data-testid="column"] {
+            padding: 8px 0 !important;
+        }
+
+        .user-list-container p {
+            padding: 8px 12px !important;
+            margin: 2px 0 !important;
+            background-color: white !important;
+            border-radius: 6px !important;
+            border: 1px solid #e0e0e0 !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -295,8 +330,8 @@ def show():
             # רשימת משתמשים
             st.markdown("**בחר משתמשים:**")
 
-            # עטיפת הרשימה ב-container נגלל
-            st.markdown('<div class="scrollable-user-list">', unsafe_allow_html=True)
+            # עטיפת הרשימה ב-container נגלל עם class מותאם אישית
+            st.markdown('<div class="user-list-container scrollable-checkbox-area">', unsafe_allow_html=True)
 
             temp_selections = []
 
@@ -613,7 +648,7 @@ def show():
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 # עטיפת רשימת תוצאות החיפוש ב-container נגלל
-                st.markdown('<div class="scrollable-user-list">', unsafe_allow_html=True)
+                st.markdown('<div class="user-list-container scrollable-checkbox-area">', unsafe_allow_html=True)
 
                 for user in st.session_state.search_results_add[:500]:  # הגבלה ל-500 תוצאות
                     username = user.get('userName', user.get('username', ''))
@@ -647,7 +682,7 @@ def show():
                 st.markdown(f"**📦 מחסנית משתמשים ({len(st.session_state.users_cart)}):**")
 
                 # עטיפת המחסנית ב-container נגלל
-                st.markdown('<div class="scrollable-user-list">', unsafe_allow_html=True)
+                st.markdown('<div class="user-list-container">', unsafe_allow_html=True)
 
                 for username in st.session_state.users_cart:
                     col_name, col_remove = st.columns([3, 1])
