@@ -903,7 +903,7 @@ def show():
 
                     with col2:
                         new_pin = st.text_input("קוד PIN", value=current_pin)
-                        new_card_id = st.text_input("מזהה כרטיס", value=current_card_id)
+                        new_card_id = st.text_input("סיסמא למערכת הדוחות", value=current_card_id)
 
                     col_submit, col_cancel = st.columns(2)
                     with col_submit:

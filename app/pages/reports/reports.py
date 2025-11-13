@@ -340,6 +340,28 @@ def show_dashboard_tab(api, status_filter_list):
         st.warning("⚠️ אין נתונים להצגה")
         return
 
+    # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
+    allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
+
+    if allowed_departments != ["ALL"]:
+        original_count_before_dept = len(documents)
+
+        # פונקציה עזר לבדיקה אם דוקומנט שייך למחלקה מורשית
+        def doc_has_allowed_department(doc):
+            tags = doc.get('tags', [])
+            for tag in tags:
+                if tag.get('tagType') == 0:  # Department tag
+                    dept_name = tag.get('name', '')
+                    if dept_name in allowed_departments:
+                        return True
+            return False
+
+        # סינון דוקומנטים לפי מחלקות מורשות
+        documents = [doc for doc in documents if doc_has_allowed_department(doc)]
+
+        if len(documents) < original_count_before_dept:
+            st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
+
     # סינון לפי סטטוס
     original_count = len(documents)
     filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
@@ -548,6 +570,28 @@ def show_detailed_report_tab(api, status_filter_list):
         st.warning("⚠️ אין נתונים להצגה")
         return
 
+    # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
+    allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
+
+    if allowed_departments != ["ALL"]:
+        original_count_before_dept = len(documents)
+
+        # פונקציה עזר לבדיקה אם דוקומנט שייך למחלקה מורשית
+        def doc_has_allowed_department(doc):
+            tags = doc.get('tags', [])
+            for tag in tags:
+                if tag.get('tagType') == 0:  # Department tag
+                    dept_name = tag.get('name', '')
+                    if dept_name in allowed_departments:
+                        return True
+            return False
+
+        # סינון דוקומנטים לפי מחלקות מורשות
+        documents = [doc for doc in documents if doc_has_allowed_department(doc)]
+
+        if len(documents) < original_count_before_dept:
+            st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
+
     # בניית cache של שמות משתמשים
     if 'user_lookup_cache' not in st.session_state:
         with st.spinner("טוען מידע משתמשים..."):
@@ -668,53 +712,32 @@ def build_user_lookup_cache(api, usernames: List[str]) -> Dict[str, str]:
     unique_usernames = list(set(usernames))
 
     try:
-        # נסה לטעון משתמשים מקומיים ו-Entra (בשקט, בלי הודעות שגיאה)
+        # נסה לטעון משתמשים מקומיים ו-Entra (בשקט, בלי הודעות)
         all_users = []
 
         # Local users
         try:
-            st.info(f"🔄 מנסה לטעון משתמשים מקומיים (Provider {CONFIG['PROVIDERS']['LOCAL']})...")
             local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
             if local_users:
                 all_users.extend(local_users)
-                st.success(f"✅ נטענו {len(local_users)} משתמשים מקומיים")
-            else:
-                st.warning("⚠️ לא נמצאו משתמשים מקומיים")
-        except Exception as e:
-            st.error(f"❌ שגיאה בטעינת משתמשים מקומיים: {e}")
+        except Exception:
+            pass
 
         # Entra users
         try:
-            st.info(f"🔄 מנסה לטעון משתמשי Entra (Provider {CONFIG['PROVIDERS']['ENTRA']})...")
             entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=500)
             if entra_users:
                 all_users.extend(entra_users)
-                st.success(f"✅ נטענו {len(entra_users)} משתמשי Entra")
-            else:
-                st.warning("⚠️ לא נמצאו משתמשי Entra")
-        except Exception as e:
-            st.error(f"❌ שגיאה בטעינת משתמשי Entra: {e}")
+        except Exception:
+            pass
 
         # בניית cache
-        found_count = 0
-        missing_count = 0
-
         for user in all_users:
             username = user.get('userName', '') or user.get('username', '')
             full_name = user.get('fullName', '') or user.get('displayName', '') or user.get('name', '')
 
-            if username:
-                if full_name:
-                    user_cache[username] = full_name
-                    found_count += 1
-                else:
-                    missing_count += 1
-
-        # Debug: הצג כמה משתמשים נמצאו
-        if found_count > 0:
-            st.info(f"📋 נטענו {found_count} שמות משתמשים ({missing_count} ללא שם מלא)")
-        elif all_users:
-            st.warning(f"⚠️ נטענו {len(all_users)} משתמשים אך אף אחד אין לו שם מלא")
+            if username and full_name:
+                user_cache[username] = full_name
 
     except Exception as e:
         # שגיאה כללית - לא מציג למשתמש

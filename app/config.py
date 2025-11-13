@@ -84,6 +84,11 @@ class Config:
                     self._get_secret('ROLE_SUPERADMIN_GROUP', 'SafeQ-SuperAdmin'): 'superadmin'
                 }
             },
+
+            # Reports - Local Cloud Authentication
+            # משתמשים מקומיים שמאומתים מול הענן לצפייה בדוחות
+            'REPORTS_VIEW_GROUP': self._get_secret('REPORTS_VIEW_GROUP', 'Reports-View'),
+            'LOCAL_ADMIN_USERNAME': self._get_secret('LOCAL_ADMIN_USERNAME', 'Admin'),
             
             # Session
             'SESSION_TIMEOUT': int(self._get_secret('SESSION_TIMEOUT', '120')),

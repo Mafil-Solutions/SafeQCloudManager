@@ -824,45 +824,87 @@ def show_login_page():
             #st.markdown("#### 🔑 Local Admin Login")
             with st.form("local_login_form"):
                 username = st.text_input("👤 שם משתמש")
-                password = st.text_input("🔒 סיסמה", type="password")
+                card_id = st.text_input("🔐 סיסמא", type="password", help="הזן את הסיסמא שהוגדרה במערכת")
                 login_button = st.form_submit_button("🚀 התחבר", use_container_width=True)
-            
+
             if login_button:
-                if not username or not password:
-                    st.error("❌ אנא הזן שם משתמש וסיסמה")
+                if not username or not card_id:
+                    st.error("❌ אנא הזן שם משתמש וסיסמא")
                 else:
                     logger = AuditLogger()
 
-                    # בדיקה אם יש משתמשי חירום מוגדרים
-                    if not CONFIG.get('LOCAL_USERS'):
-                        st.error("❌ אין משתמשי חירום מוגדרים במערכת")
-                        st.info("💡 הוסף משתמשי חירום ב-Settings → Secrets → [EMERGENCY_USERS]")
-                        st.stop()
+                    # מקרה 1: משתמש חירום (Emergency User) = SuperAdmin (גישה מלאה)
+                    # בודקים אם המשתמש קיים ב-EMERGENCY_USERS (מאומת מול secrets.toml בלבד)
+                    if CONFIG.get('LOCAL_USERS') and username in CONFIG['LOCAL_USERS']:
+                        # משתמש חירום - אימות מקומי בלבד (לא מול הענן)
+                        if CONFIG['LOCAL_USERS'][username] != card_id:
+                            logger.log_action(username, "Login Failed", "Invalid emergency user credentials", "", "", False)
+                            st.error("❌ שם משתמש או מזהה כרטיס שגויים")
+                            st.stop()
 
-                    # השוואה ישירה - הסיסמאות ב-secrets הן plain text (Streamlit מצפין את secrets.toml)
-                    if username in CONFIG['LOCAL_USERS'] and CONFIG['LOCAL_USERS'][username] == password:
+                        # אימות הצליח - משתמש חירום
                         st.session_state.logged_in = True
                         st.session_state.username = username
                         st.session_state.user_email = f"{username}@local"
                         st.session_state.user_groups = []
-                        st.session_state.access_level = 'superadmin'  # משתמשי חירום מקבלים הרשאות מלאות
+                        st.session_state.access_level = 'superadmin'
                         st.session_state.login_time = datetime.now()
                         st.session_state.auth_method = 'local'
 
-                        # הוספת שדות hybrid auth - משתמשי חירום מקבלים גישה לכל
+                        # שדות hybrid auth - משתמש חירום מקבל גישה לכל
                         st.session_state.role = 'superadmin'
                         st.session_state.allowed_departments = ["ALL"]
                         st.session_state.local_username = username
                         st.session_state.entra_username = None
                         st.session_state.local_groups = []
 
-                        logger.log_action(username, "Login Success", "Local emergency auth",
-                                        st.session_state.user_email, "Emergency SuperAdmin", True, 'superadmin')
+                        logger.log_action(username, "Login Success", "Emergency user local auth",
+                                        st.session_state.user_email, "SuperAdmin", True, 'superadmin')
                         st.success(f"✅ ברוך הבא, {username}!")
                         st.rerun()
+
+                    # מקרה 2: משתמש מקומי אחר - אימות מול הענן
                     else:
-                        logger.log_action(username, "Login Failed", "Invalid local credentials", "", "", False)
-                        st.error("❌ שם משתמש או סיסמה שגויים")
+                        from permissions import authenticate_local_cloud_user
+
+                        with st.spinner(f"מאמת את המשתמש '{username}' מול הענן..."):
+                            api = SafeQAPI()
+                            auth_result = authenticate_local_cloud_user(api, username, card_id, CONFIG)
+
+                        if not auth_result['success']:
+                            # אימות נכשל
+                            logger.log_action(username, "Login Failed", auth_result['error_message'],
+                                            "", "", False)
+                            st.error(auth_result['error_message'])
+                            st.stop()
+
+                        # אימות הצליח - משתמש school_manager
+                        st.session_state.logged_in = True
+                        st.session_state.username = username
+                        st.session_state.user_email = f"{username}@local"
+                        st.session_state.user_groups = auth_result['user_groups']
+                        st.session_state.access_level = 'school_manager'
+                        st.session_state.login_time = datetime.now()
+                        st.session_state.auth_method = 'local_cloud'
+
+                        # שדות hybrid auth - school_manager עם departments מסוננים
+                        st.session_state.role = auth_result['role']
+                        st.session_state.allowed_departments = auth_result['allowed_departments']
+                        st.session_state.local_username = username
+                        st.session_state.entra_username = None
+                        st.session_state.local_groups = auth_result['user_groups']
+
+                        # הצגת בתי הספר המורשים
+                        schools_display = ', '.join(auth_result['allowed_departments'][:3])
+                        if len(auth_result['allowed_departments']) > 3:
+                            schools_display += f" (+{len(auth_result['allowed_departments']) - 3} נוספים)"
+
+                        logger.log_action(username, "Login Success", f"School manager auth - {schools_display}",
+                                        st.session_state.user_email, "School Manager", True, 'school_manager')
+
+                        st.success(f"✅ ברוך הבא, {username}!")
+                        st.info(f"🏫 בתי ספר מורשים: {schools_display}")
+                        st.rerun()
         
         # Access info
         with st.expander("ℹ️ מידע על הרשאות"):
