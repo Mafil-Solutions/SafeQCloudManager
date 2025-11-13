@@ -872,7 +872,7 @@ def show_login_page():
                         from permissions import authenticate_local_cloud_user
 
                         with st.spinner(f"מאמת את המשתמש '{username}' מול הענן..."):
-                            api = SafeQAPI(CONFIG['SERVER_URL'], CONFIG['API_KEY'])
+                            api = SafeQAPI()
                             auth_result = authenticate_local_cloud_user(api, username, card_id, CONFIG)
 
                         if not auth_result['success']:
