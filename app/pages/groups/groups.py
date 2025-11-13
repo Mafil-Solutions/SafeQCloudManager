@@ -40,7 +40,11 @@ def show():
         }
 
         /* כפתורי פעולות - עיצוב בולט כמו "צור משתמש" */
-        .action-button button {
+        .action-button button,
+        .action-button button:hover,
+        .action-button button:active,
+        .action-button button:focus,
+        .action-button button:visited {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
@@ -52,33 +56,36 @@ def show():
             padding: 0.5rem 1.5rem !important;
             cursor: pointer !important;
             user-select: none !important;
-            pointer-events: auto !important;
-            transition: none !important;
-            transform: none !important;
-            animation: none !important;
-        }
 
-        /* ביטול מוחלט של כל אפקטי hover ואנימציות */
-        .action-button button:hover,
-        .action-button button:active,
-        .action-button button:focus {
-            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
-            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
-            border: none !important;
+            /* ביטול כל אנימציות ואפקטים */
             transition: none !important;
             transform: none !important;
             animation: none !important;
             outline: none !important;
+            opacity: 1 !important;
+            filter: none !important;
+            will-change: auto !important;
+
+            /* נעילת מיקום - אפס תזוזה */
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            margin: 0 !important;
+            vertical-align: baseline !important;
         }
 
-        /* תיקון hover issue - הוספת pointer-events */
-        .action-button button,
-        .action-button button * {
-            pointer-events: auto !important;
+        /* ביטול pointer-events tricks שגורמים לריצוד */
+        .action-button button *,
+        .action-button button::before,
+        .action-button button::after {
+            pointer-events: none !important;
         }
 
         .action-button {
-            pointer-events: auto !important;
+            display: inline-block !important;
+            line-height: 1 !important;
         }
 
         /* כפתורי קבוצות - עיצוב Secondary בהיר */
