@@ -355,13 +355,6 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
         # 1. בדוק אם המשתמש קיים בענן
         cloud_user = api.get_single_user(username, provider_id=local_provider_id)
 
-        # DEBUG: הדפסת המשתמש שחזר מה-API
-        st.info(f"🐛 DEBUG - User data returned: {cloud_user}")
-        if cloud_user:
-            st.info(f"🐛 DEBUG - User keys: {list(cloud_user.keys())}")
-            if 'details' in cloud_user:
-                st.info(f"🐛 DEBUG - Details array: {cloud_user.get('details')}")
-
         if not cloud_user:
             result['error_message'] = (
                 f"❌ המשתמש '{username}' לא נמצא במערכת הענן.\n\n"
@@ -370,12 +363,9 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
             return result
 
         # 2. בדוק Card ID (משמש כסיסמה)
-        # Card ID נמצא ב-details array עם detailType=4
-        user_card_id = next(
-            (d.get('detailData', '') for d in cloud_user.get('details', [])
-             if isinstance(d, dict) and d.get('detailType') == 4),
-            ""
-        )
+        # Card ID נמצא במערך cards (לוקחים את הראשון)
+        cards = cloud_user.get('cards', [])
+        user_card_id = cards[0] if cards else ""
 
         if not user_card_id:
             result['error_message'] = (
