@@ -349,8 +349,11 @@ def authenticate_local_cloud_user(api, username: str, card_id: str, config: dict
     }
 
     try:
+        # קבלת provider_id עבור משתמשים מקומיים
+        local_provider_id = config.get('PROVIDERS', {}).get('LOCAL', 12348)
+
         # 1. בדוק אם המשתמש קיים בענן
-        cloud_user = api.get_single_user(username)
+        cloud_user = api.get_single_user(username, provider_id=local_provider_id)
 
         if not cloud_user:
             result['error_message'] = (
