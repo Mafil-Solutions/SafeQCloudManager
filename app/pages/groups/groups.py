@@ -331,8 +331,8 @@ def show():
                     if checkbox_result:
                         temp_selections.append(username)
 
-            # עדכון הסטייט
-            if temp_selections != st.session_state.selected_group_members:
+            # עדכון הסטייט - רק אם באמת השתנה
+            if set(temp_selections) != set(st.session_state.selected_group_members):
                 st.session_state.selected_group_members = temp_selections
                 st.rerun()
 

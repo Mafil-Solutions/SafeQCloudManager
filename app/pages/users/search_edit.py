@@ -229,6 +229,7 @@ def show():
         search_type = search_type_map_he_to_en[search_type_he]
 
         search_term = st.text_input("הזן ערך לחיפוש",
+                                   key="search_term_input",
                                    help="השתמש ב-* כתו כלשהו (wildcard). לדוגמה: *admin*, test*")
         partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
                                    help="מצא את כל המשתמשים המכילים את ערך החיפוש")
