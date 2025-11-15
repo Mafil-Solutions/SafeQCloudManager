@@ -126,7 +126,7 @@ def show():
         }
 
         /* רקע לבן לקונטיינרים הנגללים */
-        [data-testid="stVerticalBlockBorderWrapper"],
+        div[data-testid="stVerticalBlockBorderWrapper"],
         [data-testid="stVerticalBlockBorderWrapper"] > div,
         [data-testid="stVerticalBlock"]:has([data-testid="stVerticalBlockBorderWrapper"]) {
             background-color: white !important;
