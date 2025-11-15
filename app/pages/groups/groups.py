@@ -124,6 +124,11 @@ def show():
         .stCheckbox label:hover {
             background-color: rgba(196, 30, 58, 0.05) !important;
         }
+
+        /* רקע לבן לקונטיינרים הנגללים */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: white !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
