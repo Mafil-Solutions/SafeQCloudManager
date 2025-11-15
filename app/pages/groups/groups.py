@@ -126,7 +126,9 @@ def show():
         }
 
         /* רקע לבן לקונטיינרים הנגללים */
-        [data-testid="stVerticalBlockBorderWrapper"] {
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stVerticalBlockBorderWrapper"] > div,
+        [data-testid="stVerticalBlock"]:has([data-testid="stVerticalBlockBorderWrapper"]) {
             background-color: white !important;
         }
     </style>
@@ -618,6 +620,8 @@ def show():
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 # שימוש ב-container עם גובה קבוע ליצירת סקרול אוטומטי
+                temp_cart_selections = []
+
                 with st.container(height=400, border=True):
                     for user in st.session_state.search_results_add[:500]:  # הגבלה ל-500 תוצאות
                         username = user.get('userName', user.get('username', ''))
@@ -635,13 +639,13 @@ def show():
                         checkbox_result = st.checkbox(label, value=is_checked,
                                                      key=f"search_user_checkbox_{username}_{st.session_state.user_search_checkbox_counter}")
 
-                        # הוספה/הסרה אוטומטית למחסנית
-                        if checkbox_result and username not in st.session_state.users_cart:
-                            st.session_state.users_cart.append(username)
-                            st.rerun()
-                        elif not checkbox_result and username in st.session_state.users_cart:
-                            st.session_state.users_cart.remove(username)
-                            st.rerun()
+                        if checkbox_result:
+                            temp_cart_selections.append(username)
+
+                # עדכון המחסנית רק אם השתנה משהו
+                if set(temp_cart_selections) != set(st.session_state.users_cart):
+                    st.session_state.users_cart = temp_cart_selections
+                    st.rerun()
 
             # הצגת מחסנית משתמשים
             if st.session_state.users_cart:
