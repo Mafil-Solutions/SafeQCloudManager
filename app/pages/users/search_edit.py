@@ -185,6 +185,11 @@ def show():
         .stNumberInput > div > div > input {
             background-color: white !important;  /* אדום עדין מאוד */
         }
+
+        /* רקע לבן לקונטיינרים הנגללים */
+        div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"] {
+            background-color: white !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -464,20 +469,22 @@ def show():
                 # תיקון: בנייה מחדש של רשימת בחירה מהצ'קבוקסים
                 temp_selections = []
 
-                for label in user_options:
-                    username = user_mapping[label]
-                    is_checked = username in st.session_state.selected_users
+                # שימוש ב-container עם גובה קבוע ליצירת סקרול אוטומטי
+                with st.container(height=400, border=True):
+                    for label in user_options:
+                        username = user_mapping[label]
+                        is_checked = username in st.session_state.selected_users
 
-                    # תיקון: checkbox עם key דינמי שכולל counter
-                    checkbox_result = st.checkbox(label, value=is_checked,
-                                                 key=f"user_checkbox_{username}_{st.session_state.user_checkbox_counter}")
+                        # תיקון: checkbox עם key דינמי שכולל counter
+                        checkbox_result = st.checkbox(label, value=is_checked,
+                                                     key=f"user_checkbox_{username}_{st.session_state.user_checkbox_counter}")
 
-                    # אוסף את כל הבחירות
-                    if checkbox_result:
-                        temp_selections.append(username)
+                        # אוסף את כל הבחירות
+                        if checkbox_result:
+                            temp_selections.append(username)
 
-                # עדכון הסטייט רק אם השתנה משהו
-                if temp_selections != st.session_state.selected_users:
+                # עדכון הסטייט רק אם השתנה משהו - שימוש ב-set comparison
+                if set(temp_selections) != set(st.session_state.selected_users):
                     st.session_state.selected_users = temp_selections
                     st.rerun()
 
