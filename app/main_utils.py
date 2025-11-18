@@ -658,6 +658,11 @@ def is_session_valid():
 
 def show_access_denied_page():
     st.title("🚫 הגישה נדחתה")
+
+    # הצגת פרטי המשתמש שניסה להתחבר
+    if hasattr(st.session_state, 'denied_user_name') and st.session_state.denied_user_name:
+        st.warning(f"👤 משתמש: **{st.session_state.denied_user_name}** ({st.session_state.get('denied_user_email', '')})")
+
     st.error(CONFIG['ACCESS_CONTROL']['DENY_MESSAGE'])
     st.info("**קבוצות SafeQ נדרשות (אחת לפחות):**")
     for group_name, role in CONFIG['ACCESS_CONTROL']['ROLE_MAPPING'].items():
@@ -665,6 +670,11 @@ def show_access_denied_page():
     st.markdown("---")
     st.write("אם לדעתך זו טעות, פנה למנהל ה-IT שלך.")
     if st.button("🔄 נסה שוב"):
+        # ניקוי פרטי המשתמש הנדחה
+        if 'denied_user_name' in st.session_state:
+            del st.session_state.denied_user_name
+        if 'denied_user_email' in st.session_state:
+            del st.session_state.denied_user_email
         st.rerun()
 
 def show_login_page():
@@ -702,12 +712,16 @@ def show_login_page():
 
             with st.spinner("מתחבר ל-Entra ID..."):
                 token_result = entra_auth.get_token_from_code(auth_code)
-                
+
                 if token_result and 'access_token' in token_result:
                     user_info = entra_auth.get_user_info(token_result['access_token'])
-                    
+
                     if user_info:
+                        # הצגת פרטי המשתמש שהתחבר
+                        user_display_name = user_info.get('displayName', 'לא ידוע')
                         user_email = user_info['mail'] or user_info['userPrincipalName']
+                        st.info(f"👤 משתמש מחובר: **{user_display_name}** ({user_email})")
+
                         user_groups = entra_auth.get_user_groups(token_result['access_token'])
                         user_groups_names = [g['displayName'] for g in user_groups]
                         
@@ -727,7 +741,7 @@ def show_login_page():
 
                             # בדיקה אם אתחול ההרשאות הצליח
                             if not perm_result['success']:
-                                st.error("❌ אימות הרשאות נכשל")
+                                st.error(f"❌ אימות הרשאות נכשל עבור **{user_display_name}**")
                                 st.error(perm_result['error_message'])
 
                                 logger.log_action(
@@ -737,7 +751,7 @@ def show_login_page():
                                 )
 
                                 # הצג הוראות למשתמש
-                                st.info("💡 אנא וודא שקיים משתמש לוקאלי תואם במערכת SafeQ עם אותו שם משתמש.")
+                                st.info(f"💡 אנא וודא שקיים משתמש לוקאלי תואם במערכת SafeQ עם שם המשתמש: **{user_display_name}**")
 
                                 # לא ממשיכים - לא מבצעים login
                                 st.stop()
@@ -797,6 +811,8 @@ def show_login_page():
                                 user_email, ', '.join(user_groups_names), False
                             )
                             st.session_state.access_denied = True
+                            st.session_state.denied_user_name = user_display_name
+                            st.session_state.denied_user_email = user_email
                             st.query_params.clear()
                             st.rerun()
                     else:
