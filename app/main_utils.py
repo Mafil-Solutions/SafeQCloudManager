@@ -849,10 +849,24 @@ def show_login_page():
                                 if k.startswith('EMERGENCY_USER_'):
                                     value = os.environ.get(k, '')
                                     value_len = len(value)
-                                    is_empty = not (value and value.strip())
+                                    stripped = value.strip() if value else ''
+
+                                    # בדוק אם יש גרשיים
+                                    has_quotes = (stripped.startswith('"') and stripped.endswith('"')) or \
+                                                (stripped.startswith("'") and stripped.endswith("'"))
+
+                                    # הסר גרשיים לבדיקה
+                                    cleaned = stripped
+                                    if has_quotes and len(stripped) >= 2:
+                                        cleaned = stripped[1:-1]
+
+                                    is_empty = not cleaned
+
                                     emergency_vars[k] = {
                                         'length': value_len,
+                                        'cleaned_length': len(cleaned),
                                         'is_empty': is_empty,
+                                        'has_quotes': has_quotes,
                                         'first_char': value[0] if value else 'N/A',
                                         'has_whitespace': value != value.strip() if value else False
                                     }
@@ -863,11 +877,16 @@ def show_login_page():
                                 for var_name, details in emergency_vars.items():
                                     username = var_name.replace('EMERGENCY_USER_', '')
                                     if details['is_empty']:
-                                        st.error(f"❌ **{var_name}** - הערך ריק!")
+                                        st.error(f"❌ **{var_name}** - הערך ריק אחרי ניקוי!")
                                     elif details['length'] == 0:
                                         st.error(f"❌ **{var_name}** - אורך 0")
                                     else:
-                                        st.success(f"✅ **{var_name}** - אורך: {details['length']} תווים")
+                                        if details['has_quotes']:
+                                            st.warning(f"⚠️ **{var_name}** - אורך: {details['length']} תווים (כולל גרשיים)")
+                                            st.info(f"   אחרי הסרת גרשיים: {details['cleaned_length']} תווים")
+                                        else:
+                                            st.success(f"✅ **{var_name}** - אורך: {details['length']} תווים")
+
                                         if details['has_whitespace']:
                                             st.warning(f"⚠️ יש רווחים בהתחלה/סוף (יוסרו אוטומטית)")
 

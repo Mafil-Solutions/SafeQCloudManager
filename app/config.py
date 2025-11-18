@@ -142,13 +142,27 @@ class Config:
                     value_len = len(value) if value else 0
                     print(f"[DEBUG] Checking {key}: value_length={value_len}, value_exists={value is not None}, value_bool={bool(value)}")
 
-                    if value and value.strip():  # וודא שיש ערך
-                        emergency_users[username] = value
-                        found_vars.append(key)
-                        print(f"[DEBUG] ✅ Added emergency user: {username} (password length: {len(value)})")
+                    # נקה רווחים וגרשיים מהתחלה וסוף
+                    if value:
+                        cleaned_value = value.strip()  # הסר רווחים
+                        # הסר גרשיים כפולים/יחידים מהתחלה וסוף (Railway לפעמים מוסיף אותם)
+                        if cleaned_value.startswith('"') and cleaned_value.endswith('"'):
+                            cleaned_value = cleaned_value[1:-1]
+                        elif cleaned_value.startswith("'") and cleaned_value.endswith("'"):
+                            cleaned_value = cleaned_value[1:-1]
+
+                        print(f"[DEBUG] Original length: {value_len}, After strip: {len(cleaned_value)}, starts_with_quote: {value.strip().startswith(('\"', \"'\"))}")
+
+                        if cleaned_value:  # וודא שיש ערך אחרי ניקוי
+                            emergency_users[username] = cleaned_value
+                            found_vars.append(key)
+                            print(f"[DEBUG] ✅ Added emergency user: {username} (password length after cleaning: {len(cleaned_value)})")
+                        else:
+                            skipped_vars.append((key, f"empty after cleaning quotes/whitespace (original length={value_len})"))
+                            print(f"[DEBUG] ❌ Skipped {key}: empty after cleaning (original length={value_len})")
                     else:
-                        skipped_vars.append((key, f"empty or whitespace-only (length={value_len})"))
-                        print(f"[DEBUG] ❌ Skipped {key}: value is empty or whitespace-only (length={value_len})")
+                        skipped_vars.append((key, f"empty or None (length={value_len})"))
+                        print(f"[DEBUG] ❌ Skipped {key}: value is empty or None")
 
             if found_vars:
                 print(f"[DEBUG] Found emergency user environment variables: {found_vars}")
