@@ -833,7 +833,27 @@ def show_login_page():
             auth_url = entra_auth.get_auth_url()
 
         if auth_url:
-            st.link_button("🔒 התחבר עם Entra ID", auth_url, type="primary", use_container_width=True)
+            # כפתור שמבצע redirect באותה לשונית (במקום לפתוח טאב חדש)
+            st.markdown(f"""
+                <a href="{auth_url}" style="
+                    display: inline-block;
+                    width: 100%;
+                    padding: 0.5rem 1rem;
+                    background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+                    color: white;
+                    text-align: center;
+                    text-decoration: none;
+                    border-radius: 0.5rem;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                ">
+                    🔒 התחבר עם Entra ID
+                </a>
+            """, unsafe_allow_html=True)
 
         # Emergency Admin Login - מוסתר בתוך expander
         with st.expander("🔑 התחברות מנהל מקומי"):
