@@ -10,7 +10,7 @@ from config import config
 
 CONFIG = config.get()
 
-def create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page):
+def create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page, reports_page):
     """יוצר את דף הבית עם גישה לאובייקטי Page"""
 
     def show():
@@ -147,21 +147,21 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
 
             # קטגוריות אחרות
             st.markdown("### 📊 מודולים נוספים")
-            col_act, col_print, col_scan = st.columns(3)
+            col_act, col_reports, col_print = st.columns(3)
 
             with col_act:
                 st.markdown("**📋 הפעילות שלי**")
                 st.caption("צפייה בפעולות שביצעת במערכת")
                 st.page_link(my_activity_page, label="📋➡️ עבור לפעילות", use_container_width=True)
 
+            with col_reports:
+                st.markdown("**📊 דוחות**")
+                st.caption("צפייה בדוחות היסטוריה, סטטיסטיקות ומבט על כללי")
+                st.page_link(reports_page, label="📊➡️ עבור לדוחות", use_container_width=True)
+
             with col_print:
                 st.markdown("**🖨️ מדפסות**")
                 st.caption("ניהול מדפסות (בפיתוח)")
-                st.info("💡 תכונה זו בפיתוח")
-
-            with col_scan:
-                st.markdown("**📄 סריקה**")
-                st.caption("תהליכי סריקה (בפיתוח)")
                 st.info("💡 תכונה זו בפיתוח")
 
         else:

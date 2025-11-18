@@ -752,7 +752,7 @@ def main():
 
     # דף הבית - עם גישה לאובייקטי Page
     from pages.home import create_home_page
-    home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page)
+    home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page, reports_page)
 
     # יצירת ניווט עם קבוצות היררכיות - מותאם לפי סוג משתמש
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
