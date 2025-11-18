@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import io
 import time
 
@@ -18,6 +18,113 @@ from permissions import filter_users_by_departments
 from config import config
 
 CONFIG = config.get()
+
+
+def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
+    """
+    הצגת סינונים משותפים לדשבורד ולדוח המפורט
+
+    Args:
+        df: DataFrame המקורי
+
+    Returns:
+        tuple: (DataFrame מסונן, dict של הבחירות)
+    """
+    st.markdown("---")
+
+    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=False):
+        st.markdown("##### סנן את הנתונים המוצגים בדשבורד ובדוח המפורט")
+
+        filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
+
+        with filter_row1_col1:
+            search_text = st.text_input(
+                "חיפוש חופשי",
+                placeholder="שם, מסמך, מדפסת...",
+                key="shared_search",
+                help="חפש בכל השדות"
+            )
+
+        with filter_row1_col2:
+            source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
+            selected_source = st.selectbox(
+                "מקור",
+                source_options,
+                key="shared_filter_source"
+            )
+
+        with filter_row1_col3:
+            jobtype_options = ['הכל'] + sorted(df['סוג'].unique().tolist())
+            selected_jobtype = st.selectbox(
+                "סוג עבודה",
+                jobtype_options,
+                key="shared_filter_jobtype"
+            )
+
+        filter_row2_col1, filter_row2_col2, filter_row2_col3 = st.columns(3)
+
+        with filter_row2_col1:
+            status_options = ['הכל'] + sorted(df['סטטוס'].unique().tolist())
+            selected_status = st.selectbox(
+                "סטטוס",
+                status_options,
+                key="shared_filter_status"
+            )
+
+        with filter_row2_col2:
+            dept_options = ['הכל'] + sorted([d for d in df['מחלקה'].unique() if d], key=str)
+            selected_dept = st.selectbox(
+                "מחלקה",
+                dept_options,
+                key="shared_filter_dept"
+            )
+
+        with filter_row2_col3:
+            # איפוס סינונים
+            if st.button("🔄 איפוס סינונים", use_container_width=True):
+                # נשמור את המפתחות שצריך למחוק
+                keys_to_delete = [
+                    'shared_search', 'shared_filter_source', 'shared_filter_jobtype',
+                    'shared_filter_status', 'shared_filter_dept'
+                ]
+                for key in keys_to_delete:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
+
+    # החלת סינונים
+    filtered_df = df.copy()
+    filters_applied = {
+        'search': search_text,
+        'source': selected_source,
+        'jobtype': selected_jobtype,
+        'status': selected_status,
+        'dept': selected_dept
+    }
+
+    if search_text:
+        mask = filtered_df.astype(str).apply(
+            lambda x: x.str.contains(search_text, case=False, na=False)
+        ).any(axis=1)
+        filtered_df = filtered_df[mask]
+
+    if selected_source != 'הכל':
+        filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+
+    if selected_jobtype != 'הכל':
+        filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
+
+    if selected_status != 'הכל':
+        filtered_df = filtered_df[filtered_df['סטטוס'] == selected_status]
+
+    if selected_dept != 'הכל':
+        filtered_df = filtered_df[filtered_df['מחלקה'] == selected_dept]
+
+    # הצגת מידע על הסינון
+    if len(filtered_df) < len(df):
+        st.info(f"🔍 מציג {len(filtered_df):,} מתוך {len(df):,} רשומות (סוננו {len(df) - len(filtered_df):,} רשומות)")
+
+    return filtered_df, filters_applied
 
 
 def show_report_settings(api):
@@ -328,60 +435,28 @@ def fetch_report_data(api, logger, username, date_start, date_end, filter_userna
 def show_dashboard_tab(api, status_filter_list):
     """
     דשבורד מבט על - סטטיסטיקות
+    משתמש בנתונים המסוננים מהsession_state
     """
-    if 'history_report_data' not in st.session_state:
+    if 'filtered_df' not in st.session_state:
         st.info("ℹ️ לחץ על 'הצג דוח' כדי לטעון נתונים")
         return
 
-    data = st.session_state.history_report_data
-    documents = data.get('documents', [])
+    df = st.session_state.filtered_df
 
-    if not documents:
-        st.warning("⚠️ אין נתונים להצגה")
+    if len(df) == 0:
+        st.warning("⚠️ אין נתונים להצגה לאחר הסינון")
+        st.info("💡 טיפ: נסה לשנות את הגדרות הסינון")
         return
-
-    # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
-    allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
-
-    if allowed_departments != ["ALL"]:
-        original_count_before_dept = len(documents)
-
-        # פונקציה עזר לבדיקה אם דוקומנט שייך למחלקה מורשית
-        def doc_has_allowed_department(doc):
-            tags = doc.get('tags', [])
-            for tag in tags:
-                if tag.get('tagType') == 0:  # Department tag
-                    dept_name = tag.get('name', '')
-                    if dept_name in allowed_departments:
-                        return True
-            return False
-
-        # סינון דוקומנטים לפי מחלקות מורשות
-        documents = [doc for doc in documents if doc_has_allowed_department(doc)]
-
-        if len(documents) < original_count_before_dept:
-            st.info(f"ℹ️ מציג נתונים עבור בתי הספר שלך בלבד ({len(documents)} מתוך {original_count_before_dept})")
-
-    # סינון לפי סטטוס
-    original_count = len(documents)
-    filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
-    documents = filtered_documents
 
     st.markdown("## 📈 סיכום הדפסות/צילומים")
 
-    if len(documents) < original_count:
-        st.info(f"ℹ️ הסטטיסטיקות מציגות רק עבודות עם הסטטוס שנבחר ({len(documents)} מתוך {original_count} תוצאות)")
+    # חישוב סטטיסטיקות ישירות מהDataFrame
+    # סינון רק הדפסות והעתקות
+    print_copy_df = df[df['סוג'].isin(['הדפסה', 'העתקה'])]
 
-    if not documents:
-        st.warning("⚠️ אין עבודות עם הסטטוס שנבחר")
-        st.info("💡 טיפ: שנה את סטטוס הסינון בהגדרות הדוח")
-        return
-
-    # חישוב סטטיסטיקות
-    print_copy_docs = [doc for doc in documents if doc.get('jobType') in ['PRINT', 'COPY']]
-    total_docs = len(print_copy_docs)
-    total_pages = sum(doc.get('totalPages', 0) for doc in print_copy_docs)
-    total_color_pages = sum(doc.get('colorPages', 0) for doc in print_copy_docs)
+    total_docs = len(print_copy_df)
+    total_pages = int(print_copy_df['עמודים'].sum())
+    total_color_pages = int(print_copy_df['צבע'].sum())
 
     # כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
@@ -424,27 +499,20 @@ def show_dashboard_tab(api, status_filter_list):
     # פילוח לפי סוג עבודה
     st.markdown("### 📋 פילוח לפי סוג עבודה")
 
-    job_type_translation = {
-        'PRINT': 'הדפסה',
-        'COPY': 'העתקה',
-        'SCAN': 'סריקה',
-        'FAX': 'פקס'
-    }
-
+    # חישוב סטטיסטיקות לפי סוג עבודה מהDataFrame
     job_types_stats = {}
-    for doc in documents:
-        job_type = doc.get('jobType', 'UNKNOWN')
-        job_type_he = job_type_translation.get(job_type, job_type)
-        if job_type_he not in job_types_stats:
-            job_types_stats[job_type_he] = {'count': 0, 'pages': 0}
-        job_types_stats[job_type_he]['count'] += 1
-        job_types_stats[job_type_he]['pages'] += doc.get('totalPages', 0)
+    for job_type in df['סוג'].unique():
+        job_type_df = df[df['סוג'] == job_type]
+        job_types_stats[job_type] = {
+            'count': len(job_type_df),
+            'pages': int(job_type_df['עמודים'].sum())
+        }
 
     job_type_names = {
-        'PRINT': '🖨️ הדפסה',
-        'COPY': '📄 העתקה',
-        'SCAN': '📷 סריקה',
-        'FAX': '📠 פקס'
+        'הדפסה': '🖨️ הדפסה',
+        'העתקה': '📄 העתקה',
+        'סריקה': '📷 סריקה',
+        'פקס': '📠 פקס'
     }
 
     if job_types_stats:
@@ -454,7 +522,7 @@ def show_dashboard_tab(api, status_filter_list):
                 display_name = job_type_names.get(job_type, job_type)
                 count = stats['count']
                 pages = stats['pages']
-                percentage = (count / len(documents) * 100) if documents else 0
+                percentage = (count / len(df) * 100) if len(df) > 0 else 0
                 st.markdown(f"""
                 <div class="stats-card">
                     <div class="stats-label">{display_name}</div>
@@ -469,59 +537,37 @@ def show_dashboard_tab(api, status_filter_list):
     # TOP 10 משתמשים
     st.markdown("### 👥 משתמשים מובילים (Top 10)")
 
-    if 'user_lookup_cache' not in st.session_state:
-        with st.spinner("טוען מידע משתמשים..."):
-            usernames = [doc.get('userName', '') for doc in documents if doc.get('userName')]
-            st.session_state.user_lookup_cache = build_user_lookup_cache(api, usernames)
+    # חישוב סטטיסטיקות משתמשים מהDataFrame
+    user_stats = df.groupby('משתמש').agg({
+        'עמודים': 'sum',
+        'צבע': 'sum',
+        'שם מלא': 'first'  # לוקח את השם המלא הראשון
+    }).reset_index()
 
-    user_cache = st.session_state.user_lookup_cache
+    user_stats['מסמכים'] = df.groupby('משתמש').size().values
+    user_stats['ש/ל'] = user_stats['עמודים'] - user_stats['צבע']
 
-    user_stats = {}
-    for doc in documents:
-        user = doc.get('userName', 'Unknown')
-        if user not in user_stats:
-            user_stats[user] = {'docs': 0, 'pages': 0, 'color_pages': 0}
-        user_stats[user]['docs'] += 1
-        user_stats[user]['pages'] += doc.get('totalPages', 0)
-        user_stats[user]['color_pages'] += doc.get('colorPages', 0)
+    # מיון לפי עמודים והצגת Top 10
+    top_users_df = user_stats.nlargest(10, 'עמודים')[['שם מלא', 'משתמש', 'מסמכים', 'עמודים', 'צבע', 'ש/ל']]
+    top_users_df.columns = ['שם מלא', 'משתמש', 'מסמכים', 'עמודים', 'עמודי צבע', 'ש/ל']
 
-    top_users = sorted(user_stats.items(), key=lambda x: x[1]['pages'], reverse=True)[:10]
-
-    user_df = pd.DataFrame([
-        {
-            'שם מלא': user_cache.get(user, user),
-            'משתמש': user,
-            'מסמכים': stats['docs'],
-            'עמודים': stats['pages'],
-            'עמודי צבע': stats['color_pages'],
-            'ש/ל': stats['pages'] - stats['color_pages']
-        }
-        for user, stats in top_users
-    ])
-
-    st.dataframe(user_df, use_container_width=True, hide_index=True)
+    st.dataframe(top_users_df, use_container_width=True, hide_index=True)
 
     st.markdown("---")
 
     # TOP 10 מדפסות
     st.markdown("### 🖨️ מדפסות פעילות (Top 10)")
 
-    port_stats = {}
-    for doc in documents:
-        port = doc.get('outputPortName', 'Unknown')
-        if port and port != '':
-            if port not in port_stats:
-                port_stats[port] = {'docs': 0, 'pages': 0}
-            port_stats[port]['docs'] += 1
-            port_stats[port]['pages'] += doc.get('totalPages', 0)
+    # חישוב סטטיסטיקות מדפסות מהDataFrame
+    port_stats = df[df['מדפסת'] != ''].groupby('מדפסת').agg({
+        'עמודים': 'sum'
+    }).reset_index()
+    port_stats['מסמכים'] = df[df['מדפסת'] != ''].groupby('מדפסת').size().values
 
-    if port_stats:
-        top_ports = sorted(port_stats.items(), key=lambda x: x[1]['pages'], reverse=True)[:10]
-        port_df = pd.DataFrame([
-            {'מדפסת': port, 'מסמכים': stats['docs'], 'עמודים': stats['pages']}
-            for port, stats in top_ports
-        ])
-        st.dataframe(port_df, use_container_width=True, hide_index=True)
+    # מיון לפי עמודים והצגת Top 10
+    if len(port_stats) > 0:
+        top_ports_df = port_stats.nlargest(10, 'עמודים')[['מדפסת', 'מסמכים', 'עמודים']]
+        st.dataframe(top_ports_df, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ אין מידע על מדפסות בנתונים")
 
@@ -530,26 +576,16 @@ def show_dashboard_tab(api, status_filter_list):
     # פילוח לפי מחלקות
     st.markdown("### 🏢 פילוח לפי מחלקות")
 
-    dept_stats = {}
-    for doc in documents:
-        tags = doc.get('tags', [])
-        for tag in tags:
-            if tag.get('tagType') == 0:
-                dept_name = tag.get('name', 'Unknown')
-                if dept_name not in dept_stats:
-                    dept_stats[dept_name] = {'docs': 0, 'pages': 0}
-                dept_stats[dept_name]['docs'] += 1
-                dept_stats[dept_name]['pages'] += doc.get('totalPages', 0)
+    # חישוב סטטיסטיקות מחלקות מהDataFrame
+    dept_stats = df[df['מחלקה'] != ''].groupby('מחלקה').agg({
+        'עמודים': 'sum'
+    }).reset_index()
 
-    if dept_stats:
-        dept_df = pd.DataFrame([
-            {
-                'מחלקה': dept,
-                'מסמכים': stats['docs'],
-                'עמודים': stats['pages']
-            }
-            for dept, stats in sorted(dept_stats.items(), key=lambda x: x[1]['pages'], reverse=True)
-        ])
+    if len(dept_stats) > 0:
+        dept_stats['מסמכים'] = df[df['מחלקה'] != ''].groupby('מחלקה').size().values
+
+        # מיון לפי עמודים
+        dept_df = dept_stats.sort_values('עמודים', ascending=False)[['מחלקה', 'מסמכים', 'עמודים']]
         st.dataframe(dept_df, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ אין מידע על מחלקות בנתונים")
@@ -616,61 +652,18 @@ def show_detailed_report_tab(api, status_filter_list):
         st.warning("⚠️ אין תוצאות להצגה")
         return
 
-    # סינון נתונים
-    st.markdown("---")
-    st.markdown("### 🔍 סינון נתונים")
-
-    filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
-
-    with filter_row1_col1:
-        search_text = st.text_input("חיפוש חופשי", placeholder="שם, מסמך, מדפסת...", key="detail_search")
-
-    with filter_row1_col2:
-        source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
-        selected_source = st.selectbox("מקור", source_options, key="detail_filter_source")
-
-    with filter_row1_col3:
-        jobtype_options = ['הכל'] + sorted(df['סוג'].unique().tolist())
-        selected_jobtype = st.selectbox("סוג עבודה", jobtype_options, key="detail_filter_jobtype")
-
-    filter_row2_col1, filter_row2_col2, filter_row2_col3 = st.columns(3)
-
-    with filter_row2_col1:
-        status_options = ['הכל'] + sorted(df['סטטוס'].unique().tolist())
-        selected_status = st.selectbox("סטטוס", status_options, key="detail_filter_status")
-
-    with filter_row2_col2:
-        dept_options = ['הכל'] + sorted([d for d in df['מחלקה'].unique() if d], key=str)
-        selected_dept = st.selectbox("מחלקה", dept_options, key="detail_filter_dept")
-
-    # החלת סינונים
-    filtered_df = df.copy()
-
-    if search_text:
-        mask = filtered_df.astype(str).apply(lambda x: x.str.contains(search_text, case=False, na=False)).any(axis=1)
-        filtered_df = filtered_df[mask]
-
-    if selected_source != 'הכל':
-        filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
-
-    if selected_jobtype != 'הכל':
-        filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
-
-    if selected_status != 'הכל':
-        filtered_df = filtered_df[filtered_df['סטטוס'] == selected_status]
-
-    if selected_dept != 'הכל':
-        filtered_df = filtered_df[filtered_df['מחלקה'] == selected_dept]
+    # שימוש בנתונים המסוננים מה-session_state (סינון משותף עם הדשבורד)
+    filtered_df = st.session_state.get('filtered_df', df)
+    original_df = st.session_state.get('original_df', df)
 
     # הצגת מונה וכפתור ייצוא
-    st.markdown("---")
     result_col1, result_col2 = st.columns([3, 1])
 
     with result_col1:
-        if len(filtered_df) < len(df):
-            st.info(f"📊 מוצגים {len(filtered_df)} מתוך {len(df)} רשומות")
+        if len(filtered_df) < len(original_df):
+            st.info(f"📊 מוצגים {len(filtered_df)} מתוך {len(original_df)} רשומות")
         else:
-            st.info(f"📊 סה\"כ {len(df)} רשומות")
+            st.info(f"📊 סה\"כ {len(filtered_df)} רשומות")
 
     with result_col2:
         excel_data = export_to_excel(filtered_df, "history_report")
@@ -902,6 +895,52 @@ def show():
             # קריאת נתונים מ-API
             fetch_report_data(api, logger, username, date_start, date_end, filter_username,
                             filter_port, job_type, status_filter_list, max_records)
+
+        # טעינת הנתונים והכנת DataFrame מסונן משותף
+        if 'history_report_data' in st.session_state:
+            data = st.session_state.history_report_data
+            documents = data.get('documents', [])
+
+            if documents:
+                # סינון לפי הרשאות - school_manager רואה רק את בתי הספר שלו
+                allowed_departments = st.session_state.get('allowed_departments', ["ALL"])
+
+                if allowed_departments != ["ALL"]:
+                    def doc_has_allowed_department(doc):
+                        tags = doc.get('tags', [])
+                        for tag in tags:
+                            if tag.get('tagType') == 0:  # Department tag
+                                dept_name = tag.get('name', '')
+                                if dept_name in allowed_departments:
+                                    return True
+                        return False
+
+                    documents = [doc for doc in documents if doc_has_allowed_department(doc)]
+
+                # סינון לפי סטטוס
+                filtered_documents = [doc for doc in documents if doc.get('status') in status_filter_list]
+
+                # בניית cache של שמות משתמשים
+                if 'user_lookup_cache' not in st.session_state:
+                    with st.spinner("טוען מידע משתמשים..."):
+                        usernames = [doc.get('userName', '') for doc in filtered_documents if doc.get('userName')]
+                        st.session_state.user_lookup_cache = build_user_lookup_cache(api, usernames)
+
+                user_cache = st.session_state.user_lookup_cache
+
+                # המרת הנתונים ל-DataFrame
+                df = prepare_history_dataframe(filtered_documents, user_cache)
+
+                # הצגת סינון משותף (בexpander)
+                filtered_df, filters_applied = apply_data_filters(df)
+
+                # שמירת הנתונים המסוננים ב-session_state כדי שהטאבים יוכלו להשתמש בהם
+                st.session_state.filtered_df = filtered_df
+                st.session_state.original_df = df
+                st.session_state.filters_applied = filters_applied
+            else:
+                st.warning("⚠️ אין נתונים להצגה")
+                return
 
     # יצירת טאבים - רק 2 טאבים
     tab1, tab2 = st.tabs([
