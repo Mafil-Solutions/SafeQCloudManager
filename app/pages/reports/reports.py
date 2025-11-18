@@ -42,7 +42,8 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
                 "חיפוש חופשי",
                 placeholder="שם, מסמך, מדפסת...",
                 key="shared_search",
-                help="חפש בכל השדות"
+                help="חפש בכל השדות",
+                value=""  # ערך ברירת מחדל
             )
 
         with filter_row1_col2:
@@ -50,7 +51,8 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_source = st.selectbox(
                 "מקור",
                 source_options,
-                key="shared_filter_source"
+                key="shared_filter_source",
+                index=0  # ברירת מחדל: 'הכל'
             )
 
         with filter_row1_col3:
@@ -58,7 +60,8 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_jobtype = st.selectbox(
                 "סוג עבודה",
                 jobtype_options,
-                key="shared_filter_jobtype"
+                key="shared_filter_jobtype",
+                index=0  # ברירת מחדל: 'הכל'
             )
 
         filter_row2_col1, filter_row2_col2, filter_row2_col3 = st.columns(3)
@@ -68,7 +71,8 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_status = st.selectbox(
                 "סטטוס",
                 status_options,
-                key="shared_filter_status"
+                key="shared_filter_status",
+                index=0  # ברירת מחדל: 'הכל'
             )
 
         with filter_row2_col2:
@@ -76,13 +80,14 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_dept = st.selectbox(
                 "מחלקה",
                 dept_options,
-                key="shared_filter_dept"
+                key="shared_filter_dept",
+                index=0  # ברירת מחדל: 'הכל'
             )
 
         with filter_row2_col3:
-            # איפוס סינונים
-            if st.button("🔄 איפוס סינונים", use_container_width=True):
-                # נשמור את המפתחות שצריך למחוק
+            # איפוס סינונים - מחיקת המפתחות כדי שהשדות יחזרו לברירת מחדל
+            if st.button("🔄 איפוס סינונים", use_container_width=True, key="reset_filters_btn"):
+                # מחיקת כל מפתחות הסינון
                 keys_to_delete = [
                     'shared_search', 'shared_filter_source', 'shared_filter_jobtype',
                     'shared_filter_status', 'shared_filter_dept'
@@ -448,15 +453,13 @@ def show_dashboard_tab(api, status_filter_list):
         st.info("💡 טיפ: נסה לשנות את הגדרות הסינון")
         return
 
-    st.markdown("## 📈 סיכום הדפסות/צילומים")
+    st.markdown("## 📈 סיכום כל העבודות")
 
-    # חישוב סטטיסטיקות ישירות מהDataFrame
-    # סינון רק הדפסות והעתקות
-    print_copy_df = df[df['סוג'].isin(['הדפסה', 'העתקה'])]
-
-    total_docs = len(print_copy_df)
-    total_pages = int(print_copy_df['עמודים'].sum())
-    total_color_pages = int(print_copy_df['צבע'].sum())
+    # חישוב סטטיסטיקות ישירות מהDataFrame המסונן
+    # כולל כל סוגי העבודות: הדפסה, העתקה, סריקה, פקס
+    total_docs = len(df)
+    total_pages = int(df['עמודים'].sum())
+    total_color_pages = int(df['צבע'].sum())
 
     # כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
@@ -465,7 +468,7 @@ def show_dashboard_tab(api, status_filter_list):
         st.markdown(f"""
         <div class="stats-card">
             <div class="stats-number">{total_docs:,}</div>
-            <div class="stats-label">סה"כ עבודות הדפסה/צילום</div>
+            <div class="stats-label">סה"כ עבודות</div>
         </div>
         """, unsafe_allow_html=True)
 
