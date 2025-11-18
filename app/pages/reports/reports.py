@@ -148,6 +148,34 @@ def show_report_settings(api):
             background-color: rgba(74, 144, 226, 0.15) !important;
             border-color: rgba(196, 30, 58, 0.5) !important;
         }
+
+                /* עטיפת הטאבים */
+        .stTabs [data-baseweb="tab-list"] {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        /* כל טאב בנפרד */
+        .stTabs [data-baseweb="tab"] {
+            flex: 1 1 50%;         /* כל טאב תופס 50% */
+            max-width: 50%;
+            text-align: center;     /* טקסט במרכז */
+            font-size: 20px;        /* גודל טקסט גדול יותר */
+            padding: 16px 0;        /* גובה גדול */
+        }
+        
+        /* כותרת טאב נבחר */
+        .stTabs [aria-selected="true"] {
+            background-color: #dce6f7;   /* צבע רקע לטאב נבחר */
+            border-bottom: 3px solid #1f66d1;
+            font-weight: bold;
+        }
+        
+        /* כותרת טאב לא נבחר */
+        .stTabs [aria-selected="false"] {
+            background-color: #f5f5f5;
+        }
     </style>
     """, unsafe_allow_html=True)
 
