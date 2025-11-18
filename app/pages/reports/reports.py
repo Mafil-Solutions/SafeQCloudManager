@@ -30,6 +30,12 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     Returns:
         tuple: (DataFrame מסונן, dict של הבחירות)
     """
+    # מונה לאיפוס סינונים - כל פעם שעולה, הקומפוננטים מתאפסים
+    if 'filter_reset_counter' not in st.session_state:
+        st.session_state.filter_reset_counter = 0
+
+    counter = st.session_state.filter_reset_counter
+
     st.markdown("---")
 
     with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=False):
@@ -41,9 +47,8 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             search_text = st.text_input(
                 "חיפוש חופשי",
                 placeholder="שם, מסמך, מדפסת...",
-                key="shared_search",
-                help="חפש בכל השדות",
-                value=""  # ערך ברירת מחדל
+                key=f"shared_search_{counter}",
+                help="חפש בכל השדות"
             )
 
         with filter_row1_col2:
@@ -51,8 +56,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_source = st.selectbox(
                 "מקור",
                 source_options,
-                key="shared_filter_source",
-                index=0  # ברירת מחדל: 'הכל'
+                key=f"shared_filter_source_{counter}"
             )
 
         with filter_row1_col3:
@@ -60,8 +64,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_jobtype = st.selectbox(
                 "סוג עבודה",
                 jobtype_options,
-                key="shared_filter_jobtype",
-                index=0  # ברירת מחדל: 'הכל'
+                key=f"shared_filter_jobtype_{counter}"
             )
 
         filter_row2_col1, filter_row2_col2, filter_row2_col3 = st.columns(3)
@@ -71,8 +74,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_status = st.selectbox(
                 "סטטוס",
                 status_options,
-                key="shared_filter_status",
-                index=0  # ברירת מחדל: 'הכל'
+                key=f"shared_filter_status_{counter}"
             )
 
         with filter_row2_col2:
@@ -80,21 +82,13 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             selected_dept = st.selectbox(
                 "מחלקה",
                 dept_options,
-                key="shared_filter_dept",
-                index=0  # ברירת מחדל: 'הכל'
+                key=f"shared_filter_dept_{counter}"
             )
 
         with filter_row2_col3:
-            # איפוס סינונים - מחיקת המפתחות כדי שהשדות יחזרו לברירת מחדל
-            if st.button("🔄 איפוס סינונים", use_container_width=True, key="reset_filters_btn"):
-                # מחיקת כל מפתחות הסינון
-                keys_to_delete = [
-                    'shared_search', 'shared_filter_source', 'shared_filter_jobtype',
-                    'shared_filter_status', 'shared_filter_dept'
-                ]
-                for key in keys_to_delete:
-                    if key in st.session_state:
-                        del st.session_state[key]
+            # איפוס סינונים - העלאת המונה גורמת לכל הקומפוננטים להתאפס
+            if st.button("🔄 איפוס סינונים", use_container_width=True, key=f"reset_filters_btn_{counter}"):
+                st.session_state.filter_reset_counter += 1
                 st.rerun()
 
     # החלת סינונים
@@ -525,7 +519,8 @@ def show_dashboard_tab(api, status_filter_list):
                 display_name = job_type_names.get(job_type, job_type)
                 count = stats['count']
                 pages = stats['pages']
-                percentage = (count / len(df) * 100) if len(df) > 0 else 0
+                # חישוב אחוזים לפי עמודים (ולא לפי מספר עבודות)
+                percentage = (pages / total_pages * 100) if total_pages > 0 else 0
                 st.markdown(f"""
                 <div class="stats-card">
                     <div class="stats-label">{display_name}</div>
@@ -1455,7 +1450,8 @@ def show_statistics_report(api, logger, role, username):
             display_name = job_type_names.get(job_type, job_type)
             count = stats['count']
             pages = stats['pages']
-            percentage = (count / total_docs * 100) if total_docs > 0 else 0
+            # חישוב אחוזים לפי עמודים (ולא לפי מספר עבודות)
+            percentage = (pages / total_pages * 100) if total_pages > 0 else 0
             st.markdown(f"""
             <div class="stats-card">
                 <div class="stats-label">{display_name}</div>
