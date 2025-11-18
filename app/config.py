@@ -124,19 +124,39 @@ class Config:
         ומומרות ל-hash בזמן ההתחברות
         """
         try:
+            # קודם נסה Streamlit secrets
             if hasattr(st, 'secrets') and 'EMERGENCY_USERS' in st.secrets:
                 # Streamlit secrets - מחזיר dict עם סיסמאות plain text
-                return dict(st.secrets['EMERGENCY_USERS'])
+                users = dict(st.secrets['EMERGENCY_USERS'])
+                print(f"[DEBUG] Loaded {len(users)} emergency users from Streamlit secrets")
+                return users
 
             # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
             emergency_users = {}
+            found_vars = []
             for key, value in os.environ.items():
                 if key.startswith('EMERGENCY_USER_'):
                     username = key.replace('EMERGENCY_USER_', '')
-                    emergency_users[username] = value
+                    if value and value.strip():  # וודא שיש ערך
+                        emergency_users[username] = value
+                        found_vars.append(key)
+
+            if found_vars:
+                print(f"[DEBUG] Found emergency user environment variables: {found_vars}")
+                print(f"[DEBUG] Loaded {len(emergency_users)} emergency users from environment")
+            else:
+                print("[DEBUG] No EMERGENCY_USER_* environment variables found")
+                print(f"[DEBUG] Total environment variables: {len(os.environ)}")
+                # הדפס רשימת משתנים שמתחילים ב-EMERGENCY (לדיבוג)
+                emergency_vars = [k for k in os.environ.keys() if 'EMERGENCY' in k]
+                if emergency_vars:
+                    print(f"[DEBUG] Found EMERGENCY-related vars: {emergency_vars}")
 
             return emergency_users if emergency_users else {}
-        except:
+        except Exception as e:
+            print(f"[ERROR] Exception in _parse_emergency_users: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {}
     
     def get(self, key: str = None) -> Any:

@@ -833,9 +833,38 @@ def show_login_page():
                 else:
                     logger = AuditLogger()
 
+                    # בדיקה אם יש משתמשי חירום מוגדרים
+                    local_users = CONFIG.get('LOCAL_USERS')
+                    if not local_users:
+                        st.error("❌ אין משתמשי חירום מוגדרים במערכת")
+
+                        # Debug info למשתמש
+                        with st.expander("🔍 מידע לדיבוג (לחץ לפרטים)"):
+                            st.write("**בדיקת משתני סביבה:**")
+                            import os
+                            emergency_vars = {k: "***" for k in os.environ.keys() if k.startswith('EMERGENCY_USER_')}
+                            if emergency_vars:
+                                st.success(f"✅ נמצאו {len(emergency_vars)} משתני EMERGENCY_USER_*")
+                                st.code('\n'.join(emergency_vars.keys()))
+                            else:
+                                st.warning("⚠️ לא נמצאו משתני EMERGENCY_USER_* ב-environment")
+                                st.write("משתני סביבה שמכילים 'EMERGENCY':")
+                                all_emergency = [k for k in os.environ.keys() if 'EMERGENCY' in k.upper()]
+                                if all_emergency:
+                                    st.code('\n'.join(all_emergency))
+                                else:
+                                    st.error("אף משתנה לא מכיל 'EMERGENCY'")
+
+                            st.write("**פורמט נכון ב-Railway:**")
+                            st.code("""EMERGENCY_USER_admin=YourPassword123
+EMERGENCY_USER_backup=AnotherPassword456""")
+
+                        st.info("💡 הוסף משתני סביבה ב-Railway: Variables → הוסף EMERGENCY_USER_admin ו-EMERGENCY_USER_backup")
+                        st.stop()
+
                     # מקרה 1: משתמש חירום (Emergency User) = SuperAdmin (גישה מלאה)
                     # בודקים אם המשתמש קיים ב-EMERGENCY_USERS (מאומת מול secrets.toml בלבד)
-                    if CONFIG.get('LOCAL_USERS') and username in CONFIG['LOCAL_USERS']:
+                    if username in local_users:
                         # משתמש חירום - אימות מקומי בלבד (לא מול הענן)
                         if CONFIG['LOCAL_USERS'][username] != card_id:
                             logger.log_action(username, "Login Failed", "Invalid emergency user credentials", "", "", False)
