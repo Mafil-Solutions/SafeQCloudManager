@@ -170,6 +170,7 @@ def show_report_settings(api):
             background-color: #dce6f7;   /* צבע רקע לטאב נבחר */
             border-bottom: 3px solid #1f66d1;
             font-weight: bold;
+            color: black;
         }
         
         /* כותרת טאב לא נבחר
