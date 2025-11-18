@@ -842,10 +842,37 @@ def show_login_page():
                         with st.expander("🔍 מידע לדיבוג (לחץ לפרטים)"):
                             st.write("**בדיקת משתני סביבה:**")
                             import os
-                            emergency_vars = {k: "***" for k in os.environ.keys() if k.startswith('EMERGENCY_USER_')}
+
+                            # בדיקה מפורטת של כל משתנה
+                            emergency_vars = {}
+                            for k in os.environ.keys():
+                                if k.startswith('EMERGENCY_USER_'):
+                                    value = os.environ.get(k, '')
+                                    value_len = len(value)
+                                    is_empty = not (value and value.strip())
+                                    emergency_vars[k] = {
+                                        'length': value_len,
+                                        'is_empty': is_empty,
+                                        'first_char': value[0] if value else 'N/A',
+                                        'has_whitespace': value != value.strip() if value else False
+                                    }
+
                             if emergency_vars:
                                 st.success(f"✅ נמצאו {len(emergency_vars)} משתני EMERGENCY_USER_*")
-                                st.code('\n'.join(emergency_vars.keys()))
+
+                                for var_name, details in emergency_vars.items():
+                                    username = var_name.replace('EMERGENCY_USER_', '')
+                                    if details['is_empty']:
+                                        st.error(f"❌ **{var_name}** - הערך ריק!")
+                                    elif details['length'] == 0:
+                                        st.error(f"❌ **{var_name}** - אורך 0")
+                                    else:
+                                        st.success(f"✅ **{var_name}** - אורך: {details['length']} תווים")
+                                        if details['has_whitespace']:
+                                            st.warning(f"⚠️ יש רווחים בהתחלה/סוף (יוסרו אוטומטית)")
+
+                                st.write("**מה שהתקבל ב-CONFIG['LOCAL_USERS']:**")
+                                st.json(CONFIG.get('LOCAL_USERS') or {})
                             else:
                                 st.warning("⚠️ לא נמצאו משתני EMERGENCY_USER_* ב-environment")
                                 st.write("משתני סביבה שמכילים 'EMERGENCY':")

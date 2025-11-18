@@ -134,23 +134,38 @@ class Config:
             # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
             emergency_users = {}
             found_vars = []
+            skipped_vars = []
+
             for key, value in os.environ.items():
                 if key.startswith('EMERGENCY_USER_'):
                     username = key.replace('EMERGENCY_USER_', '')
+                    value_len = len(value) if value else 0
+                    print(f"[DEBUG] Checking {key}: value_length={value_len}, value_exists={value is not None}, value_bool={bool(value)}")
+
                     if value and value.strip():  # וודא שיש ערך
                         emergency_users[username] = value
                         found_vars.append(key)
+                        print(f"[DEBUG] ✅ Added emergency user: {username} (password length: {len(value)})")
+                    else:
+                        skipped_vars.append((key, f"empty or whitespace-only (length={value_len})"))
+                        print(f"[DEBUG] ❌ Skipped {key}: value is empty or whitespace-only (length={value_len})")
 
             if found_vars:
                 print(f"[DEBUG] Found emergency user environment variables: {found_vars}")
                 print(f"[DEBUG] Loaded {len(emergency_users)} emergency users from environment")
+                print(f"[DEBUG] Emergency users dict keys: {list(emergency_users.keys())}")
             else:
-                print("[DEBUG] No EMERGENCY_USER_* environment variables found")
+                print("[DEBUG] No valid EMERGENCY_USER_* environment variables found")
+                if skipped_vars:
+                    print(f"[DEBUG] Skipped variables (empty/invalid): {skipped_vars}")
                 print(f"[DEBUG] Total environment variables: {len(os.environ)}")
                 # הדפס רשימת משתנים שמתחילים ב-EMERGENCY (לדיבוג)
                 emergency_vars = [k for k in os.environ.keys() if 'EMERGENCY' in k]
                 if emergency_vars:
                     print(f"[DEBUG] Found EMERGENCY-related vars: {emergency_vars}")
+                    for ev in emergency_vars:
+                        ev_val = os.environ.get(ev, '')
+                        print(f"[DEBUG]   - {ev}: length={len(ev_val)}, repr={repr(ev_val[:20]) if ev_val else 'None'}")
 
             return emergency_users if emergency_users else {}
         except Exception as e:
