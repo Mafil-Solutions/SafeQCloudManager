@@ -137,7 +137,7 @@ def show_report_settings(api):
     st.markdown("""
     <style>
         .streamlit-expanderHeader {
-            background-color: rgba(74, 144, 226, 0.1) !important;
+           /* background-color: rgba(74, 144, 226, 0.1) !important;*/
             border: 2px solid rgba(196, 30, 58, 0.3) !important;
             border-radius: 8px !important;
             font-size: 1.1em !important;
@@ -145,7 +145,7 @@ def show_report_settings(api):
             padding: 0.8rem !important;
         }
         .streamlit-expanderHeader:hover {
-            background-color: rgba(74, 144, 226, 0.15) !important;
+            /*background-color: rgba(74, 144, 226, 0.15) !important;*/
             border-color: rgba(196, 30, 58, 0.5) !important;
         }
 
@@ -172,9 +172,9 @@ def show_report_settings(api):
             font-weight: bold;
         }
         
-        /* כותרת טאב לא נבחר */
-        .stTabs [aria-selected="false"] {
-            background-color: #f5f5f5;
+        /* כותרת טאב לא נבחר
+         .stTabs [aria-selected="false"] {
+             background-color: #f5f5f5; */
         }
     </style>
     """, unsafe_allow_html=True)
