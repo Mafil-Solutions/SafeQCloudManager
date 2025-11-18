@@ -123,15 +123,19 @@ class Config:
         הערה: הסיסמאות מאוחסנות בטקסט רגיל ב-secrets (שהוא מוצפן ע"י Streamlit)
         ומומרות ל-hash בזמן ההתחברות
         """
+        # קודם נסה Streamlit secrets (עם try-except נפרד כי st.secrets זורק exception אם אין secrets.toml)
         try:
-            # קודם נסה Streamlit secrets
             if hasattr(st, 'secrets') and 'EMERGENCY_USERS' in st.secrets:
                 # Streamlit secrets - מחזיר dict עם סיסמאות plain text
                 users = dict(st.secrets['EMERGENCY_USERS'])
                 print(f"[DEBUG] Loaded {len(users)} emergency users from Streamlit secrets")
                 return users
+        except Exception as e:
+            # אין secrets.toml (נורמלי ב-Railway) - נמשיך לEnvironment Variables
+            print(f"[DEBUG] No Streamlit secrets found (normal in Railway): {type(e).__name__}")
 
-            # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
+        # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
+        try:
             emergency_users = {}
             found_vars = []
             skipped_vars = []
@@ -185,7 +189,7 @@ class Config:
 
             return emergency_users if emergency_users else {}
         except Exception as e:
-            print(f"[ERROR] Exception in _parse_emergency_users: {str(e)}")
+            print(f"[ERROR] Exception in _parse_emergency_users (env vars): {str(e)}")
             import traceback
             traceback.print_exc()
             return {}
