@@ -146,12 +146,14 @@ class Config:
                     if value:
                         cleaned_value = value.strip()  # הסר רווחים
                         # הסר גרשיים כפולים/יחידים מהתחלה וסוף (Railway לפעמים מוסיף אותם)
+                        had_quotes = cleaned_value.startswith(('"', "'")) and cleaned_value.endswith(('"', "'"))
+
                         if cleaned_value.startswith('"') and cleaned_value.endswith('"'):
                             cleaned_value = cleaned_value[1:-1]
                         elif cleaned_value.startswith("'") and cleaned_value.endswith("'"):
                             cleaned_value = cleaned_value[1:-1]
 
-                        print(f"[DEBUG] Original length: {value_len}, After strip: {len(cleaned_value)}, starts_with_quote: {value.strip().startswith(('\"', \"'\"))}")
+                        print(f"[DEBUG] Original length: {value_len}, After strip: {len(cleaned_value)}, had_quotes: {had_quotes}")
 
                         if cleaned_value:  # וודא שיש ערך אחרי ניקוי
                             emergency_users[username] = cleaned_value
