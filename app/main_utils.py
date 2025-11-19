@@ -833,43 +833,34 @@ def show_login_page():
             auth_url = entra_auth.get_auth_url()
 
         if auth_url:
-            # כפתור שמבצע redirect באותה לשונית באמצעות form submission
-            import streamlit.components.v1 as components
-
-            components.html(f"""
-                <style>
-                .entra-login-btn {{
+            # כפתור התחברות Entra ID - link HTML פשוט
+            st.markdown(f"""
+                <a href="{auth_url}" target="_top" style="
                     display: inline-block;
                     width: 100%;
                     padding: 0.75rem 1.5rem;
                     background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
-                    color: white;
+                    color: white !important;
                     text-align: center;
                     text-decoration: none;
                     border-radius: 0.5rem;
                     font-weight: 600;
                     font-size: 1rem;
-                    border: none;
                     cursor: pointer;
                     transition: all 0.3s ease;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                }}
-                .entra-login-btn:hover {{
-                    background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%);
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                    transform: translateY(-1px);
-                }}
-                .entra-login-btn:active {{
-                    transform: translateY(0);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                ">
+                    🔒 התחבר עם Entra ID
+                </a>
+                <style>
+                a[href]:hover {{
+                    background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%) !important;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+                    transform: translateY(-1px) !important;
                 }}
                 </style>
-                <form method="get" action="{auth_url}" target="_parent">
-                    <button type="submit" class="entra-login-btn">
-                        🔒 התחבר עם Entra ID
-                    </button>
-                </form>
-            """, height=60)
+            """, unsafe_allow_html=True)
 
         # Emergency Admin Login - מוסתר בתוך expander
         with st.expander("🔑 התחברות מנהל מקומי"):
