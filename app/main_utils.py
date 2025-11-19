@@ -833,9 +833,10 @@ def show_login_page():
             auth_url = entra_auth.get_auth_url()
 
         if auth_url:
-            # כפתור שמבצע redirect באותה לשונית (במקום לפתוח טאב חדש)
+            # כפתור שמבצע redirect באותה לשונית באמצעות JavaScript
             st.markdown(f"""
-                <a href="{auth_url}" style="
+                <style>
+                .entra-login-btn {{
                     display: inline-block;
                     width: 100%;
                     padding: 0.5rem 1rem;
@@ -850,9 +851,15 @@ def show_login_page():
                     cursor: pointer;
                     transition: all 0.3s ease;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                ">
+                }}
+                .entra-login-btn:hover {{
+                    background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                }}
+                </style>
+                <div onclick="window.location.href='{auth_url}'" class="entra-login-btn">
                     🔒 התחבר עם Entra ID
-                </a>
+                </div>
             """, unsafe_allow_html=True)
 
         # Emergency Admin Login - מוסתר בתוך expander
