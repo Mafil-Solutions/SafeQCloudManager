@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeQ Cloud Manager - תיעוד טכני</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header / Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 100px 20px;
+            page-break-after: always;
+            background: linear-gradient(135deg, #C41E3A 0%, #8B1529 100%);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+
+        .logo-placeholder {
+            width: 200px;
+            height: 80px;
+            background: white;
+            margin: 0 auto 30px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #C41E3A;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .cover-page h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cover-page .subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .cover-page .date {
+            font-size: 18px;
+            opacity: 0.8;
+            margin-top: 60px;
+        }
+
+        /* Table of Contents */
+        .toc {
+            page-break-after: always;
+            padding: 40px 0;
+        }
+
+        .toc h2 {
+            color: #C41E3A;
+            font-size: 32px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #C41E3A;
+            padding-bottom: 10px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 15px 0;
+            padding: 10px;
+            border-right: 4px solid #C41E3A;
+            background: #f8f9fa;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+            display: block;
+        }
+
+        .toc a:hover {
+            color: #C41E3A;
+        }
+
+        /* Content Sections */
+        .section {
+            page-break-inside: avoid;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #C41E3A;
+            font-size: 28px;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #C41E3A;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            color: #8B1529;
+            font-size: 22px;
+            margin: 30px 0 15px 0;
+            page-break-after: avoid;
+        }
+
+        h4 {
+            color: #555;
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: linear-gradient(135deg, #C41E3A 0%, #8B1529 100%);
+            color: white;
+            padding: 12px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* Boxes */
+        .info-box {
+            background: #e3f2fd;
+            border-right: 5px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-right: 5px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-right: 5px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+
+        .danger-box {
+            background: #f8d7da;
+            border-right: 5px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+
+        /* Code blocks */
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        pre code {
+            background: none;
+            color: #f8f8f2;
+            padding: 0;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        /* Icons */
+        .icon {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            margin-left: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #C41E3A;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Print specific */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            a {
+                color: #333;
+                text-decoration: none;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <div class="logo-placeholder">
+                [מקום ללוגו]
+                <br>
+                <span style="font-size: 16px;">Mafil Solutions</span>
+            </div>
+            <h1>SafeQ Cloud Manager</h1>
+            <div class="subtitle">תיעוד טכני ומדריך אבטחה</div>
+            <div class="subtitle">גרסה 2.0.1</div>
+            <div class="date">נובמבר 2025</div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h2>📋 תוכן עניינים</h2>
+            <ul>
+                <li><a href="#overview">1. סקירה כללית</a></li>
+                <li><a href="#architecture">2. ארכיטקטורה ותשתית</a></li>
+                <li><a href="#authentication">3. מערכת אימות והזדהות</a></li>
+                <li><a href="#authorization">4. הרשאות ותפקידים</a></li>
+                <li><a href="#entra-setup">5. הקמת אפליקציה ב-Entra ID</a></li>
+                <li><a href="#deployment">6. פריסה ב-Railway</a></li>
+                <li><a href="#security">7. אבטחה וסודיות</a></li>
+                <li><a href="#maintenance">8. תחזוקה ותמיכה</a></li>
+            </ul>
+        </div>
+
+        <!-- Content -->
+        <div class="page-break"></div>
+
+        <section id="overview" class="section">
+            <h2>1. 🎯 סקירה כללית</h2>
+
+            <h3>1.1 אודות המערכת</h3>
+            <p>
+                <strong>SafeQ Cloud Manager</strong> היא פלטפורמת ניהול מתקדמת לניהול משתמשים, קבוצות ודוחות
+                במערכת SafeQ Cloud. המערכת מציעה ממשק ידידותי למשתמש עם מנגנוני אבטחה מתקדמים ותמיכה באימות
+                היברידי המשלב Entra ID ומשתמשים מקומיים.
+            </p>
+
+            <div class="success-box">
+                <strong>✅ יתרונות המערכת:</strong>
+                <ul>
+                    <li>אימות היברידי עם Entra ID</li>
+                    <li>ניהול הרשאות מבוסס תפקידים (RBAC)</li>
+                    <li>הפרדת נתונים לפי בתי ספר</li>
+                    <li>דוחות מתקדמים עם סינונים</li>
+                    <li>פריסה מאובטחת ב-Railway</li>
+                </ul>
+            </div>
+
+            <h3>1.2 קהל יעד</h3>
+            <table>
+                <tr>
+                    <th>תפקיד</th>
+                    <th>תיאור</th>
+                </tr>
+                <tr>
+                    <td><strong>מנהלי IT</strong></td>
+                    <td>ניהול מלא של משתמשים וקבוצות במערכת</td>
+                </tr>
+                <tr>
+                    <td><strong>צוות תמיכה</strong></td>
+                    <td>תמיכה ופתרון בעיות למשתמשים</td>
+                </tr>
+                <tr>
+                    <td><strong>מנהלי בתי ספר</strong></td>
+                    <td>צפייה בדוחות של בית הספר שלהם</td>
+                </tr>
+                <tr>
+                    <td><strong>צופים</strong></td>
+                    <td>צפייה בלבד במידע</td>
+                </tr>
+            </table>
+
+            <h3>1.3 טכנולוגיות</h3>
+            <ul>
+                <li><strong>Frontend:</strong> Streamlit (Python)</li>
+                <li><strong>Backend:</strong> Python 3.11+</li>
+                <li><strong>Authentication:</strong> Microsoft Entra ID (OAuth 2.0 + OIDC)</li>
+                <li><strong>Deployment:</strong> Railway (Cloud Platform)</li>
+                <li><strong>API:</strong> SafeQ Cloud REST API</li>
+                <li><strong>Version Control:</strong> GitHub (Private Repository)</li>
+            </ul>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="architecture" class="section">
+            <h2>2. 🏗️ ארכיטקטורה ותשתית</h2>
+
+            <h3>2.1 ארכיטקטורה כללית</h3>
+            <p>
+                המערכת בנויה בארכיטקטורה של שלוש שכבות עם הפרדה ברורה בין רכיבים:
+            </p>
+
+            <div class="info-box">
+                <strong>📐 שכבות המערכת:</strong>
+                <ol>
+                    <li><strong>שכבת תצוגה (Presentation Layer):</strong> ממשק Streamlit מבוסס דפדפן</li>
+                    <li><strong>שכבת לוגיקה (Business Logic Layer):</strong> עיבוד נתונים, הרשאות ואימות</li>
+                    <li><strong>שכבת נתונים (Data Layer):</strong> SafeQ Cloud API + Entra ID Graph API</li>
+                </ol>
+            </div>
+
+            <h3>2.2 מבנה תיקיות הפרויקט</h3>
+            <pre><code>SafeQCloudManager/
+├── app/
+│   ├── main.py                 # נקודת כניסה ראשית
+│   ├── main_utils.py           # פונקציות עזר ואימות
+│   ├── config.py               # ניהול הגדרות
+│   ├── permissions.py          # מערכת הרשאות היברידית
+│   ├── pages/
+│   │   ├── home.py            # דף הבית
+│   │   ├── users/             # מודול ניהול משתמשים
+│   │   ├── reports/           # מודול דוחות
+│   │   └── ...
+│   └── utils/
+│       ├── safeq_api.py       # תקשורת עם SafeQ API
+│       └── audit_logger.py    # רישום אירועים
+├── .streamlit/
+│   └── config.toml            # הגדרות Streamlit
+├── requirements.txt           # תלויות Python
+├── railway.toml              # הגדרות Railway
+├── Procfile                  # הפעלת האפליקציה
+└── docs/                     # תיעוד</code></pre>
+
+            <h3>2.3 תשתית Railway</h3>
+            <table>
+                <tr>
+                    <th>רכיב</th>
+                    <th>תיאור</th>
+                </tr>
+                <tr>
+                    <td><strong>Platform</strong></td>
+                    <td>Railway.app - PaaS (Platform as a Service)</td>
+                </tr>
+                <tr>
+                    <td><strong>Region</strong></td>
+                    <td>ניתן לבחירה (מומלץ: אירופה לביצועים טובים יותר)</td>
+                </tr>
+                <tr>
+                    <td><strong>Build</strong></td>
+                    <td>Nixpacks (זיהוי אוטומטי של Python)</td>
+                </tr>
+                <tr>
+                    <td><strong>Runtime</strong></td>
+                    <td>Python 3.11+</td>
+                </tr>
+                <tr>
+                    <td><strong>Port</strong></td>
+                    <td>דינמי ($PORT environment variable)</td>
+                </tr>
+            </table>
+
+            <div class="warning-box">
+                <strong>⚠️ חשוב:</strong> המערכת רצה ב-headless mode ללא GUI של דפדפן.
+                גישה למערכת נעשית רק דרך ה-URL הציבורי של Railway.
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="authentication" class="section">
+            <h2>3. 🔐 מערכת אימות והזדהות</h2>
+
+            <h3>3.1 שיטות אימות נתמכות</h3>
+
+            <h4>3.1.1 התחברות עם Entra ID (ראשית)</h4>
+            <p>
+                שיטת האימות העיקרית של המערכת מבוססת על Microsoft Entra ID (לשעבר Azure AD)
+                באמצעות פרוטוקול OAuth 2.0 ו-OpenID Connect.
+            </p>
+
+            <div class="info-box">
+                <strong>🔄 תהליך האימות:</strong>
+                <ol>
+                    <li>משתמש לוחץ על "התחבר עם Entra ID"</li>
+                    <li>הפניה לדף הזדהות של Microsoft</li>
+                    <li>משתמש מזדהה עם חשבון ארגוני</li>
+                    <li>Entra ID מחזיר authorization code</li>
+                    <li>המערכת מחליפה את הקוד ב-access token</li>
+                    <li>שליפת פרטי משתמש וקבוצות מ-Graph API</li>
+                    <li><strong>בדיקה כפולה:</strong>
+                        <ul>
+                            <li>וידוא השתייכות לקבוצת SafeQ ב-Entra ID</li>
+                            <li>אימות קיום משתמש מקומי תואם ב-SafeQ Cloud</li>
+                        </ul>
+                    </li>
+                    <li>בניית פרופיל הרשאות היברידי</li>
+                    <li>יצירת session מאומת</li>
+                </ol>
+            </div>
+
+            <h4>3.1.2 התחברות מנהל מקומי (חירום)</h4>
+            <p>
+                למקרי חירום או תחזוקה, קיימת אפשרות להתחברות מקומית עם משתמשי חירום
+                שמוגדרים ב-environment variables.
+            </p>
+
+            <div class="danger-box">
+                <strong>🔒 אבטחה:</strong> משתמשי חירום מוגדרים רק ב-Railway environment variables
+                ולא נשמרים בקוד. גישה למשתמשים אלו מוגבלת למנהלי מערכת בלבד.
+            </div>
+
+            <h3>3.2 אימות היברידי (Hybrid Authentication)</h3>
+            <p>
+                המערכת משלבת שני מקורות הרשאות - Entra ID ו-SafeQ Cloud - כדי ליצור פרופיל הרשאות מלא:
+            </p>
+
+            <table>
+                <tr>
+                    <th>מקור</th>
+                    <th>מידע מסופק</th>
+                    <th>שימוש</th>
+                </tr>
+                <tr>
+                    <td><strong>Entra ID</strong></td>
+                    <td>
+                        • שם משתמש ואימייל<br>
+                        • קבוצות ארגוניות<br>
+                        • תפקיד בסיסי (Role)
+                    </td>
+                    <td>
+                        • זיהוי ראשוני<br>
+                        • קביעת רמת הרשאה כללית<br>
+                        • אימות השתייכות ארגונית
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>SafeQ Cloud</strong></td>
+                    <td>
+                        • משתמש מקומי תואם<br>
+                        • קבוצות מקומיות<br>
+                        • מחלקות (Departments)
+                    </td>
+                    <td>
+                        • סינון נתונים לפי בתי ספר<br>
+                        • הרשאות גרנולריות<br>
+                        • ניהול גישה למשאבים
+                    </td>
+                </tr>
+            </table>
+
+            <h3>3.3 בדיקת קבוצות</h3>
+
+            <h4>קבוצות Entra ID</h4>
+            <p>המערכת בודקת השתייכות לאחת מהקבוצות הבאות:</p>
+            <ul>
+                <li><code>SafeQ-Admins</code> → מנהל מערכת (admin)</li>
+                <li><code>SafeQ-Support</code> → צוות תמיכה (support)</li>
+                <li><code>SafeQ-Viewers</code> → צופים (viewer)</li>
+                <li><code>SafeQ-School-Managers</code> → מנהלי בתי ספר (school_manager)</li>
+            </ul>
+
+            <div class="warning-box">
+                <strong>⚠️ הערה:</strong> משתמש חייב להיות חבר ב<strong>לפחות אחת</strong> מהקבוצות הללו
+                כדי לקבל גישה למערכת.
+            </div>
+
+            <h4>קבוצות SafeQ Cloud (מקומיות)</h4>
+            <p>
+                לאחר אימות Entra ID, המערכת מחפשת משתמש מקומי תואם ב-SafeQ Cloud ובודקת את הקבוצות המקומיות שלו.
+                הקבוצות המקומיות קובעות את בתי הספר (Departments) שהמשתמש יכול לגשת אליהם.
+            </p>
+
+            <pre><code>דוגמה:
+משתמש Entra: yossi.cohen@school.org.il
+↓ מאומת ב-Entra ID
+↓ תפקיד: school_manager
+↓
+חיפוש משתמש מקומי: yossi.cohen
+↓ נמצא ב-SafeQ Cloud
+↓ קבוצות מקומיות: ["School_BeitSefer_A", "School_BeitSefer_B"]
+↓
+הרשאות סופיות:
+- תפקיד: school_manager
+- מחלקות: ["BeitSefer_A", "BeitSefer_B"]
+- גישה: רק לדוחות של בתי ספר אלו</code></pre>
+
+            <h3>3.4 מנגנון Session</h3>
+            <ul>
+                <li><strong>משך Session:</strong> 480 דקות (8 שעות) - ניתן להגדרה</li>
+                <li><strong>Session ID:</strong> UUID ייחודי לכל session</li>
+                <li><strong>Stored Data:</strong> שם משתמש, תפקיד, הרשאות, זמן כניסה</li>
+                <li><strong>Security:</strong> Session tokens מאוחסנים רק ב-memory (לא בדיסק)</li>
+            </ul>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="authorization" class="section">
+            <h2>4. 👥 הרשאות ותפקידים</h2>
+
+            <h3>4.1 רמות הרשאה</h3>
+            <p>
+                המערכת משתמשת במודל RBAC (Role-Based Access Control) עם חמש רמות הרשאה:
+            </p>
+
+            <table>
+                <tr>
+                    <th>תפקיד</th>
+                    <th>קבוצת Entra</th>
+                    <th>הרשאות</th>
+                </tr>
+                <tr>
+                    <td><strong>👁️ Viewer</strong></td>
+                    <td>SafeQ-Viewers</td>
+                    <td>
+                        • צפייה במשתמשים<br>
+                        • צפייה בקבוצות<br>
+                        • צפייה בדוחות<br>
+                        ❌ ללא הרשאות עריכה
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>🛠️ Support</strong></td>
+                    <td>SafeQ-Support</td>
+                    <td>
+                        • כל הרשאות Viewer<br>
+                        • עריכת משתמשים קיימים<br>
+                        • ייצוא נתונים<br>
+                        ❌ לא יכול ליצור/למחוק משתמשים
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>👑 Admin</strong></td>
+                    <td>SafeQ-Admins</td>
+                    <td>
+                        • כל הרשאות Support<br>
+                        • יצירת משתמשים חדשים<br>
+                        • מחיקת משתמשים<br>
+                        • ניהול קבוצות<br>
+                        • גישה לכל בתי הספר
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>⭐ Superadmin</strong></td>
+                    <td>SafeQ-Admins<br>(עם הרשאות מיוחדות)</td>
+                    <td>
+                        • כל הרשאות Admin<br>
+                        • הגדרות מערכת<br>
+                        • ניהול משתמשי חירום<br>
+                        • ניהול API keys
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>🏫 School Manager</strong></td>
+                    <td>SafeQ-School-Managers</td>
+                    <td>
+                        • <strong>רק</strong> צפייה בדוחות<br>
+                        • <strong>מוגבל</strong> לבתי הספר שהוקצו<br>
+                        • לא רואה מודולי ניהול<br>
+                        ❌ ללא גישה למשתמשים/קבוצות
+                    </td>
+                </tr>
+            </table>
+
+            <h3>4.2 הפרדת נתונים לפי בתי ספר</h3>
+            <p>
+                מנהלי בתי ספר (School Managers) מקבלים גישה מוגבלת רק לנתונים של בתי הספר המשויכים אליהם:
+            </p>
+
+            <div class="info-box">
+                <strong>🔍 תהליך הפרדת הנתונים:</strong>
+                <ol>
+                    <li>מנהל מזדהה ב-Entra ID → מזוהה כ-school_manager</li>
+                    <li>המערכת מחפשת משתמש מקומי תואם ב-SafeQ Cloud</li>
+                    <li>שליפת קבוצות מקומיות שמתחילות ב-<code>School_</code></li>
+                    <li>חילוץ שמות בתי ספר: <code>School_BeitSefer_A</code> → <code>BeitSefer_A</code></li>
+                    <li>סינון כל הדוחות רק למחלקות אלו</li>
+                </ol>
+            </div>
+
+            <h4>דוגמה:</h4>
+            <pre><code>משתמש: david.levi@school.org.il
+תפקיד Entra: school_manager
+קבוצות מקומיות ב-SafeQ:
+  - School_HighSchool_Jerusalem
+  - School_Elementary_TelAviv
+
+→ יכול לראות רק דוחות של:
+  • HighSchool_Jerusalem
+  • Elementary_TelAviv
+
+→ לא יכול לראות:
+  • משתמשים
+  • קבוצות
+  • דוחות של בתי ספר אחרים</code></pre>
+
+            <h3>4.3 בדיקות הרשאה בזמן ריצה</h3>
+            <p>כל פעולה במערכת עוברת בדיקת הרשאות:</p>
+            <ul>
+                <li><strong>Level 1:</strong> בדיקת session תקף</li>
+                <li><strong>Level 2:</strong> בדיקת תפקיד מינימלי נדרש</li>
+                <li><strong>Level 3:</strong> בדיקת גישה למשאב ספציפי (בית ספר/משתמש)</li>
+                <li><strong>Level 4:</strong> רישום כל פעולה ב-audit log</li>
+            </ul>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="entra-setup" class="section">
+            <h2>5. 🔧 הקמת אפליקציה ב-Entra ID</h2>
+
+            <h3>5.1 יצירת App Registration</h3>
+            <p>בצע את השלבים הבאים ב-Azure Portal:</p>
+
+            <ol>
+                <li><strong>היכנס ל-Azure Portal:</strong> <code>https://portal.azure.com</code></li>
+                <li><strong>נווט ל:</strong> Microsoft Entra ID → App registrations → New registration</li>
+                <li><strong>מלא פרטים:</strong>
+                    <ul>
+                        <li><strong>Name:</strong> SafeQ Cloud Manager</li>
+                        <li><strong>Supported account types:</strong> Single tenant</li>
+                        <li><strong>Redirect URI:</strong>
+                            <ul>
+                                <li>Platform: Web</li>
+                                <li>URI: <code>https://your-app.railway.app</code></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>לחץ:</strong> Register</li>
+            </ol>
+
+            <h3>5.2 הגדרת Authentication</h3>
+            <p>לאחר יצירת האפליקציה:</p>
+
+            <ol>
+                <li><strong>Authentication → Platform configurations:</strong>
+                    <ul>
+                        <li>הוסף Redirect URI נוספים אם נדרש (לסביבות dev/test)</li>
+                        <li>סמן: <code>ID tokens</code> ו-<code>Access tokens</code></li>
+                    </ul>
+                </li>
+                <li><strong>Certificates & secrets:</strong>
+                    <ul>
+                        <li>לחץ: New client secret</li>
+                        <li>Description: SafeQ Production Secret</li>
+                        <li>Expires: 24 months (מומלץ)</li>
+                        <li><strong>⚠️ העתק את הסוד מיד!</strong> לא ניתן לראות אותו שוב</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>5.3 API Permissions (הרשאות נדרשות)</h3>
+            <p>במסך API permissions, הוסף את ההרשאות הבאות:</p>
+
+            <table>
+                <tr>
+                    <th>API</th>
+                    <th>Permission</th>
+                    <th>Type</th>
+                    <th>תיאור</th>
+                </tr>
+                <tr>
+                    <td rowspan="4"><strong>Microsoft Graph</strong></td>
+                    <td>User.Read</td>
+                    <td>Delegated</td>
+                    <td>קריאת פרופיל המשתמש המחובר</td>
+                </tr>
+                <tr>
+                    <td>User.ReadBasic.All</td>
+                    <td>Delegated</td>
+                    <td>קריאת מידע בסיסי על משתמשים</td>
+                </tr>
+                <tr>
+                    <td>GroupMember.Read.All</td>
+                    <td>Delegated</td>
+                    <td>קריאת השתייכות לקבוצות</td>
+                </tr>
+                <tr>
+                    <td>Directory.Read.All</td>
+                    <td>Delegated</td>
+                    <td>קריאת מידע ספריית הארגון</td>
+                </tr>
+            </table>
+
+            <div class="warning-box">
+                <strong>⚠️ חשוב:</strong> לאחר הוספת ההרשאות, לחץ על
+                <strong>"Grant admin consent for [Your Organization]"</strong>
+                כדי לאשר את ההרשאות עבור כל המשתמשים.
+            </div>
+
+            <h3>5.4 יצירת קבוצות אבטחה</h3>
+            <p>ב-Microsoft Entra ID, צור את הקבוצות הבאות:</p>
+
+            <ol>
+                <li><strong>Microsoft Entra ID → Groups → New group</strong></li>
+                <li><strong>עבור כל קבוצה:</strong>
+                    <ul>
+                        <li>Group type: Security</li>
+                        <li>Group name: (לפי הטבלה למטה)</li>
+                        <li>Group description: תיאור התפקיד</li>
+                        <li>Membership type: Assigned</li>
+                        <li>הוסף חברים רלוונטיים</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <table>
+                <tr>
+                    <th>שם קבוצה</th>
+                    <th>תיאור</th>
+                </tr>
+                <tr>
+                    <td><code>SafeQ-Admins</code></td>
+                    <td>מנהלי מערכת עם הרשאות מלאות</td>
+                </tr>
+                <tr>
+                    <td><code>SafeQ-Support</code></td>
+                    <td>צוות תמיכה טכנית</td>
+                </tr>
+                <tr>
+                    <td><code>SafeQ-Viewers</code></td>
+                    <td>צופים - צפייה בלבד</td>
+                </tr>
+                <tr>
+                    <td><code>SafeQ-School-Managers</code></td>
+                    <td>מנהלי בתי ספר - דוחות בלבד</td>
+                </tr>
+            </table>
+
+            <h3>5.5 פרטי אפליקציה לשמירה</h3>
+            <p>אסוף את הפרטים הבאים והעבר אותם לצוות הפיתוח:</p>
+
+            <div class="danger-box">
+                <strong>🔐 פרטים סודיים - שמור במקום מאובטח:</strong>
+                <ul>
+                    <li><strong>Application (client) ID:</strong> [GUID]</li>
+                    <li><strong>Directory (tenant) ID:</strong> [GUID]</li>
+                    <li><strong>Client Secret Value:</strong> [סוד - זמין רק בזמן היצירה]</li>
+                    <li><strong>Redirect URI:</strong> https://your-app.railway.app</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="deployment" class="section">
+            <h2>6. 🚀 פריסה ב-Railway</h2>
+
+            <h3>6.1 אודות Railway</h3>
+            <p>
+                <strong>Railway.app</strong> היא פלטפורמת ענן מודרנית המאפשרת פריסה קלה של אפליקציות
+                ישירות מ-GitHub. המערכת מתחזקת באופן אוטומטי ומספקת:
+            </p>
+
+            <ul>
+                <li>✅ Automatic deployments מ-GitHub</li>
+                <li>✅ HTTPS מובנה עם SSL certificates</li>
+                <li>✅ Environment variables מאובטחים</li>
+                <li>✅ Logs בזמן אמת</li>
+                <li>✅ Scaling אוטומטי</li>
+                <li>✅ Monitoring ו-metrics</li>
+            </ul>
+
+            <h3>6.2 הקמת הפרויקט ב-Railway</h3>
+
+            <ol>
+                <li><strong>התחברות:</strong>
+                    <ul>
+                        <li>היכנס ל-<code>https://railway.app</code></li>
+                        <li>התחבר עם חשבון GitHub</li>
+                    </ul>
+                </li>
+                <li><strong>יצירת פרויקט חדש:</strong>
+                    <ul>
+                        <li>לחץ: New Project</li>
+                        <li>בחר: Deploy from GitHub repo</li>
+                        <li>בחר את ה-repository: <code>SafeQCloudManager</code></li>
+                        <li>בחר את ה-branch: <code>main</code> או <code>production</code></li>
+                    </ul>
+                </li>
+                <li><strong>הגדרות Build:</strong>
+                    <ul>
+                        <li>Builder: Nixpacks (זיהוי אוטומטי)</li>
+                        <li>Build Command: <code>pip install -r requirements.txt</code></li>
+                        <li>Start Command: <code>streamlit run app/main.py --server.port=$PORT</code></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>6.3 הגדרת Environment Variables</h3>
+            <p>במסך Settings → Variables, הגדר את המשתנים הבאים:</p>
+
+            <div class="danger-box">
+                <strong>⚠️ משתנים קריטיים - הגדר ב-Railway בלבד!</strong>
+            </div>
+
+            <table>
+                <tr>
+                    <th>משתנה</th>
+                    <th>ערך לדוגמה</th>
+                    <th>הסבר</th>
+                </tr>
+                <tr>
+                    <td><code>SAFEQ_API_KEY</code></td>
+                    <td>[API Key מ-SafeQ]</td>
+                    <td>מפתח API לגישה ל-SafeQ Cloud</td>
+                </tr>
+                <tr>
+                    <td><code>SAFEQ_BASE_URL</code></td>
+                    <td>https://cloud.safeq.com</td>
+                    <td>כתובת בסיס של SafeQ Cloud API</td>
+                </tr>
+                <tr>
+                    <td><code>ENTRA_CLIENT_ID</code></td>
+                    <td>[GUID מ-Azure]</td>
+                    <td>Application (client) ID</td>
+                </tr>
+                <tr>
+                    <td><code>ENTRA_CLIENT_SECRET</code></td>
+                    <td>[Secret מ-Azure]</td>
+                    <td>Client Secret Value</td>
+                </tr>
+                <tr>
+                    <td><code>ENTRA_TENANT_ID</code></td>
+                    <td>[GUID מ-Azure]</td>
+                    <td>Directory (tenant) ID</td>
+                </tr>
+                <tr>
+                    <td><code>ENTRA_REDIRECT_URI</code></td>
+                    <td>https://your-app.railway.app</td>
+                    <td>Redirect URI (חייב להיות זהה ל-Azure)</td>
+                </tr>
+                <tr>
+                    <td><code>EMERGENCY_USER_admin</code></td>
+                    <td>[סיסמה חזקה]</td>
+                    <td>משתמש חירום לתחזוקה</td>
+                </tr>
+                <tr>
+                    <td><code>SESSION_TIMEOUT</code></td>
+                    <td>480</td>
+                    <td>משך session בדקות (8 שעות)</td>
+                </tr>
+            </table>
+
+            <h3>6.4 Custom Domain (אופציונלי)</h3>
+            <p>ניתן להגדיר domain מותאם אישית:</p>
+            <ol>
+                <li>Settings → Domains</li>
+                <li>Add Custom Domain</li>
+                <li>הזן את ה-domain שלך (לדוגמה: <code>safeq.school.org.il</code>)</li>
+                <li>עדכן DNS records אצל ספק ה-domain</li>
+                <li>Railway יספק אוטומטית SSL certificate</li>
+            </ol>
+
+            <h3>6.5 Deployment Workflow</h3>
+            <p>כל push ל-branch הראשי מפעיל deployment אוטומטי:</p>
+
+            <pre><code>1. Developer → Push code to GitHub
+2. GitHub → Webhook ל-Railway
+3. Railway → Pull latest code
+4. Railway → Build application (pip install)
+5. Railway → Run tests (אופציונלי)
+6. Railway → Deploy to production
+7. Railway → Health check
+8. ✅ Live!</code></pre>
+
+            <div class="success-box">
+                <strong>✅ Zero-downtime deployment:</strong> Railway מבצע rolling deployment -
+                המערכת החדשה עולה לפני שהישנה יורדת, ללא הפסקת שירות.
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="security" class="section">
+            <h2>7. 🔒 אבטחה וסודיות</h2>
+
+            <h3>7.1 שכבות אבטחה</h3>
+
+            <h4>שכבה 1: Transport Layer Security (TLS)</h4>
+            <ul>
+                <li>✅ כל התקשורת מוצפנת ב-HTTPS/TLS 1.3</li>
+                <li>✅ SSL certificates מ-Let's Encrypt (ניהול אוטומטי ע"י Railway)</li>
+                <li>✅ HSTS Headers מופעלים</li>
+            </ul>
+
+            <h4>שכבה 2: Authentication & Authorization</h4>
+            <ul>
+                <li>✅ OAuth 2.0 + OpenID Connect עם Entra ID</li>
+                <li>✅ Multi-factor Authentication (MFA) דרך Entra ID</li>
+                <li>✅ Role-Based Access Control (RBAC)</li>
+                <li>✅ Session timeout אוטומטי (8 שעות)</li>
+            </ul>
+
+            <h4>שכבה 3: Data Protection</h4>
+            <ul>
+                <li>✅ Secrets מאוחסנים רק ב-Railway environment variables</li>
+                <li>✅ אין אחסון מקומי של credentials</li>
+                <li>✅ API tokens מתחדשים אוטומטית</li>
+                <li>✅ Audit logging של כל הפעולות</li>
+            </ul>
+
+            <h4>שכבה 4: Application Security</h4>
+            <ul>
+                <li>✅ Input validation ו-sanitization</li>
+                <li>✅ Protection מפני SQL Injection (parameterized queries)</li>
+                <li>✅ CSRF protection</li>
+                <li>✅ XSS prevention</li>
+            </ul>
+
+            <h3>7.2 ניהול Secrets</h3>
+
+            <div class="info-box">
+                <strong>🔐 הפרדה מוחלטת של קוד ו-secrets:</strong>
+                <ol>
+                    <li><strong>Repository (GitHub):</strong>
+                        <ul>
+                            <li>Private repository</li>
+                            <li>קוד בלבד - ללא secrets</li>
+                            <li>Access control מוגבל</li>
+                            <li>.gitignore מונע commit של קבצי secrets</li>
+                        </ul>
+                    </li>
+                    <li><strong>Railway Environment:</strong>
+                        <ul>
+                            <li>Secrets מוצפנים ב-rest</li>
+                            <li>גישה רק לבעלי הרשאות</li>
+                            <li>Audit log של שינויים</li>
+                            <li>לא נחשפים ב-logs</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <h3>7.3 GitHub Repository Security</h3>
+            <table>
+                <tr>
+                    <th>הגדרה</th>
+                    <th>סטטוס</th>
+                    <th>הסבר</th>
+                </tr>
+                <tr>
+                    <td><strong>Visibility</strong></td>
+                    <td>🔒 Private</td>
+                    <td>גישה מוגבלת לצוות מורשה בלבד</td>
+                </tr>
+                <tr>
+                    <td><strong>Branch Protection</strong></td>
+                    <td>✅ Enabled</td>
+                    <td>Main branch מוגן מפני push ישיר</td>
+                </tr>
+                <tr>
+                    <td><strong>Required Reviews</strong></td>
+                    <td>✅ 1+ reviewers</td>
+                    <td>כל PR דורש אישור</td>
+                </tr>
+                <tr>
+                    <td><strong>Secrets Scanning</strong></td>
+                    <td>✅ Enabled</td>
+                    <td>זיהוי אוטומטי של secrets שנחשפו</td>
+                </tr>
+                <tr>
+                    <td><strong>Dependabot</strong></td>
+                    <td>✅ Enabled</td>
+                    <td>עדכוני אבטחה אוטומטיים</td>
+                </tr>
+            </table>
+
+            <h3>7.4 Audit Logging</h3>
+            <p>כל פעולה במערכת נרשמת ב-audit log:</p>
+
+            <pre><code>Logged Events:
+• Login/Logout attempts
+• User creation/modification/deletion
+• Group changes
+• Permission changes
+• Report generation
+• Failed authentication attempts
+• API calls
+
+Log Format:
+{
+  "timestamp": "2025-11-19T10:30:00Z",
+  "user": "yossi.cohen@school.org.il",
+  "action": "USER_EDIT",
+  "details": "Modified user: david.levi",
+  "ip_address": "1.2.3.4",
+  "status": "success"
+}</code></pre>
+
+            <h3>7.5 מדיניות סיסמאות (Emergency Users)</h3>
+            <div class="warning-box">
+                <strong>דרישות מינימום:</strong>
+                <ul>
+                    <li>אורך: 12 תווים לפחות</li>
+                    <li>מורכבות: אותיות גדולות, קטנות, מספרים וסימנים</li>
+                    <li>החלפה: כל 90 יום</li>
+                    <li>אחסון: רק ב-Railway environment variables</li>
+                    <li>אין שימוש חוזר בסיסמאות ישנות</li>
+                </ul>
+            </div>
+
+            <h3>7.6 Compliance & Standards</h3>
+            <ul>
+                <li>✅ <strong>GDPR:</strong> זכות למחיקת נתונים, data portability</li>
+                <li>✅ <strong>ISO 27001:</strong> תקן ניהול אבטחת מידע</li>
+                <li>✅ <strong>OWASP Top 10:</strong> הגנה מפני פגיעויות נפוצות</li>
+                <li>✅ <strong>OAuth 2.0 Best Practices:</strong> תקני אימות מודרניים</li>
+            </ul>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="maintenance" class="section">
+            <h2>8. 🔧 תחזוקה ותמיכה</h2>
+
+            <h3>8.1 ניטור ובקרה</h3>
+
+            <h4>Railway Dashboard</h4>
+            <p>הניטור נעשה דרך Railway dashboard:</p>
+            <ul>
+                <li><strong>Deployment Status:</strong> מצב deployment אחרון</li>
+                <li><strong>Resource Usage:</strong> CPU, Memory, Network</li>
+                <li><strong>Logs:</strong> לוגים בזמן אמת</li>
+                <li><strong>Metrics:</strong> Response times, Error rates</li>
+            </ul>
+
+            <h4>Application Logs</h4>
+            <p>לוגים זמינים ב-Railway → Project → Logs:</p>
+            <pre><code>סוגי לוגים:
+• Application logs (Python/Streamlit)
+• Access logs (HTTP requests)
+• Error logs (Exceptions & Stack traces)
+• Audit logs (User actions)
+
+שמירת לוגים: 7 ימים (Plan dependent)</code></pre>
+
+            <h3>8.2 גיבויים</h3>
+
+            <div class="info-box">
+                <strong>אסטרטגיית גיבויים:</strong>
+                <ol>
+                    <li><strong>קוד:</strong> שמור ב-GitHub (Git history מלא)</li>
+                    <li><strong>Environment Variables:</strong> יש לגבות ידנית ולשמור במקום מאובטח</li>
+                    <li><strong>נתוני SafeQ:</strong> מגובים אוטומטית ע"י SafeQ Cloud</li>
+                    <li><strong>תצורות:</strong> מתועדות ב-Railway ו-version controlled</li>
+                </ol>
+            </div>
+
+            <h3>8.3 עדכונים</h3>
+
+            <h4>עדכוני אבטחה</h4>
+            <ul>
+                <li><strong>Dependencies:</strong> Dependabot מזהה ומתריע על פגיעויות</li>
+                <li><strong>Python Packages:</strong> בדיקה שבועית עם <code>pip-audit</code></li>
+                <li><strong>Streamlit:</strong> עדכון לגרסאות יציבות</li>
+            </ul>
+
+            <h4>תהליך עדכון</h4>
+            <ol>
+                <li>פיתוח והרצה ב-development environment</li>
+                <li>Testing מקיף (unit tests + integration tests)</li>
+                <li>Staging deployment (אם קיים)</li>
+                <li>Code review ו-approval</li>
+                <li>Merge ל-main branch</li>
+                <li>Automatic deployment ל-production</li>
+                <li>Monitoring ו-validation</li>
+            </ol>
+
+            <h3>8.4 פתרון בעיות נפוצות</h3>
+
+            <table>
+                <tr>
+                    <th>בעיה</th>
+                    <th>פתרון</th>
+                </tr>
+                <tr>
+                    <td>❌ לא מצליח להתחבר עם Entra ID</td>
+                    <td>
+                        1. בדוק Redirect URI ב-Azure ו-Railway<br>
+                        2. ודא שהמשתמש חבר בקבוצת SafeQ<br>
+                        3. בדוק Client Secret (לא פג תוקף?)
+                    </td>
+                </tr>
+                <tr>
+                    <td>❌ "אימות הרשאות נכשל"</td>
+                    <td>
+                        1. ודא שיש משתמש מקומי תואם ב-SafeQ<br>
+                        2. בדוק שהמשתמש שייך לקבוצות מקומיות<br>
+                        3. בדוק את SAFEQ_API_KEY ב-Railway
+                    </td>
+                </tr>
+                <tr>
+                    <td>❌ "הגישה נדחתה"</td>
+                    <td>
+                        1. בדוק השתייכות לקבוצות Entra ID<br>
+                        2. ודא שהקבוצות קיימות ב-Azure<br>
+                        3. בדוק את ROLE_MAPPING ב-config
+                    </td>
+                </tr>
+                <tr>
+                    <td>⚠️ Application לא עולה ב-Railway</td>
+                    <td>
+                        1. בדוק Logs ב-Railway<br>
+                        2. ודא שכל Environment Variables מוגדרים<br>
+                        3. בדוק Build logs לשגיאות
+                    </td>
+                </tr>
+                <tr>
+                    <td>⚠️ ביצועים איטיים</td>
+                    <td>
+                        1. בדוק Resource Usage ב-Railway<br>
+                        2. שקול upgrade של Plan<br>
+                        3. אופטימיזציה של queries ל-API
+                    </td>
+                </tr>
+            </table>
+
+            <h3>8.5 איש קשר לתמיכה</h3>
+            <div class="success-box">
+                <strong>📞 פרטי תמיכה טכנית:</strong>
+                <ul>
+                    <li><strong>חברה:</strong> Mafil Solutions</li>
+                    <li><strong>אתר:</strong> [URL של האתר]</li>
+                    <li><strong>אימייל תמיכה:</strong> support@mafil.co.il</li>
+                    <li><strong>טלפון:</strong> [מספר טלפון]</li>
+                    <li><strong>שעות תמיכה:</strong> א׳-ה׳, 09:00-17:00</li>
+                </ul>
+            </div>
+
+            <h3>8.6 SLA (Service Level Agreement)</h3>
+            <table>
+                <tr>
+                    <th>מדד</th>
+                    <th>יעד</th>
+                </tr>
+                <tr>
+                    <td><strong>Uptime</strong></td>
+                    <td>99.5% (Railway SLA)</td>
+                </tr>
+                <tr>
+                    <td><strong>Response Time</strong></td>
+                    <td>&lt; 2 שניות (90th percentile)</td>
+                </tr>
+                <tr>
+                    <td><strong>תגובה לבעיה קריטית</strong></td>
+                    <td>תוך 4 שעות עבודה</td>
+                </tr>
+                <tr>
+                    <td><strong>תגובה לבעיה רגילה</strong></td>
+                    <td>תוך יום עבודה אחד</td>
+                </tr>
+                <tr>
+                    <td><strong>עדכוני אבטחה</strong></td>
+                    <td>תוך 48 שעות מזיהוי</td>
+                </tr>
+            </table>
+        </section>
+
+        <div class="page-break"></div>
+
+        <!-- Summary / Conclusion -->
+        <section class="section">
+            <h2>9. 📝 סיכום</h2>
+
+            <p>
+                מערכת <strong>SafeQ Cloud Manager</strong> מספקת פתרון מקיף ומאובטח לניהול משתמשים
+                וקבוצות במערכת SafeQ Cloud, תוך שימוש באימות מודרני ומנגנוני הרשאה מתקדמים.
+            </p>
+
+            <h3>נקודות מפתח:</h3>
+            <ul>
+                <li>✅ <strong>אימות היברידי:</strong> שילוב Entra ID + SafeQ Cloud לאבטחה מרבית</li>
+                <li>✅ <strong>הרשאות גרנולריות:</strong> 5 רמות הרשאה עם הפרדת נתונים לפי בתי ספר</li>
+                <li>✅ <strong>פריסה מאובטחת:</strong> Railway עם secrets מוצפנים והפרדה מקוד</li>
+                <li>✅ <strong>ניטור מלא:</strong> Audit logs, metrics ו-monitoring בזמן אמת</li>
+                <li>✅ <strong>תחזוקה קלה:</strong> Automatic deployments ועדכוני אבטחה</li>
+            </ul>
+
+            <div class="success-box">
+                <strong>🎯 המערכת מוכנה לשימוש בייצור!</strong><br>
+                עקוב אחר ההנחיות במסמך זה כדי להבטיח פריסה מוצלחת ומאובטחת.
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>SafeQ Cloud Manager v2.0.1</strong></p>
+            <p>© 2025 Mafil Solutions. כל הזכויות שמורות.</p>
+            <p>מסמך זה מיועד לשימוש פנימי בלבד ומכיל מידע רגיש.</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                תאריך יצירה: נובמבר 2025 | גרסת מסמך: 1.0
+            </p>
+        </div>
+    </div>
+</body>
+</html>
