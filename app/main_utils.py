@@ -833,7 +833,7 @@ def show_login_page():
             auth_url = entra_auth.get_auth_url()
 
         if auth_url:
-            # כפתור שמבצע redirect באותה לשונית באמצעות JavaScript component
+            # כפתור שמבצע redirect באותה לשונית באמצעות form submission
             import streamlit.components.v1 as components
 
             components.html(f"""
@@ -864,15 +864,11 @@ def show_login_page():
                     transform: translateY(0);
                 }}
                 </style>
-                <button class="entra-login-btn" onclick="window.top.location.href='{auth_url}'">
-                    🔒 התחבר עם Entra ID
-                </button>
-                <script>
-                    // וידוא שהלחיצה עובדת
-                    document.querySelector('.entra-login-btn').addEventListener('click', function() {{
-                        window.top.location.href = '{auth_url}';
-                    }});
-                </script>
+                <form method="get" action="{auth_url}" target="_parent">
+                    <button type="submit" class="entra-login-btn">
+                        🔒 התחבר עם Entra ID
+                    </button>
+                </form>
             """, height=60)
 
         # Emergency Admin Login - מוסתר בתוך expander
