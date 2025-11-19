@@ -833,13 +833,15 @@ def show_login_page():
             auth_url = entra_auth.get_auth_url()
 
         if auth_url:
-            # כפתור שמבצע redirect באותה לשונית באמצעות JavaScript
-            st.markdown(f"""
+            # כפתור שמבצע redirect באותה לשונית באמצעות JavaScript component
+            import streamlit.components.v1 as components
+
+            components.html(f"""
                 <style>
                 .entra-login-btn {{
                     display: inline-block;
                     width: 100%;
-                    padding: 0.5rem 1rem;
+                    padding: 0.75rem 1.5rem;
                     background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
                     color: white;
                     text-align: center;
@@ -851,16 +853,27 @@ def show_login_page():
                     cursor: pointer;
                     transition: all 0.3s ease;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 }}
                 .entra-login-btn:hover {{
                     background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%);
                     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                    transform: translateY(-1px);
+                }}
+                .entra-login-btn:active {{
+                    transform: translateY(0);
                 }}
                 </style>
-                <div onclick="window.location.href='{auth_url}'" class="entra-login-btn">
+                <button class="entra-login-btn" onclick="window.top.location.href='{auth_url}'">
                     🔒 התחבר עם Entra ID
-                </div>
-            """, unsafe_allow_html=True)
+                </button>
+                <script>
+                    // וידוא שהלחיצה עובדת
+                    document.querySelector('.entra-login-btn').addEventListener('click', function() {{
+                        window.top.location.href = '{auth_url}';
+                    }});
+                </script>
+            """, height=60)
 
         # Emergency Admin Login - מוסתר בתוך expander
         with st.expander("🔑 התחברות מנהל מקומי"):
