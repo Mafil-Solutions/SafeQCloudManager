@@ -705,13 +705,13 @@ def main():
                     return os.path.join(sys._MEIPASS, relative_path)
                 return os.path.join(os.path.abspath("."), relative_path)
 
-            logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=130)
+            logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
+            st.image(logo_path, width=200)
         except Exception as e:
             st.markdown("**MafilIT**")
 
     with col_title:
-        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Services</span></div>', unsafe_allow_html=True)
+        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
 
     with col_user:
         show_compact_user_info()
