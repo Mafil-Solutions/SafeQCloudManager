@@ -856,6 +856,7 @@ def show_login_page():
                 <style>
                 a[href] {{
                     color: white !important;
+                    background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
                 }}
                 a[href]:hover {{
                     background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%) !important;
