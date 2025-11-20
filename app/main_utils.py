@@ -1086,7 +1086,7 @@ def show_header():
     with col4:
         # לוגו של החברה בצד שמאל (בגלל RTL)
         try:
-            logo_path = resource_path("assets/MafilIT_Logo.png")
+            logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
             st.image(logo_path, width=250)
         except Exception as e:
             pass
