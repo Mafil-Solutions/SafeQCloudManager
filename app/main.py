@@ -49,8 +49,8 @@ def apply_modern_styling_compact(rtl=False):
     text_align = "right" if rtl else "left"
 
     # צבעי Mafil (אדום-כחול)
-    primary_color = "#C41E3A"  # אדום Mafil
-    secondary_color = "#4A90E2"  # כחול Mafil
+    primary_color = "#D71F27"  # אדום Mafil
+    secondary_color = "#009BDB"  # כחול Mafil
     accent_color = "#C41E3A"  # אדום לנקודות הדגשה
     hover_color = "#ffe4e9"  # אדום בהיר מאוד
     sidebar_bg = "#f8fafc"  # רקע עדין אפור-לבן
