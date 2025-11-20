@@ -256,8 +256,8 @@ def apply_modern_styling_compact(rtl=False):
 
         .stPageLink:hover {{
             background: linear-gradient(45deg, #FF6B6B, {primary_color}) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
         }}
 
         /* כפתור ניווט פעיל */
