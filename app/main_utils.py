@@ -858,6 +858,7 @@ def show_login_page():
                     background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%) !important;
                     box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
                     transform: translateY(-1px) !important;
+                    color: white !important;
                 }}
                 </style>
             """, unsafe_allow_html=True)
