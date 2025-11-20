@@ -839,7 +839,7 @@ def show_login_page():
                     display: inline-block;
                     width: 100%;
                     padding: 0.75rem 1.5rem;
-                    background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+                    background: linear-gradient(135deg,#C41E3A 0%, #005a9e 100%);
                     color: white !important;
                     text-align: center;
                     text-decoration: none;
@@ -854,6 +854,9 @@ def show_login_page():
                     🔒 התחבר עם Entra ID
                 </a>
                 <style>
+                a[href] {{
+                    color: white !important;
+                }}
                 a[href]:hover {{
                     background: linear-gradient(135deg, #005a9e 0%, #0078d4 100%) !important;
                     box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
@@ -864,7 +867,7 @@ def show_login_page():
             """, unsafe_allow_html=True)
 
         # Emergency Admin Login - מוסתר בתוך expander
-        with st.expander("🔑 התחברות מנהל מקומי"):
+        with st.expander("🔑 התחברות מקומית"):
             #st.markdown("#### 🔑 Local Admin Login")
             with st.form("local_login_form"):
                 username = st.text_input("👤 שם משתמש")
