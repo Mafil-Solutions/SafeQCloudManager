@@ -583,7 +583,7 @@ def show_sidebar_info():
                     return os.path.join(sys._MEIPASS, relative_path)
                 return os.path.join(os.path.abspath("."), relative_path)
 
-            logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
+            logo_path = resource_path("assets/MafilIT_Logo.png")
             st.image(logo_path, width=200)
         except Exception as e:
             st.markdown("**MafilIT**")
