@@ -572,24 +572,6 @@ def show_compact_user_info():
 def show_sidebar_info():
     """הצגת מידע מפורט במסגרת צד"""
     with st.sidebar:
-        # לוגו של החברה בראש הסיידבר
-        try:
-            import sys
-            import os
-
-            def resource_path(relative_path: str) -> str:
-                """מחזיר נתיב תקין לקובץ"""
-                if hasattr(sys, "_MEIPASS"):
-                    return os.path.join(sys._MEIPASS, relative_path)
-                return os.path.join(os.path.abspath("."), relative_path)
-
-            logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=200)
-        except Exception as e:
-            st.markdown("**MafilIT**")
-
-        st.markdown("---")
-
         st.markdown("### 🔧 מערכת")
         st.info(f"🌐 {CONFIG['SERVER_URL']}")
 
@@ -754,6 +736,25 @@ def main():
     # דף הבית - עם גישה לאובייקטי Page
     from pages.home import create_home_page
     home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page, reports_page)
+
+    # לוגו בראש הסיידבר
+    with st.sidebar:
+        try:
+            import sys
+            import os
+
+            def resource_path(relative_path: str) -> str:
+                """מחזיר נתיב תקין לקובץ"""
+                if hasattr(sys, "_MEIPASS"):
+                    return os.path.join(sys._MEIPASS, relative_path)
+                return os.path.join(os.path.abspath("."), relative_path)
+
+            logo_path = resource_path("assets/MafilIT_Logo.png")
+            st.image(logo_path, width=200)
+        except Exception as e:
+            st.markdown("**MafilIT**")
+
+        st.markdown("---")
 
     # יצירת ניווט עם קבוצות היררכיות - מותאם לפי סוג משתמש
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
