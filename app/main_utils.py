@@ -839,7 +839,7 @@ def show_login_page():
                     display: inline-block;
                     width: 100%;
                     padding: 0.75rem 1.5rem;
-                    background: linear-gradient(135deg,#C41E3A 0%, #005a9e 100%);
+                    background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
                     color: white !important;
                     text-align: center;
                     text-decoration: none;
