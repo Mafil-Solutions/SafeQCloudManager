@@ -631,7 +631,7 @@ def show_sidebar_info():
 
 def main():
     st.set_page_config(
-        page_title="Mafil Cloud Services",
+        page_title="Mafil Cloud Manager",
         page_icon="🔐",
         layout="wide",
         initial_sidebar_state="expanded"  # פתוח אחרי login
