@@ -1087,7 +1087,7 @@ def show_header():
         # לוגו של החברה בצד שמאל (בגלל RTL)
         try:
             logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
-            st.image(logo_path, width=250)
+            st.image(logo_path, width=500)
         except Exception as e:
             pass
 
