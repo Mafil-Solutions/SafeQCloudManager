@@ -681,7 +681,7 @@ def show_login_page():
     st.markdown("""
 <div style='text-align: center; margin-bottom: 2rem;'>
     <span style='font-size: 2rem; color: #C41E3A;'>🛡️</span>
-    <h1 style='display: inline; color: #2C3E50; margin-left: 10px;'>SafeQ Cloud Manager - Login</h1>
+    <h1 style='display: inline; color: #D71F27; margin-left: 10px;'>Mafil Cloud Manager - Login</h1>
 </div>
 """, unsafe_allow_html=True)
     
@@ -854,7 +854,7 @@ def show_login_page():
                     🔒 התחבר עם Entra ID
                 </a>
                 <style>
-                a[href] > Span {{
+                a[href] > p {{
                     color: white !important;
                     background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
                 }}
