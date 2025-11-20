@@ -572,6 +572,24 @@ def show_compact_user_info():
 def show_sidebar_info():
     """הצגת מידע מפורט במסגרת צד"""
     with st.sidebar:
+        # לוגו של החברה בראש הסיידבר
+        try:
+            import sys
+            import os
+
+            def resource_path(relative_path: str) -> str:
+                """מחזיר נתיב תקין לקובץ"""
+                if hasattr(sys, "_MEIPASS"):
+                    return os.path.join(sys._MEIPASS, relative_path)
+                return os.path.join(os.path.abspath("."), relative_path)
+
+            logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
+            st.image(logo_path, width=200)
+        except Exception as e:
+            st.markdown("**MafilIT**")
+
+        st.markdown("---")
+
         st.markdown("### 🔧 מערכת")
         st.info(f"🌐 {CONFIG['SERVER_URL']}")
 
@@ -691,24 +709,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_title, col_user = st.columns([2, 4, 5])
-
-    with col_logo:
-        # לוגו של החברה - מוגדל
-        try:
-            import sys
-            import os
-
-            def resource_path(relative_path: str) -> str:
-                """מחזיר נתיב תקין לקובץ"""
-                if hasattr(sys, "_MEIPASS"):
-                    return os.path.join(sys._MEIPASS, relative_path)
-                return os.path.join(os.path.abspath("."), relative_path)
-
-            logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
-            st.image(logo_path, width=200)
-        except Exception as e:
-            st.markdown("**MafilIT**")
+    col_title, col_user = st.columns([4, 6])
 
     with col_title:
         st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
