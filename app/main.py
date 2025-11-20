@@ -682,11 +682,11 @@ def main():
         }
 
         .title-mafil {
-            color: #C41E3A;
+            color: #D71F27;
         }
 
         .title-services {
-            color: #4A90E2;
+            color: #009BDB;
         }
     </style>
     """, unsafe_allow_html=True)
