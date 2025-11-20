@@ -21,7 +21,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
         <style>
             /* כפתורי st.button - זהה לעמוד overview */
             .stButton > button {
-                background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+                background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
                 color: white !important;
                 padding: 0.5rem 1rem !important;
                 border-radius: 0.5rem !important;
