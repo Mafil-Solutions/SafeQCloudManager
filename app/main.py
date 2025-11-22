@@ -49,8 +49,8 @@ def apply_modern_styling_compact(rtl=False):
     text_align = "right" if rtl else "left"
 
     # צבעי Mafil (אדום-כחול)
-    primary_color = "#C41E3A"  # אדום Mafil
-    secondary_color = "#4A90E2"  # כחול Mafil
+    primary_color = "#D71F27"  # אדום Mafil
+    secondary_color = "#009BDB"  # כחול Mafil
     accent_color = "#C41E3A"  # אדום לנקודות הדגשה
     hover_color = "#ffe4e9"  # אדום בהיר מאוד
     sidebar_bg = "#f8fafc"  # רקע עדין אפור-לבן
@@ -256,8 +256,8 @@ def apply_modern_styling_compact(rtl=False):
 
         .stPageLink:hover {{
             background: linear-gradient(45deg, #FF6B6B, {primary_color}) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
         }}
 
         /* כפתור ניווט פעיל */
@@ -631,7 +631,7 @@ def show_sidebar_info():
 
 def main():
     st.set_page_config(
-        page_title="Mafil Cloud Services",
+        page_title="Mafil Cloud Manager",
         page_icon="🔐",
         layout="wide",
         initial_sidebar_state="expanded"  # פתוח אחרי login
@@ -682,36 +682,19 @@ def main():
         }
 
         .title-mafil {
-            color: #C41E3A;
+            color: #D71F27;
         }
 
         .title-services {
-            color: #4A90E2;
+            color: #009BDB;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_title, col_user = st.columns([2, 4, 5])
-
-    with col_logo:
-        # לוגו של החברה - מוגדל
-        try:
-            import sys
-            import os
-
-            def resource_path(relative_path: str) -> str:
-                """מחזיר נתיב תקין לקובץ"""
-                if hasattr(sys, "_MEIPASS"):
-                    return os.path.join(sys._MEIPASS, relative_path)
-                return os.path.join(os.path.abspath("."), relative_path)
-
-            logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=130)
-        except Exception as e:
-            st.markdown("**MafilIT**")
+    col_title, col_user = st.columns([4, 6])
 
     with col_title:
-        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Services</span></div>', unsafe_allow_html=True)
+        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
 
     with col_user:
         show_compact_user_info()
@@ -752,7 +735,26 @@ def main():
 
     # דף הבית - עם גישה לאובייקטי Page
     from pages.home import create_home_page
-    home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page)
+    home_page = create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page, reports_page)
+
+    # לוגו בראש הסיידבר
+    with st.sidebar:
+        try:
+            import sys
+            import os
+
+            def resource_path(relative_path: str) -> str:
+                """מחזיר נתיב תקין לקובץ"""
+                if hasattr(sys, "_MEIPASS"):
+                    return os.path.join(sys._MEIPASS, relative_path)
+                return os.path.join(os.path.abspath("."), relative_path)
+
+            logo_path = resource_path("assets/MafilIT_Logo.png")
+            st.image(logo_path, width=200)
+        except Exception as e:
+            st.markdown("**MafilIT**")
+
+        st.markdown("---")
 
     # יצירת ניווט עם קבוצות היררכיות - מותאם לפי סוג משתמש
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))

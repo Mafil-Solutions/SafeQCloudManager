@@ -658,6 +658,11 @@ def is_session_valid():
 
 def show_access_denied_page():
     st.title("🚫 הגישה נדחתה")
+
+    # הצגת פרטי המשתמש שניסה להתחבר
+    if hasattr(st.session_state, 'denied_user_name') and st.session_state.denied_user_name:
+        st.warning(f"👤 משתמש: **{st.session_state.denied_user_name}** ({st.session_state.get('denied_user_email', '')})")
+
     st.error(CONFIG['ACCESS_CONTROL']['DENY_MESSAGE'])
     st.info("**קבוצות SafeQ נדרשות (אחת לפחות):**")
     for group_name, role in CONFIG['ACCESS_CONTROL']['ROLE_MAPPING'].items():
@@ -665,13 +670,18 @@ def show_access_denied_page():
     st.markdown("---")
     st.write("אם לדעתך זו טעות, פנה למנהל ה-IT שלך.")
     if st.button("🔄 נסה שוב"):
+        # ניקוי פרטי המשתמש הנדחה
+        if 'denied_user_name' in st.session_state:
+            del st.session_state.denied_user_name
+        if 'denied_user_email' in st.session_state:
+            del st.session_state.denied_user_email
         st.rerun()
 
 def show_login_page():
     st.markdown("""
 <div style='text-align: center; margin-bottom: 2rem;'>
     <span style='font-size: 2rem; color: #C41E3A;'>🛡️</span>
-    <h1 style='display: inline; color: #2C3E50; margin-left: 10px;'>SafeQ Cloud Manager - Login</h1>
+    <h1 style='display: inline; color: #D71F27; margin-left: 10px;'>Mafil Cloud Manager - Login</h1>
 </div>
 """, unsafe_allow_html=True)
     
@@ -702,12 +712,16 @@ def show_login_page():
 
             with st.spinner("מתחבר ל-Entra ID..."):
                 token_result = entra_auth.get_token_from_code(auth_code)
-                
+
                 if token_result and 'access_token' in token_result:
                     user_info = entra_auth.get_user_info(token_result['access_token'])
-                    
+
                     if user_info:
+                        # הצגת פרטי המשתמש שהתחבר
+                        user_display_name = user_info.get('displayName', 'לא ידוע')
                         user_email = user_info['mail'] or user_info['userPrincipalName']
+                        st.info(f"👤 משתמש מחובר: **{user_display_name}** ({user_email})")
+
                         user_groups = entra_auth.get_user_groups(token_result['access_token'])
                         user_groups_names = [g['displayName'] for g in user_groups]
                         
@@ -727,7 +741,7 @@ def show_login_page():
 
                             # בדיקה אם אתחול ההרשאות הצליח
                             if not perm_result['success']:
-                                st.error("❌ אימות הרשאות נכשל")
+                                st.error(f"❌ אימות הרשאות נכשל עבור **{user_display_name}**")
                                 st.error(perm_result['error_message'])
 
                                 logger.log_action(
@@ -737,7 +751,7 @@ def show_login_page():
                                 )
 
                                 # הצג הוראות למשתמש
-                                st.info("💡 אנא וודא שקיים משתמש לוקאלי תואם במערכת SafeQ עם אותו שם משתמש.")
+                                st.info(f"💡 אנא וודא שקיים משתמש לוקאלי תואם במערכת SafeQ עם שם המשתמש: **{user_display_name}**")
 
                                 # לא ממשיכים - לא מבצעים login
                                 st.stop()
@@ -797,6 +811,8 @@ def show_login_page():
                                 user_email, ', '.join(user_groups_names), False
                             )
                             st.session_state.access_denied = True
+                            st.session_state.denied_user_name = user_display_name
+                            st.session_state.denied_user_email = user_email
                             st.query_params.clear()
                             st.rerun()
                     else:
@@ -817,10 +833,42 @@ def show_login_page():
             auth_url = entra_auth.get_auth_url()
 
         if auth_url:
-            st.link_button("🔒 התחבר עם Entra ID", auth_url, type="primary", use_container_width=True)
+            # כפתור התחברות Entra ID - link HTML פשוט
+            st.markdown(f"""
+                <a href="{auth_url}" target="_top" style="
+                    display: inline-block;
+                    width: 100%;
+                    padding: 0.75rem 1.5rem;
+                    background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
+                    color: white !important;
+                    text-align: center;
+                    text-decoration: none;
+                    border-radius: 0.5rem;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                ">
+                    🔒 התחבר עם Entra ID
+                </a>
+                <style>
+                a[href] > p {{
+                    color: white !important;
+                    background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
+                }}
+                a[href]:hover {{
+                    background: linear-gradient(45deg, #FF6B6B, #D71F27) !important;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+                    transform: translateY(-1px) !important;
+                    color: white !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
 
         # Emergency Admin Login - מוסתר בתוך expander
-        with st.expander("🔑 התחברות מנהל מקומי"):
+        with st.expander("🔑 התחברות מקומית"):
             #st.markdown("#### 🔑 Local Admin Login")
             with st.form("local_login_form"):
                 username = st.text_input("👤 שם משתמש")
@@ -833,9 +881,84 @@ def show_login_page():
                 else:
                     logger = AuditLogger()
 
+                    # בדיקה אם יש משתמשי חירום מוגדרים
+                    local_users = CONFIG.get('LOCAL_USERS')
+                    if not local_users:
+                        st.error("❌ אין משתמשי חירום מוגדרים במערכת")
+
+                        # Debug info למשתמש
+                        with st.expander("🔍 מידע לדיבוג (לחץ לפרטים)"):
+                            st.write("**בדיקת משתני סביבה:**")
+                            import os
+
+                            # בדיקה מפורטת של כל משתנה
+                            emergency_vars = {}
+                            for k in os.environ.keys():
+                                if k.startswith('EMERGENCY_USER_'):
+                                    value = os.environ.get(k, '')
+                                    value_len = len(value)
+                                    stripped = value.strip() if value else ''
+
+                                    # בדוק אם יש גרשיים
+                                    has_quotes = (stripped.startswith('"') and stripped.endswith('"')) or \
+                                                (stripped.startswith("'") and stripped.endswith("'"))
+
+                                    # הסר גרשיים לבדיקה
+                                    cleaned = stripped
+                                    if has_quotes and len(stripped) >= 2:
+                                        cleaned = stripped[1:-1]
+
+                                    is_empty = not cleaned
+
+                                    emergency_vars[k] = {
+                                        'length': value_len,
+                                        'cleaned_length': len(cleaned),
+                                        'is_empty': is_empty,
+                                        'has_quotes': has_quotes,
+                                        'first_char': value[0] if value else 'N/A',
+                                        'has_whitespace': value != value.strip() if value else False
+                                    }
+
+                            if emergency_vars:
+                                st.success(f"✅ נמצאו {len(emergency_vars)} משתני EMERGENCY_USER_*")
+
+                                for var_name, details in emergency_vars.items():
+                                    username = var_name.replace('EMERGENCY_USER_', '')
+                                    if details['is_empty']:
+                                        st.error(f"❌ **{var_name}** - הערך ריק אחרי ניקוי!")
+                                    elif details['length'] == 0:
+                                        st.error(f"❌ **{var_name}** - אורך 0")
+                                    else:
+                                        if details['has_quotes']:
+                                            st.warning(f"⚠️ **{var_name}** - אורך: {details['length']} תווים (כולל גרשיים)")
+                                            st.info(f"   אחרי הסרת גרשיים: {details['cleaned_length']} תווים")
+                                        else:
+                                            st.success(f"✅ **{var_name}** - אורך: {details['length']} תווים")
+
+                                        if details['has_whitespace']:
+                                            st.warning(f"⚠️ יש רווחים בהתחלה/סוף (יוסרו אוטומטית)")
+
+                                st.write("**מה שהתקבל ב-CONFIG['LOCAL_USERS']:**")
+                                st.json(CONFIG.get('LOCAL_USERS') or {})
+                            else:
+                                st.warning("⚠️ לא נמצאו משתני EMERGENCY_USER_* ב-environment")
+                                st.write("משתני סביבה שמכילים 'EMERGENCY':")
+                                all_emergency = [k for k in os.environ.keys() if 'EMERGENCY' in k.upper()]
+                                if all_emergency:
+                                    st.code('\n'.join(all_emergency))
+                                else:
+                                    st.error("אף משתנה לא מכיל 'EMERGENCY'")
+
+                            st.write("**פורמט נכון ב-Railway:**")
+                            st.code("""EMERGENCY_USER_admin=YourPassword123
+EMERGENCY_USER_backup=AnotherPassword456""")
+
+                        st.info("💡 הוסף משתני סביבה ב-Railway: Variables → הוסף EMERGENCY_USER_admin ו-EMERGENCY_USER_backup")
+                        st.stop()
+
                     # מקרה 1: משתמש חירום (Emergency User) = SuperAdmin (גישה מלאה)
                     # בודקים אם המשתמש קיים ב-EMERGENCY_USERS (מאומת מול secrets.toml בלבד)
-                    if CONFIG.get('LOCAL_USERS') and username in CONFIG['LOCAL_USERS']:
+                    if username in local_users:
                         # משתמש חירום - אימות מקומי בלבד (לא מול הענן)
                         if CONFIG['LOCAL_USERS'][username] != card_id:
                             logger.log_action(username, "Login Failed", "Invalid emergency user credentials", "", "", False)
@@ -963,8 +1086,8 @@ def show_header():
     with col4:
         # לוגו של החברה בצד שמאל (בגלל RTL)
         try:
-            logo_path = resource_path("assets/MafilIT_Logo.png")
-            st.image(logo_path, width=250)
+            logo_path = resource_path("assets/MAFIL_CLOUD_final.jpg")
+            st.image(logo_path, width=500)
         except Exception as e:
             pass
 
