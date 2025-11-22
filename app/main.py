@@ -456,6 +456,18 @@ def apply_modern_styling_compact(rtl=False):
         a[href^="https://streamlit.io/cloud"] {{
             display: none !important;
         }}
+
+        /* Logo size - make it bigger */
+        [data-testid="stLogo"] {{
+            width: 200px !important;
+            max-width: 200px !important;
+        }}
+
+        [data-testid="stLogo"] img {{
+            width: 200px !important;
+            max-width: 200px !important;
+            height: auto !important;
+        }}
     </style>
     """, unsafe_allow_html=True)
 
