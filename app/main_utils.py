@@ -1264,8 +1264,8 @@ def apply_modern_styling(rtl=False):
     <style>
     /* צבעי החברה על בסיס הלוגו */
     :root {{
-        --mafil-red: #C41E3A;
-        --mafil-blue: #4A90E2;
+        --mafil-red: #D71F27;
+        --mafil-blue: #009BDB;
         --mafil-light-gray: #F5F6FA;
         --mafil-dark-gray: #2C3E50;
     }}
