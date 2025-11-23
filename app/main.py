@@ -466,7 +466,7 @@ def apply_modern_styling_compact(rtl=False):
         [data-testid="stLogo"] img {{
             width: 200px !important;
             max-width: 200px !important;
-            height: auto !important;
+            max-height: 10rem !important;
         }}
     </style>
     """, unsafe_allow_html=True)
