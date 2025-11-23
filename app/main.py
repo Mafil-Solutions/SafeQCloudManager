@@ -474,11 +474,13 @@ def apply_modern_styling_compact(rtl=False):
             width: 200px !important;
             max-width: 200px !important;
             max-height: 10rem !important;
+            height: auto !important;
         }}
 
         [data-testid="stHeaderLogo"] img {{
             width: 200px !important;
             max-width: 200px !important;
+            height: auto !important;
             max-height: 10rem !important;
         }}
     </style>
