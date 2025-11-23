@@ -468,6 +468,19 @@ def apply_modern_styling_compact(rtl=False):
             max-width: 200px !important;
             max-height: 10rem !important;
         }}
+
+        /* Logo size - make it bigger */
+        [data-testid="stSidebarLogo"] {{
+            width: 200px !important;
+            max-width: 200px !important;
+            max-height: 10rem !important;
+        }}
+
+        [data-testid="stHeaderLogo"] img {{
+            width: 200px !important;
+            max-width: 200px !important;
+            max-height: 10rem !important;
+        }}
     </style>
     """, unsafe_allow_html=True)
 
