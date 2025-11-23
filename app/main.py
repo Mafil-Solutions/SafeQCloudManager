@@ -477,7 +477,7 @@ def apply_modern_styling_compact(rtl=False):
             height: auto !important;
         }}
 
-        [data-testid="stHeaderLogo"] img {{
+        [data-testid="stHeaderLogo"] {{
             width: 200px !important;
             max-width: 200px !important;
             height: auto !important;
