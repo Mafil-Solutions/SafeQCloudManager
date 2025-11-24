@@ -141,7 +141,7 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
                 with st.container():
                     st.markdown("**👨‍👩‍👧‍👦 קבוצות**")
                     st.caption("ניהול קבוצות משתמשים - יצירה, עריכה, הוספה והסרה")
-                    st.page_link(users_groups_page, label=" 👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
+                    st.page_link(users_groups_page, label="👨‍👩‍👧‍👦➡️ עבור לניהול קבוצות", use_container_width=True)
 
             st.markdown("---")
 
