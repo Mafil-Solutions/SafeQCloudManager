@@ -854,7 +854,7 @@ def show_login_page():
                     🔒 התחבר עם Entra ID
                 </a>
                 <style>
-                a[href] > p {{
+                p > a[href] {{
                     color: white !important;
                     background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
                 }}
