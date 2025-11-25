@@ -18,10 +18,7 @@ from permissions import filter_groups_by_departments
 
 def get_department_options(allowed_departments, local_groups):
     """מחזיר רשימת אפשרויות מחלקות לפי הרשאות"""
-    if allowed_departments == ["ALL"]:
-        return []  # superadmin - שדה טקסט חופשי
-
-    # חילוץ מחלקות מקבוצות מקומיות
+    # חילוץ כל המחלקות מקבוצות מקומיות
     departments = set()
     for group in local_groups:
         group_name = group.get('groupName', '')
@@ -29,7 +26,11 @@ def get_department_options(allowed_departments, local_groups):
         if ' - ' in group_name:
             departments.add(group_name)
 
-    # סינון רק מחלקות מורשות
+    # Superadmin רואה את כל המחלקות
+    if allowed_departments == ["ALL"]:
+        return sorted(departments)
+
+    # סינון רק מחלקות מורשות (עבור support/admin)
     if allowed_departments:
         filtered_departments = [dept for dept in departments if dept in allowed_departments]
         return sorted(filtered_departments)
@@ -137,10 +138,7 @@ def show():
             new_email = st.text_input("אימייל", value=form_state.get('email', ''))
 
             # שדה Department דינמי
-            if is_superadmin:
-                new_department = st.text_input("מחלקה", value=form_state.get('department', ''),
-                                              help="הזן מחלקה בפורמט: עיר - מספר (למשל: צפת - 240234)")
-            elif has_single_dept:
+            if has_single_dept:
                 new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
                                               help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
             elif has_multiple_depts:
