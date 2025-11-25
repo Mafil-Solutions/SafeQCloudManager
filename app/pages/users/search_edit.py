@@ -17,6 +17,27 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import get_api_instance, get_logger_instance, check_authentication, CONFIG
 from permissions import filter_users_by_departments, filter_groups_by_departments
 
+def get_department_options(allowed_departments, local_groups):
+    """מחזיר רשימת אפשרויות מחלקות לפי הרשאות"""
+    # חילוץ כל המחלקות מקבוצות מקומיות
+    departments = set()
+    for group in local_groups:
+        group_name = group.get('groupName', '')
+        # נניח שקבוצות מחלקה מכילות " - " (למשל: "צפת - 240234")
+        if ' - ' in group_name:
+            departments.add(group_name)
+
+    # Superadmin רואה את כל המחלקות
+    if allowed_departments == ["ALL"]:
+        return sorted(departments)
+
+    # סינון רק מחלקות מורשות (עבור support/admin)
+    if allowed_departments:
+        filtered_departments = [dept for dept in departments if dept in allowed_departments]
+        return sorted(filtered_departments)
+
+    return sorted(departments)
+
 def show():
     """הצגת דף חיפוש ועריכת משתמשים"""
     check_authentication()
@@ -902,12 +923,34 @@ def show():
                 current_pin = user_data.get('shortId', '')
                 current_card_id = next((d.get('detailData', '') for d in user_data.get('details', []) if isinstance(d, dict) and d.get('detailType') == 4), "")
 
+                # הכנת אפשרויות מחלקה
+                allowed_departments = st.session_state.get('allowed_departments', [])
+                local_groups = st.session_state.get('local_groups', [])
+                department_options = get_department_options(allowed_departments, local_groups)
+
+                has_single_dept = len(department_options) == 1
+                has_multiple_depts = len(department_options) > 1
+
                 with st.form(f"edit_user_form_{st.session_state.edit_username}"):
                     col1, col2 = st.columns(2)
                     with col1:
                         new_full_name = st.text_input("שם מלא", value=current_full_name)
                         new_email = st.text_input("אימייל", value=current_email)
-                        new_department = st.text_input("מחלקה", value=current_department)
+
+                        # שדה Department דינמי - כמו בהוספת משתמש
+                        if has_single_dept:
+                            new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
+                                                          help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
+                        elif has_multiple_depts:
+                            # מצא את האינדקס של המחלקה הנוכחית
+                            default_dept_idx = 0
+                            if current_department in department_options:
+                                default_dept_idx = department_options.index(current_department)
+                            new_department = st.selectbox("מחלקה", options=department_options, index=default_dept_idx,
+                                                         help="בחר מחלקה מהרשימה המורשות")
+                        else:
+                            new_department = st.text_input("מחלקה", value=current_department, disabled=True,
+                                                          help="לא נמצאו מחלקות זמינות")
 
                     with col2:
                         new_pin = st.text_input("קוד PIN", value=current_pin)
