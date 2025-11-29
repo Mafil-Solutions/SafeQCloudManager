@@ -616,22 +616,28 @@ class SafeQAPI:
             st.error(f"שגיאה ברישום עבודה: {str(e)}")
             return False
 
-    def get_output_ports_for_user(self, username, provider_id=None):
+    def get_output_ports_for_user(self, username=None, provider_id=None, enrich_ports=True):
         """
         קבלת רשימת מדפסות (output ports) זמינות עבור משתמש
 
         Args:
-            username: שם המשתמש
+            username: שם המשתמש (אופציונלי - אם לא מסופק, השרת ינסה לנחש)
             provider_id: מזהה ספק (אופציונלי)
+            enrich_ports: האם להעשיר את המידע (account, container, location)
 
         Returns:
             list: רשימת מדפסות עם פרטים (שם, מיקום, IP, מספר סידורי וכו')
         """
         try:
-            url = f"{self.server_url}/api/v1/users/{username}/outputports"
+            url = f"{self.server_url}/api/v1/outputports"
             params = {}
+
+            if username:
+                params['username'] = username
             if provider_id:
                 params['providerid'] = provider_id
+            if enrich_ports:
+                params['enrichPorts'] = 'true'
 
             response = requests.get(url, headers=self.headers, params=params, verify=False, timeout=30)
 
