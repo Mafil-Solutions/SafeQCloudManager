@@ -616,6 +616,48 @@ class SafeQAPI:
             st.error(f"שגיאה ברישום עבודה: {str(e)}")
             return False
 
+    def get_output_ports_for_user(self, username, provider_id=None):
+        """
+        קבלת רשימת מדפסות (output ports) זמינות עבור משתמש
+
+        Args:
+            username: שם המשתמש
+            provider_id: מזהה ספק (אופציונלי)
+
+        Returns:
+            list: רשימת מדפסות עם פרטים (שם, מיקום, IP, מספר סידורי וכו')
+        """
+        try:
+            url = f"{self.server_url}/api/v1/users/{username}/outputports"
+            params = {}
+            if provider_id:
+                params['providerid'] = provider_id
+
+            response = requests.get(url, headers=self.headers, params=params, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+
+                    # YSoft API יכול להחזיר dict עם 'items' או list ישירות
+                    if isinstance(data, dict) and 'items' in data:
+                        return data['items']
+                    elif isinstance(data, list):
+                        return data
+                    else:
+                        print(f"[DEBUG] Unexpected response format for output ports: {type(data)}")
+                        return []
+
+                except json.JSONDecodeError as e:
+                    st.error(f"תגובת JSON לא תקינה: {str(e)}")
+                    return []
+            else:
+                st.error(f"שגיאה בקבלת מדפסות: HTTP {response.status_code}")
+                return []
+        except Exception as e:
+            st.error(f"שגיאה בחיבור לשרת: {str(e)}")
+            return []
+
 def get_api_instance():
     """קבלת instance של SafeQAPI"""
     if 'api' not in st.session_state:
