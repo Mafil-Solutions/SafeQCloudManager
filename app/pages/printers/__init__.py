@@ -2,27 +2,258 @@
 # -*- coding: utf-8 -*-
 """
 SafeQ Cloud Manager - Printers Module
-מודול ניהול מדפסות - בפיתוח
+מודול ניהול מדפסות
 """
 
 import streamlit as st
+import pandas as pd
+import sys
+import os
+
+# הוספת תיקיית app ל-path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from shared import get_api_instance, check_authentication
+
+def filter_printers_by_groups(printers, user_groups, allowed_departments):
+    """
+    סינון מדפסות לפי קבוצות המשתמש והרשאותיו
+
+    Args:
+        printers: רשימת מדפסות
+        user_groups: קבוצות המשתמש
+        allowed_departments: מחלקות מורשות (["ALL"] עבור superadmin)
+
+    Returns:
+        list: רשימת מדפסות מסוננות
+    """
+    # Superadmin רואה הכל
+    if allowed_departments == ["ALL"]:
+        return printers
+
+    # אם אין הגבלות - הצג הכל
+    if not user_groups:
+        return printers
+
+    # חלץ שמות קבוצות המשתמש
+    user_group_names = set()
+    for group in user_groups:
+        if isinstance(group, dict):
+            user_group_names.add(group.get('groupName', ''))
+        elif isinstance(group, str):
+            user_group_names.add(group)
+
+    filtered_printers = []
+    for printer in printers:
+        # בדוק אם המדפסת משויכת לאחת מקבוצות המשתמש
+        printer_groups = printer.get('groups', [])
+
+        # אם למדפסת אין קבוצות - הצג אותה (מדפסת ציבורית)
+        if not printer_groups:
+            filtered_printers.append(printer)
+            continue
+
+        # בדוק אם יש התאמה בין קבוצות המדפסת לקבוצות המשתמש
+        for pg in printer_groups:
+            group_name = pg.get('groupName', '') if isinstance(pg, dict) else str(pg)
+            if group_name in user_group_names:
+                filtered_printers.append(printer)
+                break
+
+    return filtered_printers
 
 def show():
-    """הצגת דף מדפסות (placeholder)"""
+    """הצגת דף מדפסות"""
+    check_authentication()
+
+    # RTL styling
+    st.markdown("""
+    <style>
+        .stApp {
+            direction: rtl !important;
+        }
+
+        .block-container {
+            text-align: right !important;
+            direction: rtl !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.header("🖨️ ניהול מדפסות")
 
-    st.info("📌 מודול זה נמצא בפיתוח")
+    # קבלת מידע על המשתמש
+    api = get_api_instance()
+    username = st.session_state.get('username', '')
+    provider_id = st.session_state.get('provider_id', None)
+    user_groups = st.session_state.get('user_groups', [])
+    allowed_departments = st.session_state.get('allowed_departments', [])
+    role = st.session_state.get('role', 'viewer')
 
-    st.markdown("""
-    ### פיצ'רים מתוכננים:
-    - 📋 רשימת מדפסות
-    - ➕ הוספת מדפסת חדשה
-    - ✏️ עריכת הגדרות מדפסת
-    - 📊 סטטיסטיקות הדפסה
-    - 🔧 ניהול תורים
-    """)
+    # בדיקת הרשאות
+    if role not in ['admin', 'superadmin', 'support', 'viewer']:
+        st.warning("👁️ אין לך הרשאה לצפות במדפסות")
+        return
 
-    st.warning("⏳ תכונה זו תהיה זמינה בגרסה הבאה")
+    st.markdown("---")
+
+    # כפתור רענון
+    col1, col2, col3 = st.columns([1, 1, 8])
+    with col1:
+        if st.button("🔄 רענן", use_container_width=True):
+            if 'printers_cache' in st.session_state:
+                del st.session_state.printers_cache
+            st.rerun()
+
+    # טעינת מדפסות
+    with st.spinner("טוען רשימת מדפסות..."):
+        # שימוש ב-cache כדי לא לטעון כל פעם מחדש
+        if 'printers_cache' not in st.session_state:
+            printers = api.get_output_ports_for_user(username, provider_id)
+            st.session_state.printers_cache = printers
+        else:
+            printers = st.session_state.printers_cache
+
+    if not printers:
+        st.info("📭 לא נמצאו מדפסות זמינות")
+        st.markdown("""
+        ### מדוע אני לא רואה מדפסות?
+        - ייתכן שאין מדפסות מוגדרות במערכת
+        - ייתכן שאין לך הרשאה לראות מדפסות
+        - ייתכן שהמדפסות לא משויכות לקבוצות שלך
+        """)
+        return
+
+    # סינון מדפסות לפי הרשאות
+    filtered_printers = filter_printers_by_groups(printers, user_groups, allowed_departments)
+
+    # הצגת סטטיסטיקה
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("סה\"כ מדפסות זמינות", len(filtered_printers))
+    with col2:
+        active_printers = [p for p in filtered_printers if p.get('enabled', True)]
+        st.metric("מדפסות פעילות", len(active_printers))
+    with col3:
+        if allowed_departments == ["ALL"]:
+            st.metric("הרשאות", "Superadmin - כל המדפסות")
+        else:
+            st.metric("הרשאות", f"{len(user_groups)} קבוצות")
+
+    st.markdown("---")
+
+    # חיפוש ופילטור
+    search_col, filter_col = st.columns([3, 1])
+    with search_col:
+        search_query = st.text_input("🔍 חיפוש מדפסת", placeholder="שם, מיקום, IP, מספר סידורי...")
+
+    # סינון לפי חיפוש
+    if search_query:
+        search_lower = search_query.lower()
+        filtered_printers = [
+            p for p in filtered_printers
+            if search_lower in p.get('name', '').lower() or
+               search_lower in p.get('location', '').lower() or
+               search_lower in p.get('ipAddress', '').lower() or
+               search_lower in str(p.get('serialNumber', '')).lower()
+        ]
+
+    # הצגת רשימת מדפסות
+    if not filtered_printers:
+        st.warning("🔍 לא נמצאו מדפסות התואמות לחיפוש")
+        return
+
+    st.subheader(f"📋 רשימת מדפסות ({len(filtered_printers)})")
+
+    # יצירת טבלה
+    printers_data = []
+    for printer in filtered_printers:
+        printers_data.append({
+            'שם': printer.get('name', 'לא ידוע'),
+            'מיקום': printer.get('location', '-'),
+            'כתובת IP': printer.get('ipAddress', '-'),
+            'מספר סידורי': printer.get('serialNumber', '-'),
+            'יצרן': printer.get('manufacturer', '-'),
+            'דגם': printer.get('model', '-'),
+            'סטטוס': '🟢 פעילה' if printer.get('enabled', True) else '🔴 לא פעילה',
+            'תיאור': printer.get('description', '-')
+        })
+
+    # הצגת טבלה
+    df = pd.DataFrame(printers_data)
+
+    # הצגה עם גלילה
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=400,
+        hide_index=True
+    )
+
+    # אפשרות להורדת רשימה
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 1, 8])
+    with col1:
+        csv = df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 הורד CSV",
+            data=csv,
+            file_name=f"printers_list_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    with col2:
+        excel_buffer = pd.io.excel.ExcelWriter('printers.xlsx', engine='openpyxl')
+        df.to_excel(excel_buffer, index=False, sheet_name='Printers')
+        excel_buffer.close()
+        excel_data = excel_buffer
+
+        # Create Excel file in memory
+        from io import BytesIO
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Printers', index=False)
+        excel_bytes = output.getvalue()
+
+        st.download_button(
+            label="📊 הורד Excel",
+            data=excel_bytes,
+            file_name=f"printers_list_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
+
+    # הצגת פרטים מורחבים
+    st.markdown("---")
+    st.subheader("📄 פרטים מורחבים")
+
+    with st.expander("🔍 לחץ לצפייה בפרטים מלאים של כל מדפסת"):
+        for i, printer in enumerate(filtered_printers, 1):
+            with st.container():
+                st.markdown(f"### {i}. {printer.get('name', 'לא ידוע')}")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown(f"**מיקום:** {printer.get('location', '-')}")
+                    st.markdown(f"**כתובת IP:** {printer.get('ipAddress', '-')}")
+                    st.markdown(f"**מספר סידורי:** {printer.get('serialNumber', '-')}")
+                    st.markdown(f"**יצרן:** {printer.get('manufacturer', '-')}")
+
+                with col2:
+                    st.markdown(f"**דגם:** {printer.get('model', '-')}")
+                    st.markdown(f"**סטטוס:** {'🟢 פעילה' if printer.get('enabled', True) else '🔴 לא פעילה'}")
+                    st.markdown(f"**תיאור:** {printer.get('description', '-')}")
+
+                    # הצגת קבוצות
+                    groups = printer.get('groups', [])
+                    if groups:
+                        group_names = [g.get('groupName', '') if isinstance(g, dict) else str(g) for g in groups]
+                        st.markdown(f"**קבוצות:** {', '.join(group_names)}")
+
+                if i < len(filtered_printers):
+                    st.markdown("---")
 
 if __name__ == "__main__":
     show()
