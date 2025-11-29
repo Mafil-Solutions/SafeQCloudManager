@@ -15,52 +15,21 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import get_api_instance, check_authentication
 
-def filter_printers_by_groups(printers, user_groups, allowed_departments):
+def analyze_printer_structure(printers):
     """
-    סינון מדפסות לפי קבוצות המשתמש והרשאותיו
-
-    Args:
-        printers: רשימת מדפסות
-        user_groups: קבוצות המשתמש
-        allowed_departments: מחלקות מורשות (["ALL"] עבור superadmin)
-
-    Returns:
-        list: רשימת מדפסות מסוננות
+    מנתח את מבנה המדפסות כדי להבין איך הן מאורגנות
     """
-    # Superadmin רואה הכל
-    if allowed_departments == ["ALL"]:
-        return printers
+    if not printers:
+        return None
 
-    # אם אין הגבלות - הצג הכל
-    if not user_groups:
-        return printers
+    # קח דוגמה של מדפסת אחת ונתח אותה
+    sample = printers[0] if isinstance(printers, list) and len(printers) > 0 else printers
 
-    # חלץ שמות קבוצות המשתמש
-    user_group_names = set()
-    for group in user_groups:
-        if isinstance(group, dict):
-            user_group_names.add(group.get('groupName', ''))
-        elif isinstance(group, str):
-            user_group_names.add(group)
-
-    filtered_printers = []
-    for printer in printers:
-        # בדוק אם המדפסת משויכת לאחת מקבוצות המשתמש
-        printer_groups = printer.get('groups', [])
-
-        # אם למדפסת אין קבוצות - הצג אותה (מדפסת ציבורית)
-        if not printer_groups:
-            filtered_printers.append(printer)
-            continue
-
-        # בדוק אם יש התאמה בין קבוצות המדפסת לקבוצות המשתמש
-        for pg in printer_groups:
-            group_name = pg.get('groupName', '') if isinstance(pg, dict) else str(pg)
-            if group_name in user_group_names:
-                filtered_printers.append(printer)
-                break
-
-    return filtered_printers
+    return {
+        'total_printers': len(printers) if isinstance(printers, list) else 1,
+        'sample_keys': list(sample.keys()) if isinstance(sample, dict) else 'Not a dict',
+        'sample_data': sample
+    }
 
 def show():
     """הצגת דף מדפסות"""
@@ -97,13 +66,16 @@ def show():
 
     st.markdown("---")
 
-    # כפתור רענון
+    # כפתורי ניהול
     col1, col2, col3 = st.columns([1, 1, 8])
     with col1:
         if st.button("🔄 רענן", use_container_width=True):
             if 'printers_cache' in st.session_state:
                 del st.session_state.printers_cache
             st.rerun()
+
+    with col2:
+        debug_mode = st.checkbox("🔍 Debug", help="הצג מבנה נתונים מלא")
 
     # טעינת מדפסות
     with st.spinner("טוען רשימת מדפסות..."):
@@ -114,18 +86,31 @@ def show():
         else:
             printers = st.session_state.printers_cache
 
+    # Debug Mode - הצג מבנה נתונים
+    if debug_mode and printers:
+        st.warning("🔍 **Debug Mode - מבנה נתונים גולמי**")
+        analysis = analyze_printer_structure(printers)
+        if analysis:
+            st.json({
+                'total_printers': analysis['total_printers'],
+                'available_fields': analysis['sample_keys'],
+                'first_printer_example': analysis['sample_data']
+            })
+            st.markdown("---")
+
     if not printers:
         st.info("📭 לא נמצאו מדפסות זמינות")
         st.markdown("""
         ### מדוע אני לא רואה מדפסות?
         - ייתכן שאין מדפסות מוגדרות במערכת
         - ייתכן שאין לך הרשאה לראות מדפסות
-        - ייתכן שהמדפסות לא משויכות לקבוצות שלך
+        - ה-API endpoint כבר מסנן לפי המשתמש
         """)
         return
 
-    # סינון מדפסות לפי הרשאות
-    filtered_printers = filter_printers_by_groups(printers, user_groups, allowed_departments)
+    # כרגע - הצג את כל מה שה-API מחזיר (ללא סינון נוסף)
+    # ה-API endpoint הוא per-user, אז הוא כבר מסנן בצד השרת
+    filtered_printers = printers
 
     # הצגת סטטיסטיקה
     col1, col2, col3 = st.columns(3)
@@ -165,19 +150,28 @@ def show():
 
     st.subheader(f"📋 רשימת מדפסות ({len(filtered_printers)})")
 
-    # יצירת טבלה
+    # יצירת טבלה - ננסה למצוא שדות נפוצים
     printers_data = []
     for printer in filtered_printers:
-        printers_data.append({
-            'שם': printer.get('name', 'לא ידוע'),
-            'מיקום': printer.get('location', '-'),
-            'כתובת IP': printer.get('ipAddress', '-'),
-            'מספר סידורי': printer.get('serialNumber', '-'),
-            'יצרן': printer.get('manufacturer', '-'),
-            'דגם': printer.get('model', '-'),
-            'סטטוס': '🟢 פעילה' if printer.get('enabled', True) else '🔴 לא פעילה',
-            'תיאור': printer.get('description', '-')
-        })
+        # נחפש שדות אפשריים (השמות עשויים להשתנות)
+        row = {
+            'שם': printer.get('name') or printer.get('portName') or printer.get('displayName') or 'לא ידוע',
+            'מיקום': printer.get('location') or printer.get('site') or '-',
+            'כתובת IP': printer.get('ipAddress') or printer.get('ip') or printer.get('address') or '-',
+            'מספר סידורי': printer.get('serialNumber') or printer.get('serial') or '-',
+        }
+
+        # שדות נוספים אופציונליים
+        if printer.get('manufacturer'):
+            row['יצרן'] = printer.get('manufacturer')
+        if printer.get('model'):
+            row['דגם'] = printer.get('model')
+        if 'enabled' in printer or 'active' in printer or 'status' in printer:
+            row['סטטוס'] = '🟢 פעילה' if printer.get('enabled', printer.get('active', True)) else '🔴 לא פעילה'
+        if printer.get('description'):
+            row['תיאור'] = printer.get('description')
+
+        printers_data.append(row)
 
     # הצגת טבלה
     df = pd.DataFrame(printers_data)
