@@ -84,6 +84,11 @@ class Config:
                     self._get_secret('ROLE_SUPERADMIN_GROUP', 'SafeQ-SuperAdmin'): 'superadmin'
                 }
             },
+
+            # Reports - Local Cloud Authentication
+            # משתמשים מקומיים שמאומתים מול הענן לצפייה בדוחות
+            'REPORTS_VIEW_GROUP': self._get_secret('REPORTS_VIEW_GROUP', 'Reports-View'),
+            'LOCAL_ADMIN_USERNAME': self._get_secret('LOCAL_ADMIN_USERNAME', 'Admin'),
             
             # Session
             'SESSION_TIMEOUT': int(self._get_secret('SESSION_TIMEOUT', '120')),
@@ -118,20 +123,75 @@ class Config:
         הערה: הסיסמאות מאוחסנות בטקסט רגיל ב-secrets (שהוא מוצפן ע"י Streamlit)
         ומומרות ל-hash בזמן ההתחברות
         """
+        # קודם נסה Streamlit secrets (עם try-except נפרד כי st.secrets זורק exception אם אין secrets.toml)
         try:
             if hasattr(st, 'secrets') and 'EMERGENCY_USERS' in st.secrets:
                 # Streamlit secrets - מחזיר dict עם סיסמאות plain text
-                return dict(st.secrets['EMERGENCY_USERS'])
+                users = dict(st.secrets['EMERGENCY_USERS'])
+                print(f"[DEBUG] Loaded {len(users)} emergency users from Streamlit secrets")
+                return users
+        except Exception as e:
+            # אין secrets.toml (נורמלי ב-Railway) - נמשיך לEnvironment Variables
+            print(f"[DEBUG] No Streamlit secrets found (normal in Railway): {type(e).__name__}")
 
-            # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
+        # נסה environment variables בפורמט: EMERGENCY_USER_admin=password
+        try:
             emergency_users = {}
+            found_vars = []
+            skipped_vars = []
+
             for key, value in os.environ.items():
                 if key.startswith('EMERGENCY_USER_'):
                     username = key.replace('EMERGENCY_USER_', '')
-                    emergency_users[username] = value
+                    value_len = len(value) if value else 0
+                    print(f"[DEBUG] Checking {key}: value_length={value_len}, value_exists={value is not None}, value_bool={bool(value)}")
+
+                    # נקה רווחים וגרשיים מהתחלה וסוף
+                    if value:
+                        cleaned_value = value.strip()  # הסר רווחים
+                        # הסר גרשיים כפולים/יחידים מהתחלה וסוף (Railway לפעמים מוסיף אותם)
+                        had_quotes = cleaned_value.startswith(('"', "'")) and cleaned_value.endswith(('"', "'"))
+
+                        if cleaned_value.startswith('"') and cleaned_value.endswith('"'):
+                            cleaned_value = cleaned_value[1:-1]
+                        elif cleaned_value.startswith("'") and cleaned_value.endswith("'"):
+                            cleaned_value = cleaned_value[1:-1]
+
+                        print(f"[DEBUG] Original length: {value_len}, After strip: {len(cleaned_value)}, had_quotes: {had_quotes}")
+
+                        if cleaned_value:  # וודא שיש ערך אחרי ניקוי
+                            emergency_users[username] = cleaned_value
+                            found_vars.append(key)
+                            print(f"[DEBUG] ✅ Added emergency user: {username} (password length after cleaning: {len(cleaned_value)})")
+                        else:
+                            skipped_vars.append((key, f"empty after cleaning quotes/whitespace (original length={value_len})"))
+                            print(f"[DEBUG] ❌ Skipped {key}: empty after cleaning (original length={value_len})")
+                    else:
+                        skipped_vars.append((key, f"empty or None (length={value_len})"))
+                        print(f"[DEBUG] ❌ Skipped {key}: value is empty or None")
+
+            if found_vars:
+                print(f"[DEBUG] Found emergency user environment variables: {found_vars}")
+                print(f"[DEBUG] Loaded {len(emergency_users)} emergency users from environment")
+                print(f"[DEBUG] Emergency users dict keys: {list(emergency_users.keys())}")
+            else:
+                print("[DEBUG] No valid EMERGENCY_USER_* environment variables found")
+                if skipped_vars:
+                    print(f"[DEBUG] Skipped variables (empty/invalid): {skipped_vars}")
+                print(f"[DEBUG] Total environment variables: {len(os.environ)}")
+                # הדפס רשימת משתנים שמתחילים ב-EMERGENCY (לדיבוג)
+                emergency_vars = [k for k in os.environ.keys() if 'EMERGENCY' in k]
+                if emergency_vars:
+                    print(f"[DEBUG] Found EMERGENCY-related vars: {emergency_vars}")
+                    for ev in emergency_vars:
+                        ev_val = os.environ.get(ev, '')
+                        print(f"[DEBUG]   - {ev}: length={len(ev_val)}, repr={repr(ev_val[:20]) if ev_val else 'None'}")
 
             return emergency_users if emergency_users else {}
-        except:
+        except Exception as e:
+            print(f"[ERROR] Exception in _parse_emergency_users (env vars): {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {}
     
     def get(self, key: str = None) -> Any:
