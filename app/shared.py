@@ -639,7 +639,16 @@ class SafeQAPI:
             if enrich_ports:
                 params['enrichPorts'] = 'true'
 
+            # Debug: הדפס את ה-URL המלא
+            import urllib.parse
+            full_url = url + ('?' + urllib.parse.urlencode(params) if params else '')
+            print(f"[DEBUG] Requesting: {full_url}")
+
             response = requests.get(url, headers=self.headers, params=params, verify=False, timeout=30)
+
+            print(f"[DEBUG] Response status: {response.status_code}")
+            if response.status_code != 200:
+                print(f"[DEBUG] Response text: {response.text[:200]}")
 
             if response.status_code == 200:
                 try:
