@@ -143,8 +143,8 @@ def show():
     if allowed_departments == ["ALL"]:
         with st.spinner("טוען רשימת מחלקות..."):
             provider_id = CONFIG['PROVIDERS']['LOCAL']
-            print(f"[DEBUG] Superadmin: Loading ALL local_groups from API (provider_id: {provider_id})...")
-            local_groups = api.get_local_groups(provider_id) or []
+            print(f"[DEBUG] Superadmin: Loading ALL groups from API (provider_id: {provider_id})...")
+            local_groups = api.get_groups(provider_id) or []
             print(f"[DEBUG] Loaded {len(local_groups)} groups from API")
             st.session_state.local_groups = local_groups
 
