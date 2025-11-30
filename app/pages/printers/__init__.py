@@ -15,6 +15,41 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import get_api_instance, check_authentication
 
+def filter_printers_by_departments(printers, allowed_departments):
+    """
+    סינון מדפסות לפי מחלקות מורשות (דרך containerName)
+
+    Args:
+        printers: רשימת מדפסות
+        allowed_departments: מחלקות מורשות (["ALL"] עבור superadmin)
+
+    Returns:
+        list: רשימת מדפסות מסוננות
+    """
+    if not printers:
+        return []
+
+    # Superadmin רואה הכל
+    if allowed_departments == ["ALL"]:
+        return printers
+
+    filtered_printers = []
+
+    for printer in printers:
+        container_name = printer.get('containerName', '')
+
+        # אם containerName ריק (תקלה ב-API) - הצג את המדפסת
+        # (ברגע שיתקנו את התקלה, הסינון יעבוד אוטומטית)
+        if not container_name:
+            filtered_printers.append(printer)
+            continue
+
+        # containerName זהה לשם קבוצה - נשווה ל-allowed_departments
+        if container_name in allowed_departments:
+            filtered_printers.append(printer)
+
+    return filtered_printers
+
 def analyze_printer_structure(printers):
     """
     מנתח את מבנה המדפסות כדי להבין איך הן מאורגנות
@@ -109,9 +144,9 @@ def show():
         """)
         return
 
-    # כרגע - הצג את כל מה שה-API מחזיר (ללא סינון נוסף)
-    # ה-API endpoint הוא per-user, אז הוא כבר מסנן בצד השרת
-    filtered_printers = printers
+    # סינון לפי מחלקות מורשות (דרך containerName)
+    # containerName שווה לשם קבוצות - מסננים לפי allowed_departments
+    filtered_printers = filter_printers_by_departments(printers, allowed_departments)
 
     # הצגת סטטיסטיקה
     col1, col2, col3 = st.columns(3)
