@@ -85,24 +85,39 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
 
         st.markdown("---")
 
+        # בדיקת הרשאות לרשימת משתמשים
+        role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
+        local_username = st.session_state.get('local_username', None)
+        can_view_user_list = (role == 'superadmin') or (role == 'admin' and local_username)
+
         # כרטיסים לניווט
         col1, col2 = st.columns(2)
 
         with col1:
-            # כרטיס 1: רשימת משתמשים
+            # כרטיס 1: רשימת משתמשים - תלוי בהרשאות
             with st.container():
                 st.subheader("📋 רשימת משתמשים")
-                st.markdown("""
-                צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra),
-                וייצוא לקובץ CSV.
+                if can_view_user_list:
+                    st.markdown("""
+                    צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra),
+                    וייצוא לאקסל.
 
-                **תכונות:**
-                - צפייה במשתמשים מקומיים
-                - צפייה במשתמשי Entra (superadmin)
-                - סינון לפי מחלקות
-                - ייצוא CSV
-                """)
-                st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
+                    **תכונות:**
+                    - צפייה במשתמשים מקומיים
+                    - צפייה במשתמשי Entra (superadmin)
+                    - סינון לפי מחלקות
+                    - ייצוא Excel
+                    """)
+                    st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
+                else:
+                    st.markdown("""
+                    צפייה בכל המשתמשים במערכת.
+
+                    **זמין רק עבור הרשאות SuperAdmin**
+
+                    תכונה זו מוגבלת למנהלי מערכת בלבד.
+                    """)
+                    st.button("🔒 זמין רק ל-SuperAdmin", disabled=True, use_container_width=True)
 
             st.markdown("---")
 

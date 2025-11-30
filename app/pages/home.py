@@ -10,7 +10,7 @@ from config import config
 
 CONFIG = config.get()
 
-def create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page, reports_page):
+def create_home_page(users_list_page, users_search_page, users_add_page, users_groups_page, my_activity_page, reports_page, printers_page):
     """יוצר את דף הבית עם גישה לאובייקטי Page"""
 
     def show():
@@ -114,15 +114,25 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
             # גישה מהירה לתפקודים עיקריים - ישר לעניין
             st.subheader("⚡ גישה מהירה למודולים")
 
+            # בדיקת הרשאות לרשימת משתמשים
+            role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
+            local_username = st.session_state.get('local_username', None)
+            can_view_user_list = (role == 'superadmin') or (role == 'admin' and local_username)
+
             # קטגוריה: ניהול משתמשים
             st.markdown("### 👥 ניהול משתמשים")
             col1, col2 = st.columns(2)
 
             with col1:
+                # רשימת משתמשים - תלוי בהרשאות
                 with st.container():
                     st.markdown("**📋 רשימת משתמשים**")
-                    st.caption("צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra), וייצוא לקובץ CSV")
-                    st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
+                    if can_view_user_list:
+                        st.caption("צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra), וייצוא לאקסל")
+                        st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
+                    else:
+                        st.caption("זמין רק עבור הרשאות SuperAdmin")
+                        st.button("🔒 זמין רק ל-SuperAdmin", disabled=True, use_container_width=True)
                 st.markdown("")
 
                 with st.container():
@@ -161,8 +171,8 @@ def create_home_page(users_list_page, users_search_page, users_add_page, users_g
 
             with col_print:
                 st.markdown("**🖨️ מדפסות**")
-                st.caption("ניהול מדפסות (בפיתוח)")
-                st.info("💡 תכונה זו בפיתוח")
+                st.caption("ניהול וצפייה במדפסות במערכת")
+                st.page_link(printers_page, label="🖨️➡️ עבור למדפסות", use_container_width=True)
 
         else:
             st.warning("⚠️ לא מזוהה משתמש במערכת")
