@@ -18,16 +18,33 @@ from permissions import filter_groups_by_departments
 
 def get_department_options(allowed_departments, local_groups):
     """מחזיר רשימת אפשרויות מחלקות לפי הרשאות"""
+    # Debug: בדיקת מצב ההתחלה
+    print(f"[DEBUG] get_department_options called:")
+    print(f"  - allowed_departments: {allowed_departments}")
+    print(f"  - local_groups count: {len(local_groups)}")
+    if local_groups:
+        print(f"  - First group example: {local_groups[0]}")
+
     # חילוץ כל המחלקות מקבוצות מקומיות
     departments = set()
+    all_groups = set()  # כל הקבוצות (לגיבוי)
+
     for group in local_groups:
         group_name = group.get('groupName', '')
+        all_groups.add(group_name)
         # נניח שקבוצות מחלקה מכילות " - " (למשל: "צפת - 240234")
         if ' - ' in group_name:
             departments.add(group_name)
 
+    print(f"  - Groups with ' - ': {len(departments)}")
+    print(f"  - All groups: {len(all_groups)}")
+
     # Superadmin רואה את כל המחלקות
     if allowed_departments == ["ALL"]:
+        # אם אין מחלקות עם " - ", נחזיר את כל הקבוצות
+        if not departments and all_groups:
+            print(f"  - Warning: No groups with ' - ', returning all groups for superadmin")
+            return sorted(all_groups)
         return sorted(departments)
 
     # סינון רק מחלקות מורשות (עבור support/admin)
@@ -116,14 +133,24 @@ def show():
     allowed_departments = st.session_state.get('allowed_departments', [])
     local_groups = st.session_state.get('local_groups', [])
 
+    # Debug: הצגת מצב התחלתי
+    print(f"[DEBUG] Add User - Initial state:")
+    print(f"  - allowed_departments: {allowed_departments}")
+    print(f"  - local_groups in session: {len(local_groups)}")
+
     # אם local_groups ריק ו-superadmin - נטען את הקבוצות מה-API
     if not local_groups and allowed_departments == ["ALL"]:
         with st.spinner("טוען רשימת מחלקות..."):
             provider_id = CONFIG['PROVIDERS']['LOCAL']
+            print(f"[DEBUG] Loading local_groups from API (provider_id: {provider_id})...")
             local_groups = api.get_local_groups(provider_id) or []
+            print(f"[DEBUG] Loaded {len(local_groups)} groups from API")
             st.session_state.local_groups = local_groups
 
     department_options = get_department_options(allowed_departments, local_groups)
+    print(f"[DEBUG] Final department_options: {len(department_options)} options")
+    if department_options:
+        print(f"  - First 3 options: {department_options[:3]}")
 
     is_superadmin = allowed_departments == ["ALL"]
     has_single_dept = len(department_options) == 1
