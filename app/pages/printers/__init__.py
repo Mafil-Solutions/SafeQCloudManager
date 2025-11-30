@@ -15,6 +15,41 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import get_api_instance, check_authentication
 
+def filter_printers_by_departments(printers, allowed_departments):
+    """
+    סינון מדפסות לפי מחלקות מורשות (דרך containerName)
+
+    Args:
+        printers: רשימת מדפסות
+        allowed_departments: מחלקות מורשות (["ALL"] עבור superadmin)
+
+    Returns:
+        list: רשימת מדפסות מסוננות
+    """
+    if not printers:
+        return []
+
+    # Superadmin רואה הכל
+    if allowed_departments == ["ALL"]:
+        return printers
+
+    filtered_printers = []
+
+    for printer in printers:
+        container_name = printer.get('containerName', '')
+
+        # אם containerName ריק (תקלה ב-API) - הצג את המדפסת
+        # (ברגע שיתקנו את התקלה, הסינון יעבוד אוטומטית)
+        if not container_name:
+            filtered_printers.append(printer)
+            continue
+
+        # containerName זהה לשם קבוצה - נשווה ל-allowed_departments
+        if container_name in allowed_departments:
+            filtered_printers.append(printer)
+
+    return filtered_printers
+
 def analyze_printer_structure(printers):
     """
     מנתח את מבנה המדפסות כדי להבין איך הן מאורגנות
@@ -109,9 +144,9 @@ def show():
         """)
         return
 
-    # כרגע - הצג את כל מה שה-API מחזיר (ללא סינון נוסף)
-    # ה-API endpoint הוא per-user, אז הוא כבר מסנן בצד השרת
-    filtered_printers = printers
+    # סינון לפי מחלקות מורשות (דרך containerName)
+    # containerName שווה לשם קבוצות - מסננים לפי allowed_departments
+    filtered_printers = filter_printers_by_departments(printers, allowed_departments)
 
     # הצגת סטטיסטיקה
     col1, col2, col3 = st.columns(3)
@@ -159,13 +194,9 @@ def show():
             'כתובת IP': printer.get('address', '-'),
             'מספר סידורי': printer.get('deviceSerial', '-'),
             'יצרן': printer.get('vendor', '-'),
-            'תיאור': printer.get('description') or '-',
+            'קונטיינר': printer.get('containerName') or '-',
+            'Embedded': 'כן' if printer.get('embedded') else 'לא',
         }
-
-        # שדות נוספים אם קיימים
-        if printer.get('containerName'):
-            row['קונטיינר'] = printer.get('containerName')
-
         printers_data.append(row)
 
     # הצגת טבלה
@@ -193,11 +224,6 @@ def show():
         )
 
     with col2:
-        excel_buffer = pd.io.excel.ExcelWriter('printers.xlsx', engine='openpyxl')
-        df.to_excel(excel_buffer, index=False, sheet_name='Printers')
-        excel_buffer.close()
-        excel_data = excel_buffer
-
         # Create Excel file in memory
         from io import BytesIO
         output = BytesIO()
@@ -212,32 +238,6 @@ def show():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
-
-    # הצגת פרטים מורחבים
-    st.markdown("---")
-    st.subheader("📄 פרטים מורחבים")
-
-    with st.expander("🔍 לחץ לצפייה בפרטים מלאים של כל מדפסת"):
-        for i, printer in enumerate(filtered_printers, 1):
-            with st.container():
-                st.markdown(f"### {i}. {printer.get('name', 'לא ידוע')}")
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.markdown(f"**כתובת IP:** {printer.get('address', '-')}")
-                    st.markdown(f"**מספר סידורי:** {printer.get('deviceSerial', '-')}")
-                    st.markdown(f"**יצרן:** {printer.get('vendor', '-')}")
-                    st.markdown(f"**סוג יציאה:** {printer.get('portType', '-')}")
-
-                with col2:
-                    st.markdown(f"**תיאור:** {printer.get('description') or '-'}")
-                    st.markdown(f"**קונטיינר:** {printer.get('containerName') or '-'}")
-                    st.markdown(f"**פרוטוקול הדפסה:** {printer.get('printProtocol', '-')}")
-                    st.markdown(f"**Embedded:** {'כן' if printer.get('embedded') else 'לא'}")
-
-                if i < len(filtered_printers):
-                    st.markdown("---")
 
 if __name__ == "__main__":
     show()
