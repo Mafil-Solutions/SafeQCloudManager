@@ -159,13 +159,9 @@ def show():
             'כתובת IP': printer.get('address', '-'),
             'מספר סידורי': printer.get('deviceSerial', '-'),
             'יצרן': printer.get('vendor', '-'),
-            'תיאור': printer.get('description') or '-',
+            'קונטיינר': printer.get('containerName') or '-',
+            'Embedded': 'כן' if printer.get('embedded') else 'לא',
         }
-
-        # שדות נוספים אם קיימים
-        if printer.get('containerName'):
-            row['קונטיינר'] = printer.get('containerName')
-
         printers_data.append(row)
 
     # הצגת טבלה
@@ -193,11 +189,6 @@ def show():
         )
 
     with col2:
-        excel_buffer = pd.io.excel.ExcelWriter('printers.xlsx', engine='openpyxl')
-        df.to_excel(excel_buffer, index=False, sheet_name='Printers')
-        excel_buffer.close()
-        excel_data = excel_buffer
-
         # Create Excel file in memory
         from io import BytesIO
         output = BytesIO()
@@ -212,32 +203,6 @@ def show():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
-
-    # הצגת פרטים מורחבים
-    st.markdown("---")
-    st.subheader("📄 פרטים מורחבים")
-
-    with st.expander("🔍 לחץ לצפייה בפרטים מלאים של כל מדפסת"):
-        for i, printer in enumerate(filtered_printers, 1):
-            with st.container():
-                st.markdown(f"### {i}. {printer.get('name', 'לא ידוע')}")
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.markdown(f"**כתובת IP:** {printer.get('address', '-')}")
-                    st.markdown(f"**מספר סידורי:** {printer.get('deviceSerial', '-')}")
-                    st.markdown(f"**יצרן:** {printer.get('vendor', '-')}")
-                    st.markdown(f"**סוג יציאה:** {printer.get('portType', '-')}")
-
-                with col2:
-                    st.markdown(f"**תיאור:** {printer.get('description') or '-'}")
-                    st.markdown(f"**קונטיינר:** {printer.get('containerName') or '-'}")
-                    st.markdown(f"**פרוטוקול הדפסה:** {printer.get('printProtocol', '-')}")
-                    st.markdown(f"**Embedded:** {'כן' if printer.get('embedded') else 'לא'}")
-
-                if i < len(filtered_printers):
-                    st.markdown("---")
 
 if __name__ == "__main__":
     show()
