@@ -81,7 +81,13 @@ def show():
     with st.spinner("טוען רשימת מדפסות..."):
         # שימוש ב-cache כדי לא לטעון כל פעם מחדש
         if 'printers_cache' not in st.session_state:
-            printers = api.get_output_ports_for_user(username, provider_id)
+            # נסה קודם ללא username - לתת לשרת לנחש
+            printers = api.get_output_ports_for_user(username=None, provider_id=None)
+
+            # אם לא עבד, נסה עם username
+            if not printers:
+                printers = api.get_output_ports_for_user(username, provider_id)
+
             st.session_state.printers_cache = printers
         else:
             printers = st.session_state.printers_cache
