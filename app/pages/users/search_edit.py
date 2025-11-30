@@ -10,12 +10,42 @@ import pandas as pd
 import sys
 import os
 import re
+import io
 
 # הוספת תיקיית app ל-path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import get_api_instance, get_logger_instance, check_authentication, CONFIG
 from permissions import filter_users_by_departments, filter_groups_by_departments
+
+def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
+    """ייצוא DataFrame ל-Excel עם עיצוב"""
+    output = io.BytesIO()
+
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name=sheet_name, index=False, engine='openpyxl')
+
+        # עיצוב הגליון
+        workbook = writer.book
+        worksheet = writer.sheets[sheet_name]
+
+        # רוחב עמודות אוטומטי
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+
+            adjusted_width = min(max_length + 2, 50)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+
+    output.seek(0)
+    return output.getvalue()
 
 def get_department_options(allowed_departments, local_groups):
     """מחזיר רשימת אפשרויות מחלקות לפי הרשאות"""
@@ -397,16 +427,16 @@ def show():
             # הצגת הטבלה - RTL וללא height
             st.dataframe(df, use_container_width=True, hide_index=True)
 
-            # כפתורי פעולה - הורד CSV ונקה, קטנים יותר
-            col_csv, col_clear = st.columns(2)
-            with col_csv:
-                csv = df.to_csv(index=False)
+            # כפתורי פעולה - הורד Excel ונקה
+            col_excel, col_clear = st.columns(2)
+            with col_excel:
+                excel_data = export_to_excel(df, "search_results")
                 st.markdown('<div class="small-button">', unsafe_allow_html=True)
                 st.download_button(
-                    "💾 הורד CSV",
-                    csv.encode('utf-8-sig'),
-                    f"search_results_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    "text/csv",
+                    "📥 ייצא ל-Excel",
+                    excel_data,
+                    f"search_results_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     key="download_search_results",
                     use_container_width=True
                 )
