@@ -115,6 +115,14 @@ def show():
     # הכנת אפשרויות מחלקה
     allowed_departments = st.session_state.get('allowed_departments', [])
     local_groups = st.session_state.get('local_groups', [])
+
+    # אם local_groups ריק ו-superadmin - נטען את הקבוצות מה-API
+    if not local_groups and allowed_departments == ["ALL"]:
+        with st.spinner("טוען רשימת מחלקות..."):
+            provider_id = CONFIG['PROVIDERS']['LOCAL']
+            local_groups = api.get_local_groups(provider_id) or []
+            st.session_state.local_groups = local_groups
+
     department_options = get_department_options(allowed_departments, local_groups)
 
     is_superadmin = allowed_departments == ["ALL"]

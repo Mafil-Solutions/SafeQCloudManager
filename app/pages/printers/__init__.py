@@ -102,15 +102,12 @@ def show():
     st.markdown("---")
 
     # כפתורי ניהול
-    col1, col2, col3 = st.columns([1, 1, 8])
+    col1, col2 = st.columns([1, 9])
     with col1:
         if st.button("🔄 רענן", use_container_width=True):
             if 'printers_cache' in st.session_state:
                 del st.session_state.printers_cache
             st.rerun()
-
-    with col2:
-        debug_mode = st.checkbox("🔍 Debug", help="הצג מבנה נתונים מלא")
 
     # טעינת מדפסות
     with st.spinner("טוען רשימת מדפסות..."):
@@ -121,18 +118,6 @@ def show():
             st.session_state.printers_cache = printers
         else:
             printers = st.session_state.printers_cache
-
-    # Debug Mode - הצג מבנה נתונים
-    if debug_mode and printers:
-        st.warning("🔍 **Debug Mode - מבנה נתונים גולמי**")
-        analysis = analyze_printer_structure(printers)
-        if analysis:
-            st.json({
-                'total_printers': analysis['total_printers'],
-                'available_fields': analysis['sample_keys'],
-                'first_printer_example': analysis['sample_data']
-            })
-            st.markdown("---")
 
     if not printers:
         st.info("📭 לא נמצאו מדפסות זמינות")
@@ -146,20 +131,25 @@ def show():
 
     # סינון לפי מחלקות מורשות (דרך containerName)
     # containerName שווה לשם קבוצות - מסננים לפי allowed_departments
+    original_count_before_dept = len(printers)
     filtered_printers = filter_printers_by_departments(printers, allowed_departments)
 
     # הצגת סטטיסטיקה
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
-        st.metric("סה\"כ מדפסות זמינות", len(filtered_printers))
+        st.metric("כמות מדפסות", len(filtered_printers))
     with col2:
-        active_printers = [p for p in filtered_printers if p.get('enabled', True)]
-        st.metric("מדפסות פעילות", len(active_printers))
-    with col3:
-        if allowed_departments == ["ALL"]:
-            st.metric("הרשאות", "Superadmin - כל המדפסות")
-        else:
-            st.metric("הרשאות", f"{len(user_groups)} קבוצות")
+        # ספירת בתי ספר ייחודיים
+        unique_schools = set()
+        for printer in filtered_printers:
+            school = printer.get('containerName', '')
+            if school:
+                unique_schools.add(school)
+        st.metric("בתי ספר", len(unique_schools))
+
+    # הודעת סינון לפי הרשאות
+    if allowed_departments != ["ALL"] and len(filtered_printers) < original_count_before_dept:
+        st.info(f"ℹ️ מציג מדפסות עבור בתי הספר שלך בלבד ({len(filtered_printers)} מתוך {original_count_before_dept})")
 
     st.markdown("---")
 
@@ -214,18 +204,8 @@ def show():
 
     # אפשרות להורדת רשימה
     st.markdown("---")
-    col1, col2, col3 = st.columns([1, 1, 8])
+    col1, col2 = st.columns([1, 9])
     with col1:
-        csv = df.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(
-            label="📥 הורד CSV",
-            data=csv,
-            file_name=f"printers_list_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-
-    with col2:
         # Create Excel file in memory
         from io import BytesIO
         output = BytesIO()
