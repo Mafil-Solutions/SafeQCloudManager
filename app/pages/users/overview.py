@@ -77,6 +77,24 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
             a[data-testid="stPageLink-NavLink"] p {
                 color: white !important;
             }
+
+            /* כפתור מנועל - נראה כמו page_link אבל מעומעם */
+            .disabled-page-link {
+                background: linear-gradient(45deg, #999, #bbb) !important;
+                color: white !important;
+                padding: 0.3rem 0.4rem !important;
+                border-radius: 0.9rem !important;
+                font-weight: 600 !important;
+                border: none !important;
+                text-decoration: none !important;
+                display: inline-block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+                line-height: 1.5 !important;
+                cursor: not-allowed !important;
+                opacity: 0.6 !important;
+            }
         </style>
         """, unsafe_allow_html=True)
 
@@ -117,7 +135,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
 
                     תכונה זו מוגבלת למנהלי מערכת בלבד.
                     """)
-                    st.button("🔒 זמין רק ל-SuperAdmin", disabled=True, use_container_width=True)
+                    st.markdown('<div class="disabled-page-link">🔒 זמין רק ל-SuperAdmin</div>', unsafe_allow_html=True)
 
             st.markdown("---")
 
