@@ -88,7 +88,7 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 border: none !important;
                 text-decoration: none !important;
                 display: inline-block !important;
-                width: 100% !important;
+                width: 90% !important;
                 box-sizing: border-box !important;
                 text-align: center !important;
                 line-height: 1.5 !important;
