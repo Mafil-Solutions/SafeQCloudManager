@@ -191,11 +191,13 @@ def show():
     for printer in filtered_printers:
         row = {
             'שם': printer.get('name', 'לא ידוע'),
+            'מיקום': printer.get('description', '-'),
             'כתובת IP': printer.get('address', '-'),
             'מספר סידורי': printer.get('deviceSerial', '-'),
             'יצרן': printer.get('vendor', '-'),
-            'קונטיינר': printer.get('containerName') or '-',
-            'Embedded': 'כן' if printer.get('embedded') else 'לא',
+            'מדפסת צבע?': 'לא' if printer.get('monochrome') else 'כן',
+            'בית ספר': printer.get('containerName') or '-',
+            'בקר פנימי?': 'כן' if printer.get('embedded') else 'לא',
         }
         printers_data.append(row)
 
