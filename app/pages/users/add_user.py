@@ -138,11 +138,12 @@ def show():
     print(f"  - allowed_departments: {allowed_departments}")
     print(f"  - local_groups in session: {len(local_groups)}")
 
-    # אם local_groups ריק ו-superadmin - נטען את הקבוצות מה-API
-    if not local_groups and allowed_departments == ["ALL"]:
+    # Superadmin תמיד טוען את כל הקבוצות מה-API (לא תלוי במה שב-session)
+    # כי משתמשים דרך Entra עשויים להיות שייכים רק לחלק מהקבוצות
+    if allowed_departments == ["ALL"]:
         with st.spinner("טוען רשימת מחלקות..."):
             provider_id = CONFIG['PROVIDERS']['LOCAL']
-            print(f"[DEBUG] Loading local_groups from API (provider_id: {provider_id})...")
+            print(f"[DEBUG] Superadmin: Loading ALL local_groups from API (provider_id: {provider_id})...")
             local_groups = api.get_local_groups(provider_id) or []
             print(f"[DEBUG] Loaded {len(local_groups)} groups from API")
             st.session_state.local_groups = local_groups
