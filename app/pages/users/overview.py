@@ -129,11 +129,13 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                     st.page_link(users_list_page, label="📋➡️ עבור לרשימת משתמשים", use_container_width=True)
                 else:
                     st.markdown("""
-                    צפייה בכל המשתמשים במערכת.
+                    צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra),
+                    וייצוא לאקסל.
 
-                    **זמין רק עבור הרשאות SuperAdmin**
-
-                    תכונה זו מוגבלת למנהלי מערכת בלבד.
+                    **🔒 זמין רק עבור הרשאות SuperAdmin**
+                    - תכונה מוגבלת למנהלי מערכת
+                    - נדרשות הרשאות מנהל על
+                    - פנה למנהל המערכת לקבלת גישה
                     """)
                     st.markdown('<div class="disabled-page-link">🔒 זמין רק ל-SuperAdmin</div>', unsafe_allow_html=True)
 
