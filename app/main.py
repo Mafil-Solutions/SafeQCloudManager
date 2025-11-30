@@ -783,6 +783,11 @@ def main():
 
     # יצירת ניווט עם קבוצות היררכיות - מותאם לפי סוג משתמש
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
+    local_username = st.session_state.get('local_username', None)
+
+    # בדיקת הרשאה לגישה לרשימת משתמשים
+    # רק superadmin או admin מקומי (משתמש חירום) רואים את רשימת המשתמשים
+    can_view_user_list = (role == 'superadmin') or (role == 'admin' and local_username)
 
     if role == 'school_manager':
         # משתמשי school_manager רואים רק דוחות
@@ -790,10 +795,16 @@ def main():
             "📊 דוחות": [reports_page]
         })
     else:
-        # כל השאר רואים את כל התפריט
+        # כל השאר רואים את התפריט (עם או בלי רשימת משתמשים)
+        # בניית רשימת דפי משתמשים לפי הרשאות
+        user_pages = [users_overview_page, users_search_page, users_add_page, users_groups_page]
+        if can_view_user_list:
+            # הוספת רשימת משתמשים למיקום השני (אחרי סקירה)
+            user_pages.insert(1, users_list_page)
+
         nav = st.navigation({
             "ראשי": [home_page],
-            "👥 משתמשים": [users_overview_page, users_list_page, users_search_page, users_add_page, users_groups_page],
+            "👥 משתמשים": user_pages,
             "🖨️ מדפסות": [printers_page],
             "📄 סריקה": [scanning_page],
             "📊 דוחות": [reports_page],
