@@ -173,16 +173,28 @@ def show():
             new_email = st.text_input("אימייל", value=form_state.get('email', ''))
 
             # שדה Department דינמי
-            if has_single_dept:
+            # Superadmin תמיד מקבל dropdown (גם אם יש רק מחלקה אחת)
+            # משתמשים אחרים: dropdown רק אם יש יותר ממחלקה אחת
+            if is_superadmin and department_options:
+                # Superadmin - תמיד dropdown
+                default_dept_idx = 0
+                if form_state.get('department') in department_options:
+                    default_dept_idx = department_options.index(form_state.get('department'))
+                new_department = st.selectbox("מחלקה *", options=department_options, index=default_dept_idx,
+                                             help="בחר מחלקה מהרשימה")
+            elif has_single_dept:
+                # משתמש רגיל עם מחלקה אחת - שדה חסום
                 new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
                                               help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
             elif has_multiple_depts:
+                # משתמש רגיל עם מספר מחלקות - dropdown
                 default_dept_idx = 0
                 if form_state.get('department') in department_options:
                     default_dept_idx = department_options.index(form_state.get('department'))
                 new_department = st.selectbox("מחלקה *", options=department_options, index=default_dept_idx,
                                              help="בחר מחלקה מהרשימה המורשות")
             else:
+                # אין מחלקות זמינות
                 new_department = st.text_input("מחלקה", disabled=True,
                                               help="לא נמצאו מחלקות זמינות")
                 st.error("⚠️ לא ניתן ליצור משתמש - אין מחלקות מורשות")
