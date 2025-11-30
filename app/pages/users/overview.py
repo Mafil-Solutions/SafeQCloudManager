@@ -132,10 +132,11 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                     צפייה בכל המשתמשים במערכת, סינון לפי מקור (מקומי/Entra),
                     וייצוא לאקסל.
 
-                    **🔒 זמין רק עבור הרשאות SuperAdmin**
-                    - תכונה מוגבלת למנהלי מערכת
-                    - נדרשות הרשאות מנהל על
-                    - פנה למנהל המערכת לקבלת גישה
+                    **תכונות:**
+                    - צפייה במשתמשים מקומיים
+                    - צפייה במשתמשי Entra (superadmin)
+                    - סינון לפי מחלקות
+                    - 🔒 זמין רק עבור הרשאות SuperAdmin
                     """)
                     st.markdown('<div class="disabled-page-link">🔒 זמין רק ל-SuperAdmin</div>', unsafe_allow_html=True)
 
