@@ -254,7 +254,7 @@ def show():
         search_type_map_he_to_en = {v: k for k, v in search_type_map_en_to_he.items()}
         search_type = search_type_map_he_to_en[search_type_he]
 
-        search_term = st.text_input("הזן ערך לחיפוש",
+        search_term = st.text_input("הזן ערך לחיפוש (* = הכל)",
                                    key="search_term_input",
                                    help="השתמש ב-* כתו כלשהו (wildcard). לדוגמה: *admin*, test*")
         partial_search = st.checkbox("התאמה חלקית (מכיל)", value=True,
