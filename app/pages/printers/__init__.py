@@ -134,9 +134,8 @@ def show():
     st.markdown("---")
 
     # חיפוש ופילטור
-    search_col, filter_col = st.columns([3, 1])
-    with search_col:
-        search_query = st.text_input("🔍 חיפוש מדפסת", placeholder="שם, מיקום, IP, מספר סידורי...")
+    st.markdown("### 🔍 חיפוש")
+    search_query = st.text_input("חפש מדפסת", placeholder="שם, כתובת IP, מספר סידורי, יצרן...")
 
     # סינון לפי חיפוש
     if search_query:
@@ -144,9 +143,10 @@ def show():
         filtered_printers = [
             p for p in filtered_printers
             if search_lower in p.get('name', '').lower() or
-               search_lower in p.get('location', '').lower() or
-               search_lower in p.get('ipAddress', '').lower() or
-               search_lower in str(p.get('serialNumber', '')).lower()
+               search_lower in p.get('address', '').lower() or
+               search_lower in str(p.get('deviceSerial', '')).lower() or
+               search_lower in p.get('vendor', '').lower() or
+               search_lower in p.get('description', '').lower()
         ]
 
     # הצגת רשימת מדפסות
@@ -156,26 +156,20 @@ def show():
 
     st.subheader(f"📋 רשימת מדפסות ({len(filtered_printers)})")
 
-    # יצירת טבלה - ננסה למצוא שדות נפוצים
+    # יצירת טבלה עם השדות הנכונים מה-API
     printers_data = []
     for printer in filtered_printers:
-        # נחפש שדות אפשריים (השמות עשויים להשתנות)
         row = {
-            'שם': printer.get('name') or printer.get('portName') or printer.get('displayName') or 'לא ידוע',
-            'מיקום': printer.get('location') or printer.get('site') or '-',
-            'כתובת IP': printer.get('ipAddress') or printer.get('ip') or printer.get('address') or '-',
-            'מספר סידורי': printer.get('serialNumber') or printer.get('serial') or '-',
+            'שם': printer.get('name', 'לא ידוע'),
+            'כתובת IP': printer.get('address', '-'),
+            'מספר סידורי': printer.get('deviceSerial', '-'),
+            'יצרן': printer.get('vendor', '-'),
+            'תיאור': printer.get('description') or '-',
         }
 
-        # שדות נוספים אופציונליים
-        if printer.get('manufacturer'):
-            row['יצרן'] = printer.get('manufacturer')
-        if printer.get('model'):
-            row['דגם'] = printer.get('model')
-        if 'enabled' in printer or 'active' in printer or 'status' in printer:
-            row['סטטוס'] = '🟢 פעילה' if printer.get('enabled', printer.get('active', True)) else '🔴 לא פעילה'
-        if printer.get('description'):
-            row['תיאור'] = printer.get('description')
+        # שדות נוספים אם קיימים
+        if printer.get('containerName'):
+            row['קונטיינר'] = printer.get('containerName')
 
         printers_data.append(row)
 
@@ -236,21 +230,16 @@ def show():
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.markdown(f"**מיקום:** {printer.get('location', '-')}")
-                    st.markdown(f"**כתובת IP:** {printer.get('ipAddress', '-')}")
-                    st.markdown(f"**מספר סידורי:** {printer.get('serialNumber', '-')}")
-                    st.markdown(f"**יצרן:** {printer.get('manufacturer', '-')}")
+                    st.markdown(f"**כתובת IP:** {printer.get('address', '-')}")
+                    st.markdown(f"**מספר סידורי:** {printer.get('deviceSerial', '-')}")
+                    st.markdown(f"**יצרן:** {printer.get('vendor', '-')}")
+                    st.markdown(f"**סוג יציאה:** {printer.get('portType', '-')}")
 
                 with col2:
-                    st.markdown(f"**דגם:** {printer.get('model', '-')}")
-                    st.markdown(f"**סטטוס:** {'🟢 פעילה' if printer.get('enabled', True) else '🔴 לא פעילה'}")
-                    st.markdown(f"**תיאור:** {printer.get('description', '-')}")
-
-                    # הצגת קבוצות
-                    groups = printer.get('groups', [])
-                    if groups:
-                        group_names = [g.get('groupName', '') if isinstance(g, dict) else str(g) for g in groups]
-                        st.markdown(f"**קבוצות:** {', '.join(group_names)}")
+                    st.markdown(f"**תיאור:** {printer.get('description') or '-'}")
+                    st.markdown(f"**קונטיינר:** {printer.get('containerName') or '-'}")
+                    st.markdown(f"**פרוטוקול הדפסה:** {printer.get('printProtocol', '-')}")
+                    st.markdown(f"**Embedded:** {'כן' if printer.get('embedded') else 'לא'}")
 
                 if i < len(filtered_printers):
                     st.markdown("---")
