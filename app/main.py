@@ -722,7 +722,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    col_user, col_title = st.columns([4, 8])
+    col_user, col_title = st.columns([4, 2])
 
     with col_user:
         show_compact_user_info()
