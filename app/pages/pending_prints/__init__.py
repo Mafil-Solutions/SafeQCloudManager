@@ -11,6 +11,7 @@ import sys
 import os
 import io
 from datetime import datetime
+import pytz
 
 # הוספת תיקיית app ל-path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -113,11 +114,14 @@ def show():
                     # בניית טבלה
                     rows = []
                     for doc in pending_docs:
-                        # המרת timestamp ל-datetime
+                        # המרת timestamp ל-datetime בשעון ישראל
                         timestamp = doc.get('dateTime', 0)
                         if timestamp:
-                            dt = datetime.fromtimestamp(timestamp / 1000)
-                            date_str = dt.strftime('%d/%m/%Y %H:%M:%S')
+                            # המרה מ-UTC לשעון ישראל (מטפל אוטומטית בשעון חורף/קיץ)
+                            utc_dt = datetime.fromtimestamp(timestamp / 1000, tz=pytz.UTC)
+                            israel_tz = pytz.timezone('Asia/Jerusalem')
+                            israel_dt = utc_dt.astimezone(israel_tz)
+                            date_str = israel_dt.strftime('%d/%m/%Y %H:%M:%S')
                         else:
                             date_str = ''
 
