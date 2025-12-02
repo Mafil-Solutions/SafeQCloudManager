@@ -12,6 +12,7 @@ import json
 from typing import Dict, List, Optional, Tuple
 import io
 import time
+import pytz
 
 from shared import get_api_instance, get_logger_instance, check_authentication
 from permissions import filter_users_by_departments
@@ -38,7 +39,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
 
     st.markdown("---")
 
-    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=False):
+    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=True):
         st.markdown("##### סנן את הנתונים המוצגים בדשבורד ובדוח המפורט")
 
         filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
@@ -54,7 +55,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         with filter_row1_col2:
             source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
             selected_source = st.selectbox(
-                "מקור",
+                "סוג משתמש",
                 source_options,
                 key=f"shared_filter_source_{counter}"
             )
@@ -282,42 +283,10 @@ def show_report_settings(api):
         # בדיקת תקינות תאריכים
         if date_start > date_end:
             st.error("⚠️ תאריך ההתחלה חייב להיות לפני תאריך הסיום")
-            return None, None, None, None, None, None, None, False
+            return None, None, None, None, False
 
-        # שורה 2: סינון לפי משתמש/מדפסת
-        col_user, col_printer = st.columns(2)
-
-        with col_user:
-            filter_username = st.text_input(
-                "👤 סינון לפי משתמש (אופציונלי)",
-                placeholder="השאר ריק לכולם",
-                key="history_filter_username"
-            )
-
-        with col_printer:
-            filter_port = st.text_input(
-                "🖨️ סינון לפי מדפסת (אופציונלי)",
-                placeholder="השאר ריק לכולם",
-                key="history_filter_port"
-            )
-
-        # שורה 3: סוג עבודה/סטטוס
-        col_jobtype, col_status = st.columns(2)
-
-        with col_jobtype:
-            job_types_map = {
-                "הכל": None,
-                "הדפסה": "PRINT",
-                "העתקה": "COPY",
-                "סריקה": "SCAN",
-                "פקס": "FAX"
-            }
-            job_type_he = st.selectbox(
-                "📋 סוג עבודה",
-                list(job_types_map.keys()),
-                key="history_job_type"
-            )
-            job_type = job_types_map[job_type_he]
+        # שורה 2: סטטוס ותוצאות לדף
+        col_status, col_records = st.columns(2)
 
         with col_status:
             status_map = {
@@ -331,9 +300,6 @@ def show_report_settings(api):
             )
             status_filter_list = status_map[status_he]
 
-        # שורה 4: מספר תוצאות + כפתור חיפוש
-        col_records, col_search = st.columns([1, 1])
-
         with col_records:
             max_records = st.number_input(
                 "תוצאות לדף",
@@ -344,16 +310,18 @@ def show_report_settings(api):
                 key="history_max_records"
             )
 
+        # שורה 3: כפתור חיפוש
+        col_search, col_spacer = st.columns([1, 3])
+
         with col_search:
             st.write("")  # spacing
             st.write("")  # spacing
             search_clicked = st.button("🔍 הצג דוח", use_container_width=True, type="primary")
 
-    return date_start, date_end, filter_username, filter_port, job_type, status_filter_list, max_records, search_clicked
+    return date_start, date_end, status_filter_list, max_records, search_clicked
 
 
-def fetch_report_data(api, logger, username, date_start, date_end, filter_username,
-                     filter_port, job_type, status_filter_list, max_records):
+def fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records):
     """
     קריאת נתונים מה-API ושמירה ב-session_state
     """
@@ -371,9 +339,6 @@ def fetch_report_data(api, logger, username, date_start, date_end, filter_userna
             result = api.get_documents_history(
                 datestart=date_start_iso,
                 dateend=date_end_iso,
-                username=filter_username if filter_username else None,
-                portname=filter_port if filter_port else None,
-                jobtype=job_type,
                 status=None,  # לא שולחים status ל-API
                 maxrecords=max_records
             )
@@ -383,7 +348,7 @@ def fetch_report_data(api, logger, username, date_start, date_end, filter_userna
                 logger.log_action(
                     username=username,
                     action="VIEW_REPORT",
-                    details=f"Filters: user={filter_username}, port={filter_port}, jobtype={job_type}"
+                    details=f"Date range: {date_start} to {date_end}"
                 )
             else:
                 st.error("❌ לא הצלחנו לקבל נתונים מהשרת")
@@ -412,9 +377,6 @@ def fetch_report_data(api, logger, username, date_start, date_end, filter_userna
             result = api.get_documents_history(
                 datestart=week_start_iso,
                 dateend=week_end_iso,
-                username=filter_username if filter_username else None,
-                portname=filter_port if filter_port else None,
-                jobtype=job_type,
                 status=None,  # לא שולחים status ל-API
                 maxrecords=max_records
             )
@@ -894,7 +856,7 @@ def show():
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("📊 דוחות ניהול")
+    st.title("📊 דוחות שימוש")
 
     # בדיקת הרשאות
     role = st.session_state.get('role', 'viewer')
@@ -913,14 +875,13 @@ def show():
     if settings_result[0] is None:  # אם יש שגיאה בתאריכים
         return
 
-    date_start, date_end, filter_username, filter_port, job_type, status_filter_list, max_records, search_clicked = settings_result
+    date_start, date_end, status_filter_list, max_records, search_clicked = settings_result
 
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
             # קריאת נתונים מ-API
-            fetch_report_data(api, logger, username, date_start, date_end, filter_username,
-                            filter_port, job_type, status_filter_list, max_records)
+            fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records)
 
         # טעינת הנתונים והכנת DataFrame מסונן משותף
         if 'history_report_data' in st.session_state:
@@ -1611,11 +1572,14 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
         user_cache = {}
 
     for doc in documents:
-        # המרת timestamp ל-datetime
+        # המרת timestamp ל-datetime בשעון ישראל
         timestamp = doc.get('dateTime', 0)
         if timestamp:
-            dt = datetime.fromtimestamp(timestamp / 1000)  # מילישניות לשניות
-            date_str = dt.strftime('%d/%m/%Y %H:%M:%S')  # פורמט dd/mm/yyyy
+            # המרה מ-UTC לשעון ישראל (מטפל אוטומטית בשעון חורף/קיץ)
+            utc_dt = datetime.fromtimestamp(timestamp / 1000, tz=pytz.UTC)
+            israel_tz = pytz.timezone('Asia/Jerusalem')
+            israel_dt = utc_dt.astimezone(israel_tz)
+            date_str = israel_dt.strftime('%d/%m/%Y %H:%M:%S')  # פורמט dd/mm/yyyy
         else:
             date_str = ''
 

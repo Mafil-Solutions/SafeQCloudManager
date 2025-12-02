@@ -798,7 +798,7 @@ def main():
     if role == 'school_manager':
         # משתמשי school_manager רואים רק דוחות
         nav = st.navigation({
-            "📊 דוחות": [reports_page]
+            "📊 דוחות היסטוריים": [reports_page]
         })
     else:
         # כל השאר רואים את התפריט (עם או בלי רשימת משתמשים)
@@ -813,7 +813,7 @@ def main():
             "👥 משתמשים": user_pages,
             "🖨️ מדפסות ותורי הדפסה": [printers_page, print_queues_page, pending_prints_page],
             # "📄 סריקה": [scanning_page],  # מוסתר זמנית - לשימוש עתידי
-            "📊 דוחות": [reports_page],
+            "📊 דוחות היסטוריים": [reports_page],
             "📋פעילות": [my_activity_page]
         })
 
