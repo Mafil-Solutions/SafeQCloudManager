@@ -215,7 +215,7 @@ def show():
                             'תאריך': date_str,
                             'שם מלא': full_name,
                             'משתמש': username,
-                            'מקור': source,
+                            'סוג משתמש': source,
                             'מחלקה': department_str,
                             'שם מסמך': doc.get('documentName', ''),
                             'סוג': job_type_he,

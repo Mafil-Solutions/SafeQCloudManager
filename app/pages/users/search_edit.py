@@ -264,7 +264,7 @@ def show():
             provider_options = ["מקומי (12348)"]
             default_index = 0
 
-        search_provider = st.selectbox("מקור *", provider_options, index=default_index,
+        search_provider = st.selectbox("סוג משתמש *", provider_options, index=default_index,
                                      help="רק superadmin יכול לבחור Entra" if role != 'superadmin' else None)
 
     with col_spacer:

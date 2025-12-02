@@ -53,7 +53,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             )
 
         with filter_row1_col2:
-            source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
+            source_options = ['הכל'] + sorted(df['סוג משתמש'].unique().tolist())
             selected_source = st.selectbox(
                 "סוג משתמש",
                 source_options,
@@ -109,7 +109,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         filtered_df = filtered_df[mask]
 
     if selected_source != 'הכל':
-        filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+        filtered_df = filtered_df[filtered_df['סוג משתמש'] == selected_source]
 
     if selected_jobtype != 'הכל':
         filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
@@ -1232,8 +1232,8 @@ def show_history_report(api, logger, role, username):
                     search_text = st.text_input("חיפוש חופשי", placeholder="שם, מסמך, מדפסת...", key="history_search")
 
                 with filter_row1_col2:
-                    source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
-                    selected_source = st.selectbox("מקור", source_options, key="filter_source")
+                    source_options = ['הכל'] + sorted(df['סוג משתמש'].unique().tolist())
+                    selected_source = st.selectbox("סוג משתמש", source_options, key="filter_source")
 
                 with filter_row1_col3:
                     jobtype_options = ['הכל'] + sorted(df['סוג'].unique().tolist())
@@ -1258,7 +1258,7 @@ def show_history_report(api, logger, role, username):
                     filtered_df = filtered_df[mask]
 
                 if selected_source != 'הכל':
-                    filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+                    filtered_df = filtered_df[filtered_df['סוג משתמש'] == selected_source]
 
                 if selected_jobtype != 'הכל':
                     filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
@@ -1638,7 +1638,7 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
             'תאריך': date_str,
             'שם מלא': display_name,
             'משתמש': username,
-            'מקור': source,
+            'סוג משתמש': source,
             'מחלקה': department_str,
         #'שם מסמך': doc.get('documentName', ''),
             'סוג': job_type_he,  # תרגום לעברית
