@@ -738,6 +738,8 @@ def main():
     from pages.users.add_user import show as users_add_show
     from pages.groups.groups import show as users_groups_show
     from pages.printers import show as printers_show
+    from pages.print_queues import show as print_queues_show
+    from pages.pending_prints import show as pending_prints_show
     from pages.scanning import show as scanning_show
     from pages.reports import show as reports_show
 
@@ -752,8 +754,12 @@ def main():
     from pages.users.overview import create_overview_page
     users_overview_page = create_overview_page(users_list_page, users_search_page, users_add_page, users_groups_page)
 
+    # דפי מדפסות ותורי הדפסה
+    printers_page = st.Page(printers_show, title="מדפסות", icon="📋", url_path="printers")
+    print_queues_page = st.Page(print_queues_show, title="תורי הדפסה", icon="🗂️", url_path="print_queues")
+    pending_prints_page = st.Page(pending_prints_show, title="הדפסות ממתינות", icon="⏳", url_path="pending_prints")
+
     # דפים עתידיים
-    printers_page = st.Page(printers_show, title="מדפסות", icon="🖨️", url_path="printers")
     scanning_page = st.Page(scanning_show, title="תהליכי סריקה", icon="📄", url_path="scanning")
     reports_page = st.Page(reports_show, title="דוחות", icon="📊", url_path="reports")
 
@@ -805,7 +811,7 @@ def main():
         nav = st.navigation({
             "ראשי": [home_page],
             "👥 משתמשים": user_pages,
-            "🖨️ מדפסות": [printers_page],
+            "🖨️ מדפסות ותורי הדפסה": [printers_page, print_queues_page, pending_prints_page],
             # "📄 סריקה": [scanning_page],  # מוסתר זמנית - לשימוש עתידי
             "📊 דוחות": [reports_page],
             "📋פעילות": [my_activity_page]
