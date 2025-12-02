@@ -726,11 +726,10 @@ def main():
 
     with col_user:
         show_compact_user_info()
-         
+     st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
+
     with col_title:
         st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
-
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()
