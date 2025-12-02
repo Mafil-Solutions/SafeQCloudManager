@@ -722,17 +722,18 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    col_user, col_title = st.columns([4, 6])
+    col_user, col_title = st.columns([6, 4])
 
     with col_user:
         show_compact_user_info()
-     st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
-
+        
+    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
+    
+    if not check_config():
+        st.stop()  
+        
     with col_title:
         st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
-
-    if not check_config():
-        st.stop()
 
     # ייבוא דפים (רק אחרי login!)
     from pages.my_activity import show as my_activity_show
