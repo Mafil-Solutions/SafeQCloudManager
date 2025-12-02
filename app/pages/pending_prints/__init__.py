@@ -17,6 +17,62 @@ import pytz
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import get_api_instance, check_authentication
+from config import config
+
+CONFIG = config.get()
+
+def build_user_lookup_cache(api, usernames):
+    """
+    בונה cache של username -> fullName
+
+    Args:
+        api: instance של SafeQAPI
+        usernames: רשימת usernames לחיפוש
+
+    Returns:
+        dict: {username: fullName}
+    """
+    user_cache = {}
+
+    if not usernames:
+        return user_cache
+
+    # הסרת כפילויות
+    unique_usernames = list(set(usernames))
+
+    try:
+        # נסה לטעון משתמשים מקומיים ו-Entra (בשקט, בלי הודעות)
+        all_users = []
+
+        # Local users
+        try:
+            local_users = api.get_users(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+            if local_users:
+                all_users.extend(local_users)
+        except Exception:
+            pass
+
+        # Entra users
+        try:
+            entra_users = api.get_users(CONFIG['PROVIDERS']['ENTRA'], max_records=500)
+            if entra_users:
+                all_users.extend(entra_users)
+        except Exception:
+            pass
+
+        # בניית cache
+        for user in all_users:
+            username = user.get('userName', '') or user.get('username', '')
+            full_name = user.get('fullName', '') or user.get('displayName', '') or user.get('name', '')
+
+            if username and full_name:
+                user_cache[username] = full_name
+
+    except Exception as e:
+        # שגיאה כללית - לא מציג למשתמש
+        pass
+
+    return user_cache
 
 def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
     """ייצוא DataFrame ל-Excel עם עיצוב"""
@@ -94,6 +150,14 @@ def show():
 
                 # הצגת מטריקות
                 if pending_docs:
+                    # בניית cache של שמות משתמשים
+                    if 'pending_prints_user_cache' not in st.session_state:
+                        with st.spinner("טוען מידע משתמשים..."):
+                            usernames = [doc.get('userName', '') for doc in pending_docs if doc.get('userName')]
+                            st.session_state.pending_prints_user_cache = build_user_lookup_cache(api, usernames)
+
+                    user_cache = st.session_state.pending_prints_user_cache
+
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
@@ -134,6 +198,9 @@ def show():
                         username = doc.get('userName', '')
                         source = 'Entra' if '@' in username else 'מקומי'
 
+                        # חיפוש שם מלא
+                        full_name = user_cache.get(username, username)
+
                         # תרגום סוג עבודה
                         job_type_en = doc.get('jobType', '')
                         job_type_map = {
@@ -146,6 +213,7 @@ def show():
 
                         row = {
                             'תאריך': date_str,
+                            'שם מלא': full_name,
                             'משתמש': username,
                             'מקור': source,
                             'מחלקה': department_str,

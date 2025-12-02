@@ -96,12 +96,18 @@ def show():
                 if input_ports:
                     rows = []
                     for port in input_ports:
+                        # תרגום סוג תור
+                        port_type = port.get('portType', '-')
+                        port_type_map = {
+                            0: 'הדפסה עם קוד',
+                            1: 'הדפסה ישירה'
+                        }
+                        port_type_display = port_type_map.get(port_type, str(port_type))
+
                         row = {
-                            'מזהה': port.get('id', '-'),
                             'שם התור': port.get('name', '-'),
-                            'סוג': port.get('portType', '-'),
+                            'תור הדפסה': port_type_display,
                             'מדפסת מקושרת': port.get('outputPort', '-'),
-                            'מיקום': port.get('locationId', '-'),
                             'בית ספר': port.get('containerName', '-'),
                         }
                         rows.append(row)
