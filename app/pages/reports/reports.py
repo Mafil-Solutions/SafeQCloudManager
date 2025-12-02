@@ -1612,7 +1612,18 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
     if user_cache is None:
         user_cache = {}
 
+    # DEBUG: הדפס את כל השדות של המסמך הראשון עם סטטוס READY
+    debug_done = False
+
     for doc in documents:
+        # DEBUG MODE - מדפיס פעם אחת את כל השדות של מסמך READY
+        if not debug_done and doc.get('status') == 0:
+            st.warning("🔍 DEBUG MODE - שדות של מסמך READY:")
+            debug_fields = []
+            for key, value in doc.items():
+                debug_fields.append(f"- **{key}**: {value}")
+            st.markdown("\n".join(debug_fields))
+            debug_done = True
         # המרת timestamp ל-datetime
         timestamp = doc.get('dateTime', 0)
         if timestamp:
