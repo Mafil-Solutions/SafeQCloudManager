@@ -835,7 +835,7 @@ def show_login_page():
         if auth_url:
             # כפתור התחברות Entra ID - link HTML פשוט
             st.markdown(f"""
-                <a href="{auth_url}" target="_top" style="
+                <a href="{auth_url}" target="_top" class="entra-login-btn" style="
                     display: inline-block;
                     width: 100%;
                     padding: 0.75rem 1.5rem;
@@ -854,11 +854,11 @@ def show_login_page():
                     🔒 התחבר עם Entra ID
                 </a>
                 <style>
-                a[href] > p {{
-                    color: white !important;
+                .entra-login-btn {{
                     background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
+                    color: white !important;
                 }}
-                a[href]:hover {{
+                .entra-login-btn:hover {{
                     background: linear-gradient(45deg, #FF6B6B, #D71F27) !important;
                     box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
                     transform: translateY(-1px) !important;
