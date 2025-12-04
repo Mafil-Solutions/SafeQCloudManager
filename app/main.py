@@ -742,22 +742,22 @@ def main():
     else:
         amit_logo_html = '<div style="width: 10rem;"></div>'
 
-    # CSS + HTML Header
-    st.markdown(f"""
+    # CSS Header Styles
+    st.markdown("""
     <style>
         /* כפתור סיידבר נשאר גלוי אבל קטן */
-        header[data-testid="stHeader"] {{
+        header[data-testid="stHeader"] {
             height: 0px !important;
             min-height: 0px !important;
             padding: 0 !important;
             margin: 0 !important;
             background: transparent !important;
-        }}
+        }
 
         /* כפתור toggle sidebar קטן */
-        header[data-testid="stHeader"] button {{
+        header[data-testid="stHeader"] button {
             position: fixed !important;
-            top: 1rem !important;
+            top: 5rem !important;
             right: 1rem !important;
             z-index: 10001 !important;
             width: 30px !important;
@@ -766,22 +766,22 @@ def main():
             background: white !important;
             border-radius: 5px !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        }}
+        }
 
         /* הסתרת אייקונים מיותרים ב-header */
         header[data-testid="stHeader"] span[data-testid="stMainMenu"],
-        header[data-testid="stHeader"] div[data-testid="stToolbarActionButtonIcon"] {{
+        header[data-testid="stHeader"] div[data-testid="stToolbarActionButtonIcon"] {
             display: none !important;
-        }}
+        }
 
         /* הסתרת לוגו מהסיידבר */
         [data-testid="stSidebarLogo"],
-        [data-testid="stHeaderLogo"] {{
+        [data-testid="stHeaderLogo"] {
             display: none !important;
-        }}
+        }
 
         /* Top Nav Sticky - צר ונקי */
-        .custom-header {{
+        .custom-header {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -797,99 +797,79 @@ def main():
             padding: 0 3rem 0 1.5rem !important;
             direction: rtl !important;
             transition: all 0.3s ease !important;
-        }}
+        }
 
         /* סיידבר מתחת להדר */
-        [data-testid="stSidebar"] {{
-            top: 4.5rem !important;
-            height: calc(100vh - 4.5rem) !important;
+        [data-testid="stSidebar"] {
+            top: 0 !important;
+            padding-top: 4.5rem !important;
+            height: 100vh !important;
             z-index: 998 !important;
-        }}
+        }
 
         /* תוכן עם offset */
-        [data-testid="stAppViewContainer"] {{
+        [data-testid="stAppViewContainer"] {
             margin-top: 4.5rem !important;
-        }}
+        }
 
         /* לוגואים */
-        .custom-header img {{
+        .custom-header img {
             height: 10rem !important;
             object-fit: contain !important;
-        }}
+        }
 
         /* כותרת */
-        .custom-header-title {{
+        .custom-header-title {
             font-size: 1.1rem !important;
             font-weight: 700 !important;
             white-space: nowrap !important;
             flex-grow: 1 !important;
             text-align: center !important;
-        }}
+        }
 
-        .title-mafil {{
+        .title-mafil {
             color: #D71F27 !important;
-        }}
+        }
 
-        .title-services {{
+        .title-services {
             color: #009BDB !important;
-        }}
-
-        /* אזור כפתורים */
-        .custom-header-actions {{
-            display: flex !important;
-            gap: 0.5rem !important;
-            align-items: center !important;
-        }}
-
-        /* כפתור user info */
-        .user-info-display {{
-            background: #f8f9fa !important;
-            border: 1px solid #ddd !important;
-            border-radius: 0.25rem !important;
-            padding: 0.2rem 0.5rem !important;
-            font-size: 0.75rem !important;
-            white-space: nowrap !important;
-            color: #333 !important;
-        }}
+        }
 
         /* Offset לתוכן - כדי שלא יעלה על ה-header */
-        .main .block-container {{
+        .main .block-container {
             padding-top: 5.5rem !important;
-        }}
+        }
 
         /* תיקון RTL לתוכן */
-        .stApp {{
+        .stApp {
             direction: rtl !important;
             text-align: right !important;
-        }}
+        }
 
         /* תיקון RTL לכל האלמנטים */
         .main, .main .block-container, .element-container, .stMarkdown,
         [data-testid="stVerticalBlock"], [data-testid="stHorizontalBlock"],
         .stDataFrame, .stTable, .stTextInput, .stTextArea, .stSelectbox,
-        .stMultiselect, p, h1, h2, h3, h4, h5, h6, div {{
+        .stMultiselect, p, h1, h2, h3, h4, h5, h6, div {
             direction: rtl !important;
             text-align: right !important;
-        }}
+        }
     </style>
+    """, unsafe_allow_html=True)
 
+    # HTML Header - נפרד מה-CSS
+    header_html = f"""
     <div class="custom-header">
-        <!-- לוגו ימין (Mafil) -->
         <img src="data:image/png;base64,{mafil_logo_b64}" alt="Mafil Logo">
-
-        <!-- כותרת במרכז -->
         <div class="custom-header-title">
             <span class="title-mafil">Mafil</span>
             <span class="title-services">Cloud Manager</span>
         </div>
-
-        <!-- ריווח למרכז (לכפתורים שימוקמו ב-fixed) -->
         <div style="width: 250px;"></div>
-
-        <!-- לוגו שמאל (Amit) -->
         {amit_logo_html}
     </div>
-    """, unsafe_allow_html=True)
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
 
     # CSS למיקום הכפתורים בצד שמאל של ההדר
     st.markdown("""
