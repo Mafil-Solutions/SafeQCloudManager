@@ -737,7 +737,10 @@ def main():
     role_text = role_names.get(role, "משתמש")
 
     # הכנת HTML לוגו Amit
-    amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo">' if amit_logo_b64 else '<div style="width: 10rem;"></div>'
+    if amit_logo_b64:
+        amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo">'
+    else:
+        amit_logo_html = '<div style="width: 10rem;"></div>'
 
     # CSS + HTML Header
     st.markdown(f"""
@@ -869,20 +872,6 @@ def main():
             text-align: right !important;
         }}
     </style>
-
-    <script>
-        // פתיחת סיידבר אוטומטית
-        setTimeout(function() {{
-            const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-            const sidebarCollapsed = sidebar && sidebar.getAttribute('aria-expanded') === 'false';
-            if (sidebarCollapsed) {{
-                const toggleButton = window.parent.document.querySelector('[data-testid="collapsedControl"]');
-                if (toggleButton) {{
-                    toggleButton.click();
-                }}
-            }}
-        }}, 100);
-    </script>
 
     <div class="custom-header">
         <!-- לוגו ימין (Mafil) -->
