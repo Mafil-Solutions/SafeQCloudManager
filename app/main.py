@@ -697,36 +697,115 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # Header קומפקטי - עיצוב כותרת בלבד
+    # ===== Sticky Header עם 2 לוגואים =====
+
+    # CSS ל-Sticky Header - צר וקומפקטי
     st.markdown("""
     <style>
+        /* הפיכת ה-header ל-sticky - תופס רק את ה-container עם ה-class הייחודי */
+        .sticky-header-container div[data-testid="stVerticalBlockBorderWrapper"],
+        .sticky-header-container div[data-testid="stLayoutWrapper"] {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 999 !important;
+            background-color: #F5F6FF !important;
+            padding: 0.5rem 1rem 0.8rem 1rem !important;
+            border-bottom: 2px solid #e5e7eb !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+
+        /* כותרת - צר יותר */
         .title-text {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin: 0;
-            padding: 0;
-            line-height: 2.2rem;
+            font-size: 1.8rem !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.8rem !important;
         }
 
         .title-mafil {
-            color: #D71F27;
+            color: #D71F27 !important;
         }
 
         .title-services {
-            color: #009BDB;
+            color: #009BDB !important;
+        }
+
+        /* לוגואים */
+        .header-logo {
+            height: 40px !important;
+            max-width: 120px !important;
+            object-fit: contain !important;
+        }
+
+        /* צמצום גובה תמונות בהדר */
+        .sticky-header-container img {
+            max-height: 40px !important;
+            object-fit: contain !important;
+        }
+
+        /* הסתרת לוגו מהסיידבר - כי יש לנו בהדר */
+        [data-testid="stSidebarLogo"],
+        [data-testid="stHeaderLogo"] {
+            display: none !important;
+        }
+
+        /* צמצום רווחים בהדר */
+        .sticky-header-container [data-testid="column"] {
+            padding: 0 !important;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    col_title, col_user = st.columns([4, 6])
+    # סימון תחילת header עם class ייחודי
+    st.markdown('<div class="sticky-header-container">', unsafe_allow_html=True)
 
-    with col_title:
-        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
+    # יצירת container sticky
+    header_container = st.container()
 
-    with col_user:
+    with header_container:
+        # שורה ראשונה: לוגו ימין + כותרת + לוגו שמאל
+        col_logo_right, col_title, col_logo_left = st.columns([1, 3, 1])
+
+        with col_logo_right:
+            # לוגו Mafil מימין
+            try:
+                import sys
+                import os
+                def resource_path(relative_path: str) -> str:
+                    if hasattr(sys, "_MEIPASS"):
+                        return os.path.join(sys._MEIPASS, relative_path)
+                    return os.path.join(os.path.abspath("."), relative_path)
+
+                mafil_logo_path = resource_path("assets/MafilIT_Logo.png")
+                st.image(mafil_logo_path, use_container_width=False, width=120)
+            except:
+                pass
+
+        with col_title:
+            # כותרת במרכז
+            st.markdown('<div class="title-text" style="text-align: center;"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
+
+        with col_logo_left:
+            # לוגו Amit משמאל (או placeholder)
+            try:
+                amit_logo_path = resource_path("assets/Amit_Logo.png")
+                if os.path.exists(amit_logo_path):
+                    st.image(amit_logo_path, use_container_width=False, width=120)
+                else:
+                    # Placeholder אם הקובץ לא קיים
+                    st.markdown('<div style="height: 40px; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 0.8rem;">לוגו לקוח</div>', unsafe_allow_html=True)
+            except:
+                st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
+
+        # שורה שנייה: user info + כפתורים
         show_compact_user_info()
 
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
+        # קו מפריד דק
+        st.markdown('<div style="margin: 0.3rem 0; border-bottom: 0.5px solid #e5e7eb;"></div>', unsafe_allow_html=True)
+
+    # סגירת ה-wrapper של ה-header
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if not check_config():
         st.stop()
