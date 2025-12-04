@@ -794,7 +794,7 @@ def main():
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 0 3rem 0 1.5rem !important;
+            padding: 0rem 1rem !important;
             direction: rtl !important;
             transition: all 0.3s ease !important;
         }
@@ -924,20 +924,20 @@ def main():
     st.markdown('<div id="header-controls-marker"></div>', unsafe_allow_html=True)
 
     # כפתורים בצד שמאל של ההדר
-    col1, col2 = st.columns([1, 1])
-    with col1:
+    col2, col1 = st.columns([1, 1])
+    with col2:
         if st.button("🚪 יציאה", key="logout_btn_header", help="יציאה מהמערכת"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
 
-    with col2:
+    with col1:
         # כותרת expander עם שם משתמש ורמת הרשאות
         expander_title = f"👤 {username} • {role_text}"
         with st.expander(expander_title):
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
-                    st.success("✅ גישה לכל בתי הספר")
+                    st.success("✅🏫 גישה לכל בתי הספר")
                 else:
                     dept_count = len(st.session_state.allowed_departments)
                     st.info(f"🏫 בתי ספר מורשים ({dept_count}):")
