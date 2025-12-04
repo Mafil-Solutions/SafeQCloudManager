@@ -739,8 +739,32 @@ def main():
     # CSS + HTML Header
     st.markdown(f"""
     <style>
-        /* הסתרת header Streamlit המקורי */
+        /* כפתור סיידבר נשאר גלוי אבל קטן */
         header[data-testid="stHeader"] {{
+            height: 0px !important;
+            min-height: 0px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+        }}
+
+        /* כפתור toggle sidebar קטן */
+        header[data-testid="stHeader"] button {{
+            position: fixed !important;
+            top: 10px !important;
+            right: 10px !important;
+            z-index: 10001 !important;
+            width: 30px !important;
+            height: 30px !important;
+            padding: 0 !important;
+            background: white !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        }}
+
+        /* הסתרת אייקונים מיותרים ב-header */
+        header[data-testid="stHeader"] span[data-testid="stMainMenu"],
+        header[data-testid="stHeader"] div[data-testid="stToolbarActionButtonIcon"] {{
             display: none !important;
         }}
 
@@ -760,23 +784,23 @@ def main():
             z-index: 9999 !important;
             background: #ffffff !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            height: 55px !important;
+            height: 48px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 0 2rem !important;
+            padding: 0 3rem 0 1.5rem !important;
             direction: rtl !important;
         }}
 
         /* לוגואים */
         .custom-header img {{
-            height: 32px !important;
+            height: 28px !important;
             object-fit: contain !important;
         }}
 
         /* כותרת */
         .custom-header-title {{
-            font-size: 1.3rem !important;
+            font-size: 1.1rem !important;
             font-weight: 700 !important;
             white-space: nowrap !important;
             flex-grow: 1 !important;
@@ -794,7 +818,7 @@ def main():
         /* אזור כפתורים */
         .custom-header-actions {{
             display: flex !important;
-            gap: 0.6rem !important;
+            gap: 0.5rem !important;
             align-items: center !important;
         }}
 
@@ -802,47 +826,22 @@ def main():
         .user-info-display {{
             background: #f8f9fa !important;
             border: 1px solid #ddd !important;
-            border-radius: 0.3rem !important;
-            padding: 0.25rem 0.6rem !important;
-            font-size: 0.8rem !important;
+            border-radius: 0.25rem !important;
+            padding: 0.2rem 0.5rem !important;
+            font-size: 0.75rem !important;
             white-space: nowrap !important;
             color: #333 !important;
         }}
 
         /* Offset לתוכן - כדי שלא יעלה על ה-header */
         .main .block-container {{
-            padding-top: 70px !important;
+            padding-top: 60px !important;
         }}
 
         /* תיקון RTL לתוכן */
         .stApp {{
             direction: rtl !important;
             text-align: right !important;
-        }}
-
-        /* הסתרת הכפתורים שמתחת ל-header (נשתמש בהם רק לפונקציונליות) */
-        .header-controls-hidden {{
-            position: fixed !important;
-            top: 12px !important;
-            left: 2rem !important;
-            z-index: 10000 !important;
-            display: flex !important;
-            gap: 0.5rem !important;
-        }}
-
-        .header-controls-hidden .stButton > button {{
-            padding: 0.25rem 0.6rem !important;
-            font-size: 0.8rem !important;
-            height: 32px !important;
-            min-height: 32px !important;
-            background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 0.3rem !important;
-        }}
-
-        .header-controls-hidden .stButton > button:hover {{
-            background: linear-gradient(45deg, #FF6B6B, #D71F27) !important;
         }}
     </style>
 
@@ -862,17 +861,17 @@ def main():
         </div>
 
         <!-- לוגו שמאל (Amit) -->
-        {"<img src='data:image/png;base64," + amit_logo_b64 + "' alt='Amit Logo'>" if amit_logo_b64 else "<div style='width: 32px;'></div>"}
+        {"<img src='data:image/png;base64," + amit_logo_b64 + "' alt='Amit Logo'>" if amit_logo_b64 else "<div style='width: 28px;'></div>"}
     </div>
     """, unsafe_allow_html=True)
 
-    # כפתור יציאה מוסתר בתוך ה-header (CSS ממקם אותו)
-    st.markdown('<div class="header-controls-hidden">', unsafe_allow_html=True)
-    if st.button("🚪 יציאה", key="logout_btn_header"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # כפתור יציאה מתחת ל-header
+    col1, col2 = st.columns([10, 1])
+    with col2:
+        if st.button("🚪", key="logout_btn_header", help="יציאה מהמערכת"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
 
     if not check_config():
         st.stop()
