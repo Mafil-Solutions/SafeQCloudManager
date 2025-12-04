@@ -483,13 +483,7 @@ def apply_modern_styling_compact(rtl=False):
             height: auto !important;
             max-height: 10rem !important;
         }}
-         /* Sticky Header */
-        div[data-testid="stLayoutWrapper"]:first-of-type {{
-            background-color: white !important;
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 99999;
-        }}
+        
     </style>
     """, unsafe_allow_html=True)
 
