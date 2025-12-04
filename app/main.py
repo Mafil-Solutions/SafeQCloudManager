@@ -790,6 +790,12 @@ def main():
             justify-content: space-between !important;
             padding: 0 3rem 0 1.5rem !important;
             direction: rtl !important;
+            transition: margin-right 0.3s ease !important;
+        }}
+
+        /* התאמת header כשהסיידבר פתוח */
+        [data-testid="stSidebar"][aria-expanded="true"] ~ [data-testid="stAppViewContainer"] .custom-header {{
+            margin-right: 0 !important;
         }}
 
         /* לוגואים */
@@ -868,7 +874,7 @@ def main():
         <div style="width: 250px;"></div>
 
         <!-- לוגו שמאל (Amit) -->
-        {f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo">' if amit_logo_b64 else '<div style="width: 10rem;"></div>'}
+        {'<img src="data:image/png;base64,' + amit_logo_b64 + '" alt="Amit Logo">' if amit_logo_b64 else '<div style="width: 10rem;"></div>'}
     </div>
     """, unsafe_allow_html=True)
 
@@ -883,9 +889,8 @@ def main():
         /* מיקום אזור הכפתורים בצד שמאל של ההדר */
         #header-controls-marker + div[data-testid="stHorizontalBlock"] {
             position: fixed !important;
-            top: 50% !important;
+            top: 0.75rem !important;
             left: 20px !important;
-            transform: translateY(-50%) !important;
             z-index: 10000 !important;
             display: flex !important;
             align-items: center !important;
