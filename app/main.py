@@ -784,7 +784,7 @@ def main():
             z-index: 9999 !important;
             background: #ffffff !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            height: 11rem !important;
+            height: 4.5rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
@@ -835,11 +835,20 @@ def main():
 
         /* Offset לתוכן - כדי שלא יעלה על ה-header */
         .main .block-container {{
-            padding-top: 12rem !important;
+            padding-top: 5.5rem !important;
         }}
 
         /* תיקון RTL לתוכן */
         .stApp {{
+            direction: rtl !important;
+            text-align: right !important;
+        }}
+
+        /* תיקון RTL לכל האלמנטים */
+        .main, .main .block-container, .element-container, .stMarkdown,
+        [data-testid="stVerticalBlock"], [data-testid="stHorizontalBlock"],
+        .stDataFrame, .stTable, .stTextInput, .stTextArea, .stSelectbox,
+        .stMultiselect, p, h1, h2, h3, h4, h5, h6, div {{
             direction: rtl !important;
             text-align: right !important;
         }}
@@ -855,13 +864,11 @@ def main():
             <span class="title-services">Cloud Manager</span>
         </div>
 
-        <!-- מידע משתמש -->
-        <div class="custom-header-actions">
-            <span class="user-info-display">👤 {username} • {role_text}</span>
-        </div>
+        <!-- ריווח למרכז (לכפתורים שימוקמו ב-fixed) -->
+        <div style="width: 250px;"></div>
 
-        <!-- ריווח בצד שמאל -->
-        <div style="width: 200px;"></div>
+        <!-- לוגו שמאל (Amit) -->
+        {f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo">' if amit_logo_b64 else '<div style="width: 10rem;"></div>'}
     </div>
     """, unsafe_allow_html=True)
 
@@ -927,19 +934,19 @@ def main():
             st.rerun()
 
     with col2:
-        with st.expander("📋 הרשאות"):
+        # כותרת expander עם שם משתמש ורמת הרשאות
+        expander_title = f"👤 {username} • {role_text}"
+        with st.expander(expander_title):
             if st.session_state.get('allowed_departments'):
                 if st.session_state.allowed_departments == ["ALL"]:
-                    st.info("✅ גישה לכל המחלקות")
+                    st.success("✅ גישה לכל בתי הספר")
                 else:
                     dept_count = len(st.session_state.allowed_departments)
-                    st.info(f"📁 גישה ל-{dept_count} מחלקות:")
+                    st.info(f"🏫 בתי ספר מורשים ({dept_count}):")
                     for dept in st.session_state.allowed_departments[:10]:
-                        st.write(f"• {dept}")
+                        st.write(f"🏫 {dept}")
                     if dept_count > 10:
-                        st.write(f"ועוד {dept_count - 10} מחלקות...")
-            else:
-                st.warning("אין הרשאות מחלקות")
+                        st.write(f"ועוד {dept_count - 10} בתי ספר...")
 
     if not check_config():
         st.stop()
