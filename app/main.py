@@ -705,114 +705,173 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # ===== Sticky Header עם 2 לוגואים =====
+    # ===== Sticky Header אמיתי עם HTML טהור =====
 
-    # CSS ל-Sticky Header - צר וקומפקטי
-    st.markdown("""
+    # פונקציה להמרת תמונה ל-base64
+    import base64
+    def img_to_base64(path):
+        try:
+            with open(path, "rb") as f:
+                return base64.b64encode(f.read()).decode()
+        except:
+            return ""
+
+    # טעינת לוגואים
+    import sys
+    import os
+    def resource_path(relative_path: str) -> str:
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(os.path.abspath("."), relative_path)
+
+    mafil_logo_path = resource_path("assets/MafilIT_Logo.png")
+    amit_logo_path = resource_path("assets/Amit_Logo.png")
+
+    mafil_logo_b64 = img_to_base64(mafil_logo_path)
+    amit_logo_b64 = img_to_base64(amit_logo_path) if os.path.exists(amit_logo_path) else ""
+
+    # פרטי משתמש
+    username = st.session_state.get('username', 'משתמש')
+    role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
+    role_names = {'viewer': 'צופה', 'support': 'תמיכה', 'admin': 'מנהל', 'superadmin': 'מנהל על'}
+    role_text = role_names.get(role, "משתמש")
+
+    # CSS + HTML Header
+    st.markdown(f"""
     <style>
-        /* הפיכת ה-header ל-sticky - תופס רק את ה-container עם ה-class הייחודי */
-        .sticky-header-container div[data-testid="stVerticalBlockBorderWrapper"],
-        .sticky-header-container div[data-testid="stLayoutWrapper"] {
-            position: sticky !important;
+        /* הסתרת header Streamlit המקורי */
+        header[data-testid="stHeader"] {{
+            display: none !important;
+        }}
+
+        /* הסתרת לוגו מהסיידבר */
+        [data-testid="stSidebarLogo"],
+        [data-testid="stHeaderLogo"] {{
+            display: none !important;
+        }}
+
+        /* Top Nav Sticky - צר ונקי */
+        .custom-header {{
+            position: fixed !important;
             top: 0 !important;
-            z-index: 999 !important;
-            background-color: #F5F6FF !important;
-            padding: 0.5rem 1rem 0.8rem 1rem !important;
-            border-bottom: 2px solid #e5e7eb !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-        }
-
-        /* כותרת - צר יותר */
-        .title-text {
-            font-size: 1.8rem !important;
-            font-weight: 700 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1.8rem !important;
-        }
-
-        .title-mafil {
-            color: #D71F27 !important;
-        }
-
-        .title-services {
-            color: #009BDB !important;
-        }
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 9999 !important;
+            background: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            height: 55px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 2rem !important;
+            direction: rtl !important;
+        }}
 
         /* לוגואים */
-        .header-logo {
-            height: 40px !important;
-            max-width: 120px !important;
+        .custom-header img {{
+            height: 32px !important;
             object-fit: contain !important;
-        }
+        }}
 
-        /* צמצום גובה תמונות בהדר */
-        .sticky-header-container img {
-            max-height: 40px !important;
-            object-fit: contain !important;
-        }
+        /* כותרת */
+        .custom-header-title {{
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+            flex-grow: 1 !important;
+            text-align: center !important;
+        }}
 
-        /* הסתרת לוגו מהסיידבר - כי יש לנו בהדר */
-        [data-testid="stSidebarLogo"],
-        [data-testid="stHeaderLogo"] {
-            display: none !important;
-        }
+        .title-mafil {{
+            color: #D71F27 !important;
+        }}
 
-        /* צמצום רווחים בהדר */
-        .sticky-header-container [data-testid="column"] {
-            padding: 0 !important;
-        }
+        .title-services {{
+            color: #009BDB !important;
+        }}
+
+        /* אזור כפתורים */
+        .custom-header-actions {{
+            display: flex !important;
+            gap: 0.6rem !important;
+            align-items: center !important;
+        }}
+
+        /* כפתור user info */
+        .user-info-display {{
+            background: #f8f9fa !important;
+            border: 1px solid #ddd !important;
+            border-radius: 0.3rem !important;
+            padding: 0.25rem 0.6rem !important;
+            font-size: 0.8rem !important;
+            white-space: nowrap !important;
+            color: #333 !important;
+        }}
+
+        /* Offset לתוכן - כדי שלא יעלה על ה-header */
+        .main .block-container {{
+            padding-top: 70px !important;
+        }}
+
+        /* תיקון RTL לתוכן */
+        .stApp {{
+            direction: rtl !important;
+            text-align: right !important;
+        }}
+
+        /* הסתרת הכפתורים שמתחת ל-header (נשתמש בהם רק לפונקציונליות) */
+        .header-controls-hidden {{
+            position: fixed !important;
+            top: 12px !important;
+            left: 2rem !important;
+            z-index: 10000 !important;
+            display: flex !important;
+            gap: 0.5rem !important;
+        }}
+
+        .header-controls-hidden .stButton > button {{
+            padding: 0.25rem 0.6rem !important;
+            font-size: 0.8rem !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            background: linear-gradient(45deg, #D71F27, #FF6B6B) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 0.3rem !important;
+        }}
+
+        .header-controls-hidden .stButton > button:hover {{
+            background: linear-gradient(45deg, #FF6B6B, #D71F27) !important;
+        }}
     </style>
+
+    <div class="custom-header">
+        <!-- לוגו ימין (Mafil) -->
+        <img src="data:image/png;base64,{mafil_logo_b64}" alt="Mafil Logo">
+
+        <!-- כותרת במרכז -->
+        <div class="custom-header-title">
+            <span class="title-mafil">Mafil</span>
+            <span class="title-services">Cloud Manager</span>
+        </div>
+
+        <!-- מידע משתמש -->
+        <div class="custom-header-actions">
+            <span class="user-info-display">👤 {username} • {role_text}</span>
+        </div>
+
+        <!-- לוגו שמאל (Amit) -->
+        {"<img src='data:image/png;base64," + amit_logo_b64 + "' alt='Amit Logo'>" if amit_logo_b64 else "<div style='width: 32px;'></div>"}
+    </div>
     """, unsafe_allow_html=True)
 
-    # סימון תחילת header עם class ייחודי
-    st.markdown('<div class="sticky-header-container">', unsafe_allow_html=True)
-
-    # יצירת container sticky
-    header_container = st.container()
-
-    with header_container:
-        # שורה ראשונה: לוגו ימין + כותרת + לוגו שמאל
-        col_logo_right, col_title, col_logo_left = st.columns([1, 3, 1])
-
-        with col_logo_right:
-            # לוגו Mafil מימין
-            try:
-                import sys
-                import os
-                def resource_path(relative_path: str) -> str:
-                    if hasattr(sys, "_MEIPASS"):
-                        return os.path.join(sys._MEIPASS, relative_path)
-                    return os.path.join(os.path.abspath("."), relative_path)
-
-                mafil_logo_path = resource_path("assets/MafilIT_Logo.png")
-                st.image(mafil_logo_path, use_container_width=False, width=120)
-            except:
-                pass
-
-        with col_title:
-            # כותרת במרכז
-            st.markdown('<div class="title-text" style="text-align: center;"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
-
-        with col_logo_left:
-            # לוגו Amit משמאל (או placeholder)
-            try:
-                amit_logo_path = resource_path("assets/Amit_Logo.png")
-                if os.path.exists(amit_logo_path):
-                    st.image(amit_logo_path, use_container_width=False, width=120)
-                else:
-                    # Placeholder אם הקובץ לא קיים
-                    st.markdown('<div style="height: 40px; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 0.8rem;">לוגו לקוח</div>', unsafe_allow_html=True)
-            except:
-                st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
-
-        # שורה שנייה: user info + כפתורים
-        show_compact_user_info()
-
-        # קו מפריד דק
-        st.markdown('<div style="margin: 0.3rem 0; border-bottom: 0.5px solid #e5e7eb;"></div>', unsafe_allow_html=True)
-
-    # סגירת ה-wrapper של ה-header
+    # כפתור יציאה מוסתר בתוך ה-header (CSS ממקם אותו)
+    st.markdown('<div class="header-controls-hidden">', unsafe_allow_html=True)
+    if st.button("🚪 יציאה", key="logout_btn_header"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
     if not check_config():
