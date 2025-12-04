@@ -820,7 +820,7 @@ def main():
 
         /* כותרת */
         .custom-header-title {
-            font-size: 1.1rem !important;
+            font-size: 2.5rem !important;
             font-weight: 700 !important;
             white-space: nowrap !important;
             flex-grow: 1 !important;
@@ -865,7 +865,7 @@ def main():
             <span class="title-mafil">Mafil</span>
             <span class="title-services">Cloud Manager</span>
         </div>
-        <div style="width: 250px;"></div>
+        <div style="width: 0px;"></div>
         {amit_logo_html}
     </div>
     """
@@ -894,7 +894,7 @@ def main():
 
         /* עיצוב כפתור יציאה */
         #header-controls-marker + div[data-testid="stHorizontalBlock"] button {
-            height: 36px !important;
+            height: 20px !important;
             padding: 0.25rem 0.75rem !important;
             font-size: 0.9rem !important;
         }
