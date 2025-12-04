@@ -64,6 +64,14 @@ def apply_modern_styling_compact(rtl=False):
             background: #F5F6FF !important;
         }}
 
+           [data-testid="stMainBlockContainer"] {{
+           padding: 2rem 1rem 5rem !important;
+           padding-left: 1rem !important;
+           padding-right: 1rem !important;
+
+        }}
+           
+
         /* Sidebar בצד ימין עבור RTL - עדין ונקי */
         section[data-testid="stSidebar"] {{
             {'right: 0 !important; left: auto !important;' if rtl else ''}
