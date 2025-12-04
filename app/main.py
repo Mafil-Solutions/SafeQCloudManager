@@ -725,7 +725,7 @@ def main():
     mafil_logo_path = resource_path("assets/MafilIT_Logo.png")
     amit_logo_path = resource_path("assets/Amit_Logo.jpg")
 
-    mafil_logo_b64 = img_to_base64(mafil_logo_path)
+    mafil_logo_b64 = img_to_base64(mafil_logo_path) if os.path.exists(mafil_logo_path) else ""
     amit_logo_b64 = img_to_base64(amit_logo_path) if os.path.exists(amit_logo_path) else ""
 
     # פרטי משתמש
@@ -810,12 +810,22 @@ def main():
             margin-top: 4.5rem !important;
         }
 
-        /* לוגואים */
+        /* לוגואים 
         .custom-header img {
             height: 10rem !important;
             object-fit: contain !important;
-        }
+        }*/
 
+        .logo-mafil {
+            height: 10rem !important;
+            object-fit: contain;
+        }
+        
+        .logo-amit {
+            height: 5rem !important;
+            object-fit: contain;
+        }
+        
         /* כותרת */
         .custom-header-title {
             font-size: 2.5rem !important;
@@ -858,13 +868,13 @@ def main():
     # HTML Header - נפרד מה-CSS
     header_html = f"""
     <div class="custom-header">
-        <img src="data:image/png;base64,{mafil_logo_b64}" alt="Mafil Logo">
+        <img src="data:image/png;base64,{mafil_logo_b64}" alt="Mafil Logo" class="logo-mafil">
         <div class="custom-header-title">
             <span class="title-mafil">Mafil</span>
             <span class="title-services">Cloud Manager</span>
         </div>
         <div style="width: 0px;"></div>
-        {amit_logo_html}
+        <img src="data:image/png;base64,{amit_logo_html}" alt="Amit Logo" class="logo-amit">
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
@@ -922,14 +932,9 @@ def main():
     st.markdown('<div id="header-controls-marker"></div>', unsafe_allow_html=True)
 
     # כפתורים בצד שמאל של ההדר
-    col2, col1 = st.columns([1, 1])
-    with col2:
-        if st.button("🚪 יציאה", key="logout_btn_header", help="יציאה מהמערכת"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+    col1, col2 = st.columns([1, 1])
 
-    with col1:
+    with col2:
         # כותרת expander עם שם משתמש ורמת הרשאות
         expander_title = f"👤 {username} • {role_text}"
         with st.expander(expander_title):
@@ -943,7 +948,12 @@ def main():
                         st.write(f"🏫 {dept}")
                     if dept_count > 10:
                         st.write(f"ועוד {dept_count - 10} בתי ספר...")
-
+    with col1:
+            if st.button("🚪 יציאה", key="logout_btn_header", help="יציאה מהמערכת"):
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.rerun()
+                
     if not check_config():
         st.stop()
 
