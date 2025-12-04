@@ -65,9 +65,9 @@ def apply_modern_styling_compact(rtl=False):
         }}
 
            [data-testid="stMainBlockContainer"] {{
-           padding: 2rem 1rem 5rem !important;
+           padding: 1rem 1rem 5rem !important;
            padding-left: 1rem !important;
-           padding-right: 1rem !important;
+           padding-right: 2rem !important;
 
         }}
            
