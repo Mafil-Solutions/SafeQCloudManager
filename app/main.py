@@ -723,7 +723,7 @@ def main():
         return os.path.join(os.path.abspath("."), relative_path)
 
     mafil_logo_path = resource_path("assets/MafilIT_Logo.png")
-    amit_logo_path = resource_path("assets/Amit_Logo.png")
+    amit_logo_path = resource_path("assets/Amit_Logo.jpg")
 
     mafil_logo_b64 = img_to_base64(mafil_logo_path)
     amit_logo_b64 = img_to_base64(amit_logo_path) if os.path.exists(amit_logo_path) else ""
