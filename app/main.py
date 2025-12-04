@@ -751,8 +751,8 @@ def main():
         /* כפתור toggle sidebar קטן */
         header[data-testid="stHeader"] button {{
             position: fixed !important;
-            top: 10px !important;
-            right: 10px !important;
+            top: 1rem !important;
+            right: 1rem !important;
             z-index: 10001 !important;
             width: 30px !important;
             height: 30px !important;
@@ -784,7 +784,7 @@ def main():
             z-index: 9999 !important;
             background: #ffffff !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-            height: 48px !important;
+            height: 11rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
@@ -794,7 +794,7 @@ def main():
 
         /* לוגואים */
         .custom-header img {{
-            height: 28px !important;
+            height: 10rem !important;
             object-fit: contain !important;
         }}
 
@@ -835,7 +835,7 @@ def main():
 
         /* Offset לתוכן - כדי שלא יעלה על ה-header */
         .main .block-container {{
-            padding-top: 60px !important;
+            padding-top: 12rem !important;
         }}
 
         /* תיקון RTL לתוכן */
@@ -860,18 +860,86 @@ def main():
             <span class="user-info-display">👤 {username} • {role_text}</span>
         </div>
 
-        <!-- לוגו שמאל (Amit) -->
-        {"<img src='data:image/png;base64," + amit_logo_b64 + "' alt='Amit Logo'>" if amit_logo_b64 else "<div style='width: 28px;'></div>"}
+        <!-- ריווח בצד שמאל -->
+        <div style="width: 200px;"></div>
     </div>
     """, unsafe_allow_html=True)
 
-    # כפתור יציאה מתחת ל-header
-    col1, col2 = st.columns([10, 1])
-    with col2:
-        if st.button("🚪", key="logout_btn_header", help="יציאה מהמערכת"):
+    # CSS למיקום הכפתורים בצד שמאל של ההדר
+    st.markdown("""
+    <style>
+        /* הסתרת marker */
+        #header-controls-marker {
+            display: none !important;
+        }
+
+        /* מיקום אזור הכפתורים בצד שמאל של ההדר */
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] {
+            position: fixed !important;
+            top: 50% !important;
+            left: 20px !important;
+            transform: translateY(-50%) !important;
+            z-index: 10000 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            direction: ltr !important;
+            background: transparent !important;
+        }
+
+        /* עיצוב כפתור יציאה */
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] button {
+            height: 36px !important;
+            padding: 0.25rem 0.75rem !important;
+            font-size: 0.9rem !important;
+        }
+
+        /* עיצוב expander */
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] details {
+            background: white !important;
+            border: 1px solid #ddd !important;
+            border-radius: 0.25rem !important;
+            padding: 0 !important;
+        }
+
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] details summary {
+            font-size: 0.85rem !important;
+            padding: 0.4rem 0.75rem !important;
+            cursor: pointer !important;
+        }
+
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] details[open] {
+            background: white !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Marker div for CSS targeting
+    st.markdown('<div id="header-controls-marker"></div>', unsafe_allow_html=True)
+
+    # כפתורים בצד שמאל של ההדר
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("🚪 יציאה", key="logout_btn_header", help="יציאה מהמערכת"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
+
+    with col2:
+        with st.expander("📋 הרשאות"):
+            if st.session_state.get('allowed_departments'):
+                if st.session_state.allowed_departments == ["ALL"]:
+                    st.info("✅ גישה לכל המחלקות")
+                else:
+                    dept_count = len(st.session_state.allowed_departments)
+                    st.info(f"📁 גישה ל-{dept_count} מחלקות:")
+                    for dept in st.session_state.allowed_departments[:10]:
+                        st.write(f"• {dept}")
+                    if dept_count > 10:
+                        st.write(f"ועוד {dept_count - 10} מחלקות...")
+            else:
+                st.warning("אין הרשאות מחלקות")
 
     if not check_config():
         st.stop()
