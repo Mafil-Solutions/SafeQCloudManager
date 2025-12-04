@@ -736,6 +736,9 @@ def main():
     role_names = {'viewer': 'צופה', 'support': 'תמיכה', 'admin': 'מנהל', 'superadmin': 'מנהל על'}
     role_text = role_names.get(role, "משתמש")
 
+    # הכנת HTML לוגו Amit
+    amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo">' if amit_logo_b64 else '<div style="width: 10rem;"></div>'
+
     # CSS + HTML Header
     st.markdown(f"""
     <style>
@@ -781,7 +784,7 @@ def main():
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
-            z-index: 9999 !important;
+            z-index: 999 !important;
             background: #ffffff !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
             height: 4.5rem !important;
@@ -790,12 +793,19 @@ def main():
             justify-content: space-between !important;
             padding: 0 3rem 0 1.5rem !important;
             direction: rtl !important;
-            transition: margin-right 0.3s ease !important;
+            transition: all 0.3s ease !important;
         }}
 
-        /* התאמת header כשהסיידבר פתוח */
-        [data-testid="stSidebar"][aria-expanded="true"] ~ [data-testid="stAppViewContainer"] .custom-header {{
-            margin-right: 0 !important;
+        /* סיידבר מתחת להדר */
+        [data-testid="stSidebar"] {{
+            top: 4.5rem !important;
+            height: calc(100vh - 4.5rem) !important;
+            z-index: 998 !important;
+        }}
+
+        /* תוכן עם offset */
+        [data-testid="stAppViewContainer"] {{
+            margin-top: 4.5rem !important;
         }}
 
         /* לוגואים */
@@ -860,6 +870,20 @@ def main():
         }}
     </style>
 
+    <script>
+        // פתיחת סיידבר אוטומטית
+        setTimeout(function() {{
+            const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+            const sidebarCollapsed = sidebar && sidebar.getAttribute('aria-expanded') === 'false';
+            if (sidebarCollapsed) {{
+                const toggleButton = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+                if (toggleButton) {{
+                    toggleButton.click();
+                }}
+            }}
+        }}, 100);
+    </script>
+
     <div class="custom-header">
         <!-- לוגו ימין (Mafil) -->
         <img src="data:image/png;base64,{mafil_logo_b64}" alt="Mafil Logo">
@@ -874,7 +898,7 @@ def main():
         <div style="width: 250px;"></div>
 
         <!-- לוגו שמאל (Amit) -->
-        {'<img src="data:image/png;base64,' + amit_logo_b64 + '" alt="Amit Logo">' if amit_logo_b64 else '<div style="width: 10rem;"></div>'}
+        {amit_logo_html}
     </div>
     """, unsafe_allow_html=True)
 
