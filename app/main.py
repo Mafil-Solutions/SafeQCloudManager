@@ -738,7 +738,7 @@ def main():
     if amit_logo_b64:
         amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo" class="logo-amit">'
     else:
-        amit_logo_html = '<div style="width: 10rem;"></div>'
+        amit_logo_html = '<div style="width: 4rem;"></div>'
 
     # CSS Header Styles
     st.markdown("""
@@ -822,7 +822,7 @@ def main():
         }
         
         .logo-amit {
-            height: 5rem !important;
+            height: 4rem !important;
             object-fit: contain;
         }
         
