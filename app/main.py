@@ -931,7 +931,7 @@ def main():
     st.markdown('<div id="header-controls-marker"></div>', unsafe_allow_html=True)
 
     # כפתורים בצד שמאל של ההדר
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([2, 1])
 
     with col1:
         # כותרת expander עם שם משתמש ורמת הרשאות
