@@ -45,6 +45,40 @@ def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
     output.seek(0)
     return output.getvalue()
 
+def filter_input_ports_by_departments(input_ports, allowed_departments):
+    """
+    סינון תורי הדפסה לפי מחלקות מורשות (דרך containerName)
+
+    Args:
+        input_ports: רשימת תורי הדפסה
+        allowed_departments: מחלקות מורשות (["ALL"] עבור superadmin)
+
+    Returns:
+        list: רשימת תורי הדפסה מסוננות
+    """
+    if not input_ports:
+        return []
+
+    # Superadmin רואה הכל
+    if allowed_departments == ["ALL"]:
+        return input_ports
+
+    filtered_ports = []
+
+    for port in input_ports:
+        container_name = port.get('containerName', '')
+
+        # אם containerName ריק - הצג את התור
+        if not container_name:
+            filtered_ports.append(port)
+            continue
+
+        # containerName זהה לשם קבוצה - נשווה ל-allowed_departments
+        if container_name in allowed_departments:
+            filtered_ports.append(port)
+
+    return filtered_ports
+
 def show():
     """הצגת דף תורי הדפסה"""
     check_authentication()
@@ -65,37 +99,39 @@ def show():
             if response.status_code == 200:
                 input_ports = response.json()
 
-                # DEBUG MODE - הצגת המבנה של תור הדפסה אחד
-                if input_ports and len(input_ports) > 0:
-                    st.warning("🔍 DEBUG MODE - מבנה של תור הדפסה אחד:")
-                    debug_fields = []
-                    sample_port = input_ports[0]
-                    for key, value in sample_port.items():
-                        debug_fields.append(f"- **{key}**: {value}")
-                    st.markdown("\n".join(debug_fields))
-                    st.markdown("---")
+                # טעינת מדפסות לצורך קבלת מספרים סידוריים
+                printers = api.get_output_ports_for_user(username=None, provider_id=None, enrich_ports=True)
+                # יצירת מיפוי: שם מדפסת -> מספר סידורי
+                printer_serial_map = {p.get('name'): p.get('deviceSerial', '-') for p in printers if p.get('name')}
+
+                # סינון לפי מחלקות מורשות (דרך containerName)
+                allowed_departments = st.session_state.get('allowed_departments', [])
+                original_count = len(input_ports)
+                filtered_input_ports = filter_input_ports_by_departments(input_ports, allowed_departments)
 
                 # הצגת מטריקות
-                total_queues = len(input_ports)
-
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("כמות תורי הדפסה", total_queues)
+                    st.metric("כמות תורי הדפסה", len(filtered_input_ports))
 
                 with col2:
                     # ספירת תורים לפי סוג (portType)
                     port_types = {}
-                    for port in input_ports:
+                    for port in filtered_input_ports:
                         port_type = port.get('portType', 'Unknown')
                         port_types[port_type] = port_types.get(port_type, 0) + 1
                     st.metric("סוגי תורים", len(port_types))
 
+                # הודעת סינון לפי הרשאות
+                if allowed_departments != ["ALL"] and len(filtered_input_ports) < original_count:
+                    st.info(f"ℹ️ מציג תורי הדפסה עבור בתי הספר שלך בלבד ({len(filtered_input_ports)} מתוך {original_count})")
+
                 st.markdown("---")
 
                 # בניית טבלה
-                if input_ports:
+                if filtered_input_ports:
                     rows = []
-                    for port in input_ports:
+                    for port in filtered_input_ports:
                         # תרגום סוג תור
                         port_type = port.get('portType', '-')
                         port_type_map = {
@@ -104,10 +140,15 @@ def show():
                         }
                         port_type_display = port_type_map.get(port_type, str(port_type))
 
+                        # קבלת מספר סידורי של המדפסת המקושרת
+                        linked_printer = port.get('outputPort', '-')
+                        printer_serial = printer_serial_map.get(linked_printer, '-')
+
                         row = {
                             'שם התור': port.get('name', '-'),
                             'תור הדפסה': port_type_display,
-                            'מדפסת מקושרת': port.get('outputPort', '-'),
+                            'מדפסת מקושרת': linked_printer,
+                            'מספר סידורי': printer_serial,
                             'בית ספר': port.get('containerName', '-'),
                         }
                         rows.append(row)
@@ -115,7 +156,7 @@ def show():
                     df = pd.DataFrame(rows)
 
                     # סידור עמודות RTL - מימין לשמאל
-                    df = df[['בית ספר', 'מדפסת מקושרת', 'תור הדפסה', 'שם התור']]
+                    df = df[['בית ספר', 'מספר סידורי', 'מדפסת מקושרת', 'תור הדפסה', 'שם התור']]
 
                     # הצגת הטבלה וכפתור ייצוא
                     result_col1, result_col2 = st.columns([3, 1])
