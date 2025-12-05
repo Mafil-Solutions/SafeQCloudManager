@@ -874,6 +874,14 @@ def main():
             text-align: right !important;
             direction: ltr !important;
         }
+
+        /* cursor pointer לשדות בחירה (selectbox, multiselect) */
+        .stSelectbox > div > div,
+        .stMultiselect > div > div,
+        [data-baseweb="select"],
+        [data-baseweb="select"] > div {
+            cursor: pointer !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 

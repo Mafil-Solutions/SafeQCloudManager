@@ -90,6 +90,11 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             # איפוס סינונים - העלאת המונה גורמת לכל הקומפוננטים להתאפס
             if st.button("🔄 איפוס סינונים", use_container_width=True, key=f"reset_filters_btn_{counter}"):
                 st.session_state.filter_reset_counter += 1
+                # מחיקת הנתונים המסוננים כדי לאפס גם את הדשבורד
+                if 'filtered_df' in st.session_state:
+                    del st.session_state['filtered_df']
+                if 'filters_applied' in st.session_state:
+                    del st.session_state['filters_applied']
                 st.rerun()
 
     # החלת סינונים
