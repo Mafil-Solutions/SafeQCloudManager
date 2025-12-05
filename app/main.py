@@ -489,6 +489,13 @@ def apply_modern_styling_compact(rtl=False):
             height: auto !important;
             max-height: 10rem !important;
         }}
+
+        div[data-testid="stLayoutWrapper"]
+          div[data-testid="stHorizontalBlock"]
+          > div[data-testid="stColumn"]:nth-child(2){{
+            width: auto !important;
+            flex: none !important;
+          }}
     </style>
     """, unsafe_allow_html=True)
 
