@@ -857,10 +857,22 @@ def main():
         /* תיקון RTL לכל האלמנטים */
         .main, .main .block-container, .element-container, .stMarkdown,
         [data-testid="stVerticalBlock"], [data-testid="stHorizontalBlock"],
-        .stDataFrame, .stTable, .stTextInput, .stTextArea, .stSelectbox,
-        .stMultiselect, p, h1, h2, h3, h4, h5, h6, ul, div {
+        .stTextInput, .stTextArea, .stSelectbox,
+        .stMultiselect, p, h1, h2, h3, h4, h5, h6, ul {
             direction: rtl !important;
             text-align: right !important;
+        }
+
+        /* תיקון מיוחד לטבלאות - רק הcontainer, לא התאים */
+        .stDataFrame, .stTable {
+            direction: rtl !important;
+        }
+
+        /* התאים עצמם - מיושרים לימין אבל לא RTL כדי שהטקסט לא יתחבא */
+        .stDataFrame div[data-testid="stDataFrameResizable"] div[data-testid="StyledDataFrameDataCell"],
+        .stTable td, .stTable th {
+            text-align: right !important;
+            direction: ltr !important;
         }
     </style>
     """, unsafe_allow_html=True)
