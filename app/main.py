@@ -858,7 +858,7 @@ def main():
         .main, .main .block-container, .element-container, .stMarkdown,
         [data-testid="stVerticalBlock"], [data-testid="stHorizontalBlock"],
         .stDataFrame, .stTable, .stTextInput, .stTextArea, .stSelectbox,
-        .stMultiselect, p, h1, h2, h3, h4, h5, h6, div {
+        .stMultiselect, p, h1, h2, h3, h4, h5, h6, ul, div {
             direction: rtl !important;
             text-align: right !important;
         }
