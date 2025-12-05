@@ -216,16 +216,22 @@ def show_report_settings(api):
             st.write("")  # spacing
             st.write("")  # spacing
             if st.button("🔄 איפוס", use_container_width=True):
-                # איפוס מלא
-                st.session_state.quick_filter_selection = "📅 7 ימים אחרונים"
-                st.session_state.report_date_start = (datetime.now() - timedelta(days=6)).date()
-                st.session_state.report_date_end = datetime.now().date()
-                st.session_state.history_filter_username = ""
-                st.session_state.history_filter_port = ""
-                if 'history_report_data' in st.session_state:
-                    del st.session_state.history_report_data
-                if 'user_lookup_cache' in st.session_state:
-                    del st.session_state.user_lookup_cache
+                # איפוס מלא - מחיקת כל נתוני הדוח והחזרה להתחלה
+                keys_to_delete = [
+                    'quick_filter_selection',
+                    'report_date_start',
+                    'report_date_end',
+                    'history_filter_username',
+                    'history_filter_port',
+                    'history_report_data',
+                    'user_lookup_cache',
+                    'filtered_df',
+                    'filters_applied',
+                    'filter_reset_counter'
+                ]
+                for key in keys_to_delete:
+                    if key in st.session_state:
+                        del st.session_state[key]
                 st.rerun()
 
         # חישוב תאריכים לפי פילטר מהיר
@@ -544,6 +550,9 @@ def show_dashboard_tab(api, status_filter_list):
     top_users_df = user_stats.nlargest(10, 'עמודים')[['שם מלא', 'משתמש', 'מסמכים', 'עמודים', 'צבע', 'ש/ל']]
     top_users_df.columns = ['שם מלא', 'משתמש', 'מסמכים', 'עמודים', 'עמודי צבע', 'ש/ל']
 
+    # סידור עמודות RTL - מימין לשמאל
+    top_users_df = top_users_df[['ש/ל', 'עמודי צבע', 'עמודים', 'מסמכים', 'משתמש', 'שם מלא']]
+
     st.dataframe(top_users_df, use_container_width=True, hide_index=True)
 
     st.markdown("---")
@@ -560,6 +569,10 @@ def show_dashboard_tab(api, status_filter_list):
     # מיון לפי עמודים והצגת Top 10
     if len(port_stats) > 0:
         top_ports_df = port_stats.nlargest(10, 'עמודים')[['מדפסת', 'מסמכים', 'עמודים']]
+
+        # סידור עמודות RTL - מימין לשמאל
+        top_ports_df = top_ports_df[['עמודים', 'מסמכים', 'מדפסת']]
+
         st.dataframe(top_ports_df, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ אין מידע על מדפסות בנתונים")
@@ -579,6 +592,10 @@ def show_dashboard_tab(api, status_filter_list):
 
         # מיון לפי עמודים
         dept_df = dept_stats.sort_values('עמודים', ascending=False)[['מחלקה', 'מסמכים', 'עמודים']]
+
+        # סידור עמודות RTL - מימין לשמאל
+        dept_df = dept_df[['עמודים', 'מסמכים', 'מחלקה']]
+
         st.dataframe(dept_df, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ אין מידע על מחלקות בנתונים")
@@ -1658,7 +1675,13 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
 
         rows.append(row)
 
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+
+    # סידור עמודות RTL - מימין לשמאל
+    if not df.empty:
+        df = df[['גודל נייר', 'מדפסת', 'דופלקס', 'עותקים', 'צבע', 'עמודים', 'סטטוס', 'סוג', 'מחלקה', 'מקור', 'משתמש', 'שם מלא', 'תאריך']]
+
+    return df
 
 
 def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
