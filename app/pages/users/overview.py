@@ -101,7 +101,12 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
             }
         </style>
         """, unsafe_allow_html=True)
-
+        
+        # טיפים
+        st.info("""
+        💡 **טיפ:** לחץ על אחד מהכפתורים למעלה, או השתמש בתפריט הימני (צד ימין) כדי לנווט בין המודולים השונים.
+        """)
+        
         st.header("👥 ניהול משתמשים")
         st.caption("בחר פעולה מהאפשרויות למטה")
 
@@ -193,10 +198,6 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
 
         st.markdown("---")
 
-        # טיפים
-        st.info("""
-        💡 **טיפ:** לחץ על אחד מהכפתורים למעלה, או השתמש בתפריט הימני (צד ימין) כדי לנווט בין המודולים השונים.
-        """)
 
     return st.Page(show, title="סקירה", icon="👥", url_path="users_overview")
 
