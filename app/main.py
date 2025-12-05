@@ -933,7 +933,7 @@ def main():
     # כפתורים בצד שמאל של ההדר
     col1, col2 = st.columns([1, 1])
 
-    with col2:
+    with col1:
         # כותרת expander עם שם משתמש ורמת הרשאות
         expander_title = f"👤 {username} • {role_text}"
         with st.expander(expander_title):
@@ -947,7 +947,7 @@ def main():
                         st.write(f"🏫 {dept}")
                     if dept_count > 10:
                         st.write(f"ועוד {dept_count - 10} בתי ספר...")
-    with col1:
+    with col2:
             if st.button("🚪 יציאה", key="logout_btn_header", help="יציאה מהמערכת"):
                 for key in list(st.session_state.keys()):
                     del st.session_state[key]
