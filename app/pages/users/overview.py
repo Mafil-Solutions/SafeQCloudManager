@@ -95,6 +95,10 @@ def create_overview_page(users_list_page, users_search_page, users_add_page, use
                 cursor: not-allowed !important;
                 opacity: 0.6 !important;
             }
+
+            div[data-testid="stMarkdownContainer"] ul {
+            padding-right: revert !important;
+            }
         </style>
         """, unsafe_allow_html=True)
 
