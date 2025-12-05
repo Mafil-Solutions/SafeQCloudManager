@@ -489,13 +489,6 @@ def apply_modern_styling_compact(rtl=False):
             height: auto !important;
             max-height: 10rem !important;
         }}
-
-        div[data-testid="stLayoutWrapper"]
-          div[data-testid="stHorizontalBlock"]
-          > div[data-testid="stColumn"]:nth-child(2){{
-            width: auto !important;
-            flex: none !important;
-          }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -938,7 +931,7 @@ def main():
     st.markdown('<div id="header-controls-marker"></div>', unsafe_allow_html=True)
 
     # כפתורים בצד שמאל של ההדר
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([4, 1])
 
     with col1:
         # כותרת expander עם שם משתמש ורמת הרשאות
