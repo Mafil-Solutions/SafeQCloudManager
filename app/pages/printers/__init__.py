@@ -143,8 +143,8 @@ def show():
     with st.spinner("טוען רשימת מדפסות..."):
         # שימוש ב-cache כדי לא לטעון כל פעם מחדש
         if 'printers_cache' not in st.session_state:
-            # קורא ללא username וללא enrichPorts (כמו ב-Postman)
-            printers = api.get_output_ports_for_user(username=None, provider_id=None, enrich_ports=False)
+            # קורא עם enrichPorts=True כדי לקבל containerName ומידע נוסף
+            printers = api.get_output_ports_for_user(username=None, provider_id=None, enrich_ports=True)
             st.session_state.printers_cache = printers
         else:
             printers = st.session_state.printers_cache

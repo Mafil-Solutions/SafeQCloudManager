@@ -57,9 +57,9 @@ def show():
     # טעינת תורי הדפסה
     with st.spinner("טוען תורי הדפסה..."):
         try:
-            # קריאה ל-API לקבלת InputPorts
+            # קריאה ל-API לקבלת InputPorts עם enrichPorts=true כדי לקבל containerName
             import requests
-            url = f"{api.server_url}/api/v1/inputports"
+            url = f"{api.server_url}/api/v1/inputports?enrichPorts=true"
             response = requests.get(url, headers=api.headers, verify=False, timeout=30)
 
             if response.status_code == 200:
@@ -113,6 +113,9 @@ def show():
                         rows.append(row)
 
                     df = pd.DataFrame(rows)
+
+                    # סידור עמודות RTL - מימין לשמאל
+                    df = df[['בית ספר', 'מדפסת מקושרת', 'תור הדפסה', 'שם התור']]
 
                     # הצגת הטבלה וכפתור ייצוא
                     result_col1, result_col2 = st.columns([3, 1])
