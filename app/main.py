@@ -736,7 +736,7 @@ def main():
 
     # הכנת HTML לוגו Amit
     if amit_logo_b64:
-        amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo">'
+        amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo" class="logo-amit">'
     else:
         amit_logo_html = '<div style="width: 10rem;"></div>'
 
@@ -873,8 +873,7 @@ def main():
             <span class="title-mafil">Mafil</span>
             <span class="title-services">Cloud Manager</span>
         </div>
-        <div style="width: 0px;"></div>
-        <img src="data:image/png;base64,{amit_logo_html}" alt="Amit Logo" class="logo-amit">
+        {amit_logo_html}
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
