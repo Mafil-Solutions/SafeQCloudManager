@@ -114,7 +114,7 @@ def show():
     </style>
     """, unsafe_allow_html=True)
 
-    st.header("🖨️ ניהול מדפסות")
+    st.header("🖨️ רשימת מדפסות")
 
     # קבלת מידע על המשתמש
     api = get_api_instance()
@@ -130,14 +130,6 @@ def show():
         return
 
     st.markdown("---")
-
-    # כפתורי ניהול
-    col1, col2 = st.columns([1, 9])
-    with col1:
-        if st.button("🔄 רענן", use_container_width=True):
-            if 'printers_cache' in st.session_state:
-                del st.session_state.printers_cache
-            st.rerun()
 
     # טעינת מדפסות
     with st.spinner("טוען רשימת מדפסות..."):
@@ -164,22 +156,18 @@ def show():
     original_count_before_dept = len(printers)
     filtered_printers = filter_printers_by_departments(printers, allowed_departments)
 
-    # הצגת סטטיסטיקה
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("כמות מדפסות", len(filtered_printers))
-    with col2:
-        # ספירת בתי ספר ייחודיים
-        unique_schools = set()
-        for printer in filtered_printers:
-            school = printer.get('containerName', '')
-            if school:
-                unique_schools.add(school)
-        st.metric("בתי ספר", len(unique_schools))
+    # ספירת בתי ספר ייחודיים
+    unique_schools = set()
+    for printer in filtered_printers:
+        school = printer.get('containerName', '')
+        if school:
+            unique_schools.add(school)
 
-    # הודעת סינון לפי הרשאות
+    # הודעה אינפורמטיבית עם הסטטיסטיקות
     if allowed_departments != ["ALL"] and len(filtered_printers) < original_count_before_dept:
-        st.info(f"ℹ️ מציג מדפסות עבור בתי הספר שלך בלבד ({len(filtered_printers)} מתוך {original_count_before_dept})")
+        st.info(f"ℹ️ מציג {len(filtered_printers)} מדפסות מתוך {original_count_before_dept} ({len(unique_schools)} בתי ספר) - מסונן לפי בתי הספר שלך")
+    else:
+        st.info(f"ℹ️ מציג {len(filtered_printers)} מדפסות ({len(unique_schools)} בתי ספר)")
 
     st.markdown("---")
 
@@ -227,11 +215,10 @@ def show():
     # סידור עמודות RTL - מימין לשמאל: שם, מיקום, כתובת IP, מספר סידורי, יצרן, מדפסת צבע?, בית ספר, בקר פנימי?
     df = df[['בקר פנימי?', 'בית ספר', 'מדפסת צבע?', 'יצרן', 'מספר סידורי', 'כתובת IP', 'מיקום', 'שם']]
 
-    # הצגה עם גלילה
+    # הצגת הטבלה
     st.dataframe(
         df,
         use_container_width=True,
-        height=400,
         hide_index=True
     )
 

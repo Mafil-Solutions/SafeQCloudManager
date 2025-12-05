@@ -48,6 +48,7 @@ def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
 def filter_input_ports_by_departments(input_ports, allowed_departments):
     """
     סינון תורי הדפסה לפי מחלקות מורשות (דרך containerName)
+    תורי הדפסה וירטואליים (virtual queues) נראים לכולם
 
     Args:
         input_ports: רשימת תורי הדפסה
@@ -68,6 +69,11 @@ def filter_input_ports_by_departments(input_ports, allowed_departments):
     for port in input_ports:
         container_name = port.get('containerName', '')
 
+        # תורי הדפסה וירטואליים (virtual queues) נראים לכולם
+        if container_name and 'virtual' in container_name.lower():
+            filtered_ports.append(port)
+            continue
+
         # אם containerName ריק - הצג את התור
         if not container_name:
             filtered_ports.append(port)
@@ -83,7 +89,7 @@ def show():
     """הצגת דף תורי הדפסה"""
     check_authentication()
 
-    st.title("🗂️ תורי הדפסה (Input Ports)")
+    st.title("🗂️ תורי הדפסה")
 
     # קבלת API instance
     api = get_api_instance()
@@ -109,22 +115,21 @@ def show():
                 original_count = len(input_ports)
                 filtered_input_ports = filter_input_ports_by_departments(input_ports, allowed_departments)
 
-                # הצגת מטריקות
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("כמות תורי הדפסה", len(filtered_input_ports))
+                # ספירת סוגי תורים
+                port_types = {}
+                for port in filtered_input_ports:
+                    port_type = port.get('portType', 'Unknown')
+                    port_types[port_type] = port_types.get(port_type, 0) + 1
 
-                with col2:
-                    # ספירת תורים לפי סוג (portType)
-                    port_types = {}
-                    for port in filtered_input_ports:
-                        port_type = port.get('portType', 'Unknown')
-                        port_types[port_type] = port_types.get(port_type, 0) + 1
-                    st.metric("סוגי תורים", len(port_types))
-
-                # הודעת סינון לפי הרשאות
+                # הודעה אינפורמטיבית עם הסטטיסטיקות
                 if allowed_departments != ["ALL"] and len(filtered_input_ports) < original_count:
-                    st.info(f"ℹ️ מציג תורי הדפסה עבור בתי הספר שלך בלבד ({len(filtered_input_ports)} מתוך {original_count})")
+                    st.info(f"ℹ️ מציג {len(filtered_input_ports)} תורי הדפסה מתוך {original_count} ({len(port_types)} סוגי תורים) - מסונן לפי בתי הספר שלך + תורי הדפסה וירטואליים")
+                else:
+                    st.info(f"ℹ️ מציג {len(filtered_input_ports)} תורי הדפסה ({len(port_types)} סוגי תורים)")
+
+                # חיפוש
+                st.markdown("### 🔍 חיפוש")
+                search_query = st.text_input("חפש תור הדפסה", placeholder="שם תור, מדפסת מקושרת, מספר סידורי, בית ספר...")
 
                 st.markdown("---")
 
@@ -158,29 +163,42 @@ def show():
                     # סידור עמודות RTL - מימין לשמאל
                     df = df[['בית ספר', 'מספר סידורי', 'מדפסת מקושרת', 'תור הדפסה', 'שם התור']]
 
-                    # הצגת הטבלה וכפתור ייצוא
-                    result_col1, result_col2 = st.columns([3, 1])
+                    # סינון לפי חיפוש
+                    if search_query:
+                        search_lower = search_query.lower()
+                        mask = df.apply(lambda row: any(search_lower in str(val).lower() for val in row), axis=1)
+                        df = df[mask]
 
-                    with result_col1:
-                        st.info(f"📊 סה\"כ {len(df)} תורי הדפסה")
+                    # בדיקה אם יש תוצאות אחרי חיפוש
+                    if df.empty:
+                        st.warning("🔍 לא נמצאו תורי הדפסה התואמים לחיפוש")
+                    else:
+                        # הצגת הטבלה וכפתור ייצוא
+                        result_col1, result_col2 = st.columns([3, 1])
 
-                    with result_col2:
-                        excel_data = export_to_excel(df, "print_queues")
-                        st.download_button(
-                            label="📥 ייצא ל-Excel",
-                            data=excel_data,
-                            file_name=f"print_queues.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="export_queues_btn",
-                            use_container_width=True
+                        with result_col1:
+                            if search_query:
+                                st.success(f"📊 נמצאו {len(df)} תורי הדפסה")
+                            else:
+                                st.success(f"📊 סה\"כ {len(df)} תורי הדפסה")
+
+                        with result_col2:
+                            excel_data = export_to_excel(df, "print_queues")
+                            st.download_button(
+                                label="📥 ייצא ל-Excel",
+                                data=excel_data,
+                                file_name=f"print_queues.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key="export_queues_btn",
+                                use_container_width=True
+                            )
+
+                        st.dataframe(
+                            df,
+                            use_container_width=True,
+                            hide_index=True,
+                            height=min(len(df) * 35 + 38, 738)
                         )
-
-                    st.dataframe(
-                        df,
-                        use_container_width=True,
-                        hide_index=True,
-                        height=min(len(df) * 35 + 38, 738)
-                    )
                 else:
                     st.warning("⚠️ לא נמצאו תורי הדפסה")
 
