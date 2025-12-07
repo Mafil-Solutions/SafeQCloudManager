@@ -64,6 +64,12 @@ def apply_modern_styling_compact(rtl=False):
             background: #F5F6FF !important;
         }}
 
+           [data-testid="stMainBlockContainer"] {{
+           padding: 0rem 4rem 10rem 2rem !important;
+
+        }}
+           
+
         /* Sidebar בצד ימין עבור RTL - עדין ונקי */
         section[data-testid="stSidebar"] {{
             {'right: 0 !important; left: auto !important;' if rtl else ''}
@@ -697,37 +703,276 @@ def main():
 
     # ===== רק אחרי login מגיעים לכאן =====
 
-    # Header קומפקטי - עיצוב כותרת בלבד
+    # ===== Sticky Header אמיתי עם HTML טהור =====
+
+    # פונקציה להמרת תמונה ל-base64
+    import base64
+    def img_to_base64(path):
+        try:
+            with open(path, "rb") as f:
+                return base64.b64encode(f.read()).decode()
+        except:
+            return ""
+
+    # טעינת לוגואים
+    import sys
+    import os
+    def resource_path(relative_path: str) -> str:
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(os.path.abspath("."), relative_path)
+
+    mafil_logo_path = resource_path("assets/MafilIT_Logo.png")
+    amit_logo_path = resource_path("assets/Amit_Logo.jpg")
+
+    mafil_logo_b64 = img_to_base64(mafil_logo_path) if os.path.exists(mafil_logo_path) else ""
+    amit_logo_b64 = img_to_base64(amit_logo_path) if os.path.exists(amit_logo_path) else ""
+
+    # פרטי משתמש
+    username = st.session_state.get('username', 'משתמש')
+    role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
+    role_names = {'viewer': 'צופה', 'support': 'תמיכה', 'admin': 'מנהל', 'superadmin': 'מנהל על'}
+    role_text = role_names.get(role, "משתמש")
+
+    # הכנת HTML לוגו Amit
+    if amit_logo_b64:
+        amit_logo_html = f'<img src="data:image/png;base64,{amit_logo_b64}" alt="Amit Logo" class="logo-amit">'
+    else:
+        amit_logo_html = '<div style="width: 4rem;"></div>'
+
+    # CSS Header Styles
     st.markdown("""
     <style>
-        .title-text {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin: 0;
-            padding: 0;
-            line-height: 2.2rem;
+        /* כפתור סיידבר נשאר גלוי אבל קטן */
+        header[data-testid="stHeader"] {
+            height: 0px !important;
+            min-height: 0px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+        }
+
+        /* כפתור toggle sidebar קטן */
+        header[data-testid="stHeader"] button {
+            position: fixed !important;
+            top: 5rem !important;
+            right: 1rem !important;
+            z-index: 10001 !important;
+            width: 30px !important;
+            height: 30px !important;
+            padding: 0 !important;
+            background: white !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        }
+
+        /* הסתרת אייקונים מיותרים ב-header */
+        header[data-testid="stHeader"] span[data-testid="stMainMenu"],
+        header[data-testid="stHeader"] div[data-testid="stToolbarActionButtonIcon"] {
+            display: none !important;
+        }
+
+        /* הסתרת לוגו מהסיידבר */
+        [data-testid="stSidebarLogo"],
+        [data-testid="stHeaderLogo"] {
+            display: none !important;
+        }
+
+        /* Top Nav Sticky - צר ונקי */
+        .custom-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 999 !important;
+            background: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            height: 4.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0rem 1rem !important;
+            direction: rtl !important;
+            transition: all 0.3s ease !important;
+        }
+
+        /* סיידבר מתחת להדר */
+        [data-testid="stSidebar"] {
+            top: 0 !important;
+            padding-top: 4.5rem !important;
+            height: 100vh !important;
+            z-index: 998 !important;
+        }
+
+        /* תוכן עם offset */
+        [data-testid="stAppViewContainer"] {
+            margin-top: 4.5rem !important;
+        }
+
+        /* לוגואים 
+        .custom-header img {
+            height: 10rem !important;
+            object-fit: contain !important;
+        }*/
+
+        .logo-mafil {
+            height: 10rem !important;
+            object-fit: contain;
+        }
+        
+        .logo-amit {
+            height: 4rem !important;
+            object-fit: contain;
+        }
+        
+        /* כותרת */
+        .custom-header-title {
+            font-size: 2.5rem !important;
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+            flex-grow: 1 !important;
+            text-align: center !important;
         }
 
         .title-mafil {
-            color: #D71F27;
+            color: #D71F27 !important;
         }
 
         .title-services {
-            color: #009BDB;
+            color: #009BDB !important;
+        }
+
+        /* Offset לתוכן - כדי שלא יעלה על ה-header */
+        .main .block-container {
+            padding-top: 5.5rem !important;
+        }
+
+        /* תיקון RTL לתוכן */
+        .stApp {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* תיקון RTL לכל האלמנטים */
+        .main, .main .block-container, .element-container, .stMarkdown,
+        [data-testid="stVerticalBlock"], [data-testid="stHorizontalBlock"],
+        .stTextInput, .stTextArea, .stSelectbox,
+        .stMultiselect, p, h1, h2, h3, h4, h5, h6, ul {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* תיקון מיוחד לטבלאות - רק הcontainer, לא התאים */
+        .stDataFrame, .stTable {
+            direction: rtl !important;
+        }
+
+        /* התאים עצמם - מיושרים לימין אבל לא RTL כדי שהטקסט לא יתחבא */
+        .stDataFrame div[data-testid="stDataFrameResizable"] div[data-testid="StyledDataFrameDataCell"],
+        .stTable td, .stTable th {
+            text-align: right !important;
+            direction: ltr !important;
+        }
+
+        /* cursor pointer לשדות בחירה (selectbox, multiselect) */
+        .stSelectbox > div > div,
+        .stMultiselect > div > div,
+        [data-baseweb="select"],
+        [data-baseweb="select"] > div {
+            cursor: pointer !important;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    col_title, col_user = st.columns([4, 6])
+    # HTML Header - נפרד מה-CSS
+    header_html = f"""
+    <div class="custom-header">
+        <img src="data:image/png;base64,{mafil_logo_b64}" alt="Mafil Logo" class="logo-mafil">
+        <div class="custom-header-title">
+            <span class="title-mafil">Mafil</span>
+            <span class="title-services">Cloud Manager</span>
+        </div>
+        {amit_logo_html}
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
 
-    with col_title:
-        st.markdown('<div class="title-text"><span class="title-mafil">Mafil</span> <span class="title-services">Cloud Manager</span></div>', unsafe_allow_html=True)
+    # CSS למיקום הכפתורים בצד שמאל של ההדר
+    st.markdown("""
+    <style>
+        /* הסתרת marker */
+        #header-controls-marker {
+            display: none !important;
+        }
 
-    with col_user:
-        show_compact_user_info()
+        /* מיקום אזור הכפתורים בצד שמאל של ההדר */
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] {
+            position: fixed !important;
+            top: 0.75rem !important;
+            left: 20px !important;
+            z-index: 10000 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            direction: ltr !important;
+            background: transparent !important;
+        }
 
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #e5e7eb;">', unsafe_allow_html=True)
+        /* עיצוב כפתור יציאה */
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] button {
+            height: 20px !important;
+            padding: 0.25rem 0.75rem !important;
+            font-size: 0.9rem !important;
+        }
 
+        /* עיצוב expander */
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] details {
+            background: white !important;
+            border: 1px solid #ddd !important;
+            border-radius: 0.25rem !important;
+            padding: 0 !important;
+        }
+
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] details summary {
+            font-size: 0.85rem !important;
+            padding: 0.4rem 0.75rem !important;
+            cursor: pointer !important;
+        }
+
+        #header-controls-marker + div[data-testid="stHorizontalBlock"] details[open] {
+            background: white !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Marker div for CSS targeting
+    st.markdown('<div id="header-controls-marker"></div>', unsafe_allow_html=True)
+
+    # כפתורים בצד שמאל של ההדר
+    col1, col2 = st.columns([4, 1])
+
+    with col1:
+        # כותרת expander עם שם משתמש ורמת הרשאות
+        expander_title = f"👤 {username} • {role_text}"
+        with st.expander(expander_title):
+            if st.session_state.get('allowed_departments'):
+                if st.session_state.allowed_departments == ["ALL"]:
+                    st.success("✅🏫 גישה לכל בתי הספר")
+                else:
+                    dept_count = len(st.session_state.allowed_departments)
+                    st.info(f"🏫 בתי ספר מורשים ({dept_count}):")
+                    for dept in st.session_state.allowed_departments[:10]:
+                        st.write(f"🏫 {dept}")
+                    if dept_count > 10:
+                        st.write(f"ועוד {dept_count - 10} בתי ספר...")
+    with col2:
+            if st.button("🚪 יציאה", key="logout_btn_header", help="יציאה מהמערכת"):
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.rerun()
+                
     if not check_config():
         st.stop()
 

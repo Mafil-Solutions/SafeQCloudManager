@@ -197,13 +197,13 @@ def show():
                 'אימייל': user.get('email', ''),
                 'PIN': pin_code,
                 'מחלקה': user.get('department', department),
-                'מקור': user.get('source', '')
+                'סוג משתמש': user.get('source', '')
             })
 
         df = pd.DataFrame(df_data)
 
-        # קביעת סדר עמודות הפוך (RTL) - מימין לשמאל: #, שם משתמש, שם מלא, אימייל, PIN, מחלקה, מקור
-        df = df[['מקור', 'מחלקה', 'PIN', 'אימייל', 'שם מלא', 'שם משתמש', '#']]
+        # קביעת סדר עמודות הפוך (RTL) - מימין לשמאל: #, שם משתמש, שם מלא, אימייל, PIN, מחלקה, סוג משתמש
+        df = df[['סוג משתמש', 'מחלקה', 'PIN', 'אימייל', 'שם מלא', 'שם משתמש', '#']]
 
         # הצגת הטבלה - RTL וללא height
         st.dataframe(df, use_container_width=True, hide_index=True)

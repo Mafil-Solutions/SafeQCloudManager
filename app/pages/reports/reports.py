@@ -53,7 +53,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             )
 
         with filter_row1_col2:
-            source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
+            source_options = ['הכל'] + sorted(df['סוג משתמש'].unique().tolist())
             selected_source = st.selectbox(
                 "סוג משתמש",
                 source_options,
@@ -90,6 +90,11 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
             # איפוס סינונים - העלאת המונה גורמת לכל הקומפוננטים להתאפס
             if st.button("🔄 איפוס סינונים", use_container_width=True, key=f"reset_filters_btn_{counter}"):
                 st.session_state.filter_reset_counter += 1
+                # מחיקת הנתונים המסוננים כדי לאפס גם את הדשבורד
+                if 'filtered_df' in st.session_state:
+                    del st.session_state['filtered_df']
+                if 'filters_applied' in st.session_state:
+                    del st.session_state['filters_applied']
                 st.rerun()
 
     # החלת סינונים
@@ -109,7 +114,7 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         filtered_df = filtered_df[mask]
 
     if selected_source != 'הכל':
-        filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+        filtered_df = filtered_df[filtered_df['סוג משתמש'] == selected_source]
 
     if selected_jobtype != 'הכל':
         filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
@@ -211,16 +216,22 @@ def show_report_settings(api):
             st.write("")  # spacing
             st.write("")  # spacing
             if st.button("🔄 איפוס", use_container_width=True):
-                # איפוס מלא
-                st.session_state.quick_filter_selection = "📅 7 ימים אחרונים"
-                st.session_state.report_date_start = (datetime.now() - timedelta(days=6)).date()
-                st.session_state.report_date_end = datetime.now().date()
-                st.session_state.history_filter_username = ""
-                st.session_state.history_filter_port = ""
-                if 'history_report_data' in st.session_state:
-                    del st.session_state.history_report_data
-                if 'user_lookup_cache' in st.session_state:
-                    del st.session_state.user_lookup_cache
+                # איפוס מלא - מחיקת כל נתוני הדוח והחזרה להתחלה
+                keys_to_delete = [
+                    'quick_filter_selection',
+                    'report_date_start',
+                    'report_date_end',
+                    'history_filter_username',
+                    'history_filter_port',
+                    'history_report_data',
+                    'user_lookup_cache',
+                    'filtered_df',
+                    'filters_applied',
+                    'filter_reset_counter'
+                ]
+                for key in keys_to_delete:
+                    if key in st.session_state:
+                        del st.session_state[key]
                 st.rerun()
 
         # חישוב תאריכים לפי פילטר מהיר
@@ -539,6 +550,9 @@ def show_dashboard_tab(api, status_filter_list):
     top_users_df = user_stats.nlargest(10, 'עמודים')[['שם מלא', 'משתמש', 'מסמכים', 'עמודים', 'צבע', 'ש/ל']]
     top_users_df.columns = ['שם מלא', 'משתמש', 'מסמכים', 'עמודים', 'עמודי צבע', 'ש/ל']
 
+    # סידור עמודות RTL - מימין לשמאל
+    top_users_df = top_users_df[['ש/ל', 'עמודי צבע', 'עמודים', 'מסמכים', 'משתמש', 'שם מלא']]
+
     st.dataframe(top_users_df, use_container_width=True, hide_index=True)
 
     st.markdown("---")
@@ -555,6 +569,10 @@ def show_dashboard_tab(api, status_filter_list):
     # מיון לפי עמודים והצגת Top 10
     if len(port_stats) > 0:
         top_ports_df = port_stats.nlargest(10, 'עמודים')[['מדפסת', 'מסמכים', 'עמודים']]
+
+        # סידור עמודות RTL - מימין לשמאל
+        top_ports_df = top_ports_df[['עמודים', 'מסמכים', 'מדפסת']]
+
         st.dataframe(top_ports_df, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ אין מידע על מדפסות בנתונים")
@@ -574,6 +592,10 @@ def show_dashboard_tab(api, status_filter_list):
 
         # מיון לפי עמודים
         dept_df = dept_stats.sort_values('עמודים', ascending=False)[['מחלקה', 'מסמכים', 'עמודים']]
+
+        # סידור עמודות RTL - מימין לשמאל
+        dept_df = dept_df[['עמודים', 'מסמכים', 'מחלקה']]
+
         st.dataframe(dept_df, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ אין מידע על מחלקות בנתונים")
@@ -1232,8 +1254,8 @@ def show_history_report(api, logger, role, username):
                     search_text = st.text_input("חיפוש חופשי", placeholder="שם, מסמך, מדפסת...", key="history_search")
 
                 with filter_row1_col2:
-                    source_options = ['הכל'] + sorted(df['מקור'].unique().tolist())
-                    selected_source = st.selectbox("מקור", source_options, key="filter_source")
+                    source_options = ['הכל'] + sorted(df['סוג משתמש'].unique().tolist())
+                    selected_source = st.selectbox("סוג משתמש", source_options, key="filter_source")
 
                 with filter_row1_col3:
                     jobtype_options = ['הכל'] + sorted(df['סוג'].unique().tolist())
@@ -1258,7 +1280,7 @@ def show_history_report(api, logger, role, username):
                     filtered_df = filtered_df[mask]
 
                 if selected_source != 'הכל':
-                    filtered_df = filtered_df[filtered_df['מקור'] == selected_source]
+                    filtered_df = filtered_df[filtered_df['סוג משתמש'] == selected_source]
 
                 if selected_jobtype != 'הכל':
                     filtered_df = filtered_df[filtered_df['סוג'] == selected_jobtype]
@@ -1638,7 +1660,7 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
             'תאריך': date_str,
             'שם מלא': display_name,
             'משתמש': username,
-            'מקור': source,
+            'סוג משתמש': source,
             'מחלקה': department_str,
         #'שם מסמך': doc.get('documentName', ''),
             'סוג': job_type_he,  # תרגום לעברית
@@ -1653,7 +1675,13 @@ def prepare_history_dataframe(documents: List[Dict], user_cache: Dict[str, str] 
 
         rows.append(row)
 
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+
+    # סידור עמודות RTL - מימין לשמאל
+    if not df.empty:
+        df = df[['גודל נייר', 'מדפסת', 'דופלקס', 'עותקים', 'צבע', 'עמודים', 'סטטוס', 'סוג', 'מחלקה', 'סוג משתמש', 'משתמש', 'שם מלא', 'תאריך']]
+
+    return df
 
 
 def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
