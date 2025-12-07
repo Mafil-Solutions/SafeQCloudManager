@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מדריך הקמת אפליקציית Entra ID למערכת SafeQ Cloud</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 50px 60px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            font-weight: 600;
+        }
+
+        .subsection-title {
+            font-size: 1.5em;
+            color: #764ba2;
+            margin: 30px 0 15px 0;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            border-right: 5px solid #667eea;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe5b4 100%);
+            border-right: 5px solid #ffc107;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-right: 5px solid #28a745;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.15);
+        }
+
+        .danger-box {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border-right: 5px solid #dc3545;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.15);
+        }
+
+        .box-title {
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            font-size: 1.4em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s ease;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .step {
+            background: white;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 45px;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-left: 15px;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-content {
+            margin-right: 60px;
+            line-height: 1.8;
+        }
+
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-block code {
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #fef08a 0%, #fde047 100%);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-right: 4px solid #28a745;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .checklist li:hover {
+            transform: translateX(-5px);
+        }
+
+        .checklist li::before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.5em;
+            background: #d4edda;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 0 5px;
+        }
+
+        .badge-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .badge-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 40px;
+            text-align: center;
+            border-top: 3px solid #667eea;
+            color: #666;
+        }
+
+        .footer p {
+            margin: 10px 0;
+            font-size: 0.95em;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-right: 40px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+
+            .step-content {
+                margin-right: 0;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .toc {
+            background: #f8f9fa;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .toc-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .toc li:last-child {
+            border-bottom: none;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .toc a:hover {
+            color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔐 מדריך הקמת אפליקציית Microsoft Entra ID</h1>
+            <div class="subtitle">למערכת SafeQ Cloud Manager ו-Service Account Sync</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- תקציר מנהלים -->
+            <div class="section">
+                <h2 class="section-title">📋 תקציר מנהלים</h2>
+                <div class="info-box">
+                    <div class="box-title"><span class="icon">💡</span>למה נדרש מדריך זה?</div>
+                    <p>
+                        מדריך זה מפרט כיצד ליצור <strong>אפליקציה אחת</strong> ב-Microsoft Entra ID (לשעבר Azure AD)
+                        שתשרת את כל צרכי האימות והסנכרון של SafeQ Cloud - גם לממשק הניהול שלכם וגם ל-Service Account Sync עם ענן SafeQ.
+                    </p>
+                </div>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">⏱️ זמן ביצוע</div>
+                        <p><strong>15-20 דקות</strong></p>
+                        <p>תהליך חד-פעמי פשוט</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">👤 דרישות גישה</div>
+                        <p><strong>Global Administrator</strong></p>
+                        <p>או Application Administrator ב-Entra ID</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🎯 תוצאה</div>
+                        <p><strong>אפליקציה מאוחדת</strong></p>
+                        <p>פתרון All-in-One לכל הצרכים</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- תוכן עניינים -->
+            <div class="toc">
+                <div class="toc-title">📑 תוכן עניינים</div>
+                <ul>
+                    <li><a href="#overview">סקירה כללית</a></li>
+                    <li><a href="#requirements">דרישות טכניות</a></li>
+                    <li><a href="#step-by-step">מדריך שלב אחר שלב</a></li>
+                    <li><a href="#summary">טבלת סיכום</a></li>
+                    <li><a href="#checklist">Checklist סופי</a></li>
+                    <li><a href="#faq">שאלות ותשובות</a></li>
+                </ul>
+            </div>
+
+            <!-- סקירה כללית -->
+            <div class="section" id="overview">
+                <h2 class="section-title">🎯 סקירה כללית</h2>
+
+                <h3 class="subsection-title">מה נבנה?</h3>
+                <p>
+                    נקים אפליקציית <span class="highlight">Single-Tenant</span> ב-Microsoft Entra ID עם ההרשאות והתצורות הנדרשות
+                    לאימות משתמשים ומשיכת נתונים ממערכת Entra.
+                </p>
+
+                <div class="success-box">
+                    <div class="box-title"><span class="icon">✨</span>יתרונות הגישה המאוחדת</div>
+                    <ul>
+                        <li><strong>ניהול פשוט:</strong> אפליקציה אחת במקום מספר אפליקציות</li>
+                        <li><strong>אבטחה משופרת:</strong> Client Secret אחד לנהל ולחדש</li>
+                        <li><strong>תחזוקה קלה:</strong> עדכונים והגדרות במקום מרכזי אחד</li>
+                        <li><strong>עלות נמוכה:</strong> פחות מורכבות = פחות זמן ניהול</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">מה נדרש?</h3>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">🏢 Account Type</div>
+                        <p><span class="badge badge-primary">Single-Tenant</span></p>
+                        <p>גישה למשתמשים בארגון שלכם בלבד</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🔗 Redirect URIs</div>
+                        <p><span class="badge badge-success">2 URIs</span></p>
+                        <p>Web + Public Client</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🔑 Permissions</div>
+                        <p><span class="badge badge-warning">Delegated</span></p>
+                        <p>User.Read.All + GroupMember.Read.All</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">✅ Public Flows</div>
+                        <p><span class="badge badge-danger">Required</span></p>
+                        <p>חובה להפעלה</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- דרישות טכניות -->
+            <div class="section" id="requirements">
+                <h2 class="section-title">🛠️ דרישות טכניות</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>רכיב</th>
+                            <th>ערך נדרש</th>
+                            <th>הערות</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Supported Account Types</strong></td>
+                            <td>Single-Tenant</td>
+                            <td>Accounts in this organizational directory only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redirect URI #1</strong></td>
+                            <td>Web</td>
+                            <td>https://your-app-name.streamlit.app (או כתובת הממשק שלכם)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redirect URI #2</strong></td>
+                            <td>Public client/native</td>
+                            <td>אופציונלי - לפי הגדרות SafeQ Cloud</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Delegated Permissions</strong></td>
+                            <td>User.Read.All<br>GroupMember.Read.All</td>
+                            <td>שתי הרשאות חובה + Admin Consent</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Allow Public Client Flows</strong></td>
+                            <td>Yes</td>
+                            <td><strong>קריטי!</strong> חובה להפעלה</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Client Secret</strong></td>
+                            <td>24 חודשים</td>
+                            <td>יש לחדש לפני התפוגה</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning-box">
+                    <div class="box-title"><span class="icon">⚠️</span>חשוב לדעת</div>
+                    <p>
+                        <strong>Public Client Flows</strong> הוא הגדרה קריטית שבלעדיה Service Account Sync לא יעבוד.
+                        ודאו שהגדרה זו מופעלת (Yes) בחלק Authentication של האפליקציה.
+                    </p>
+                </div>
+            </div>
+
+            <!-- מדריך שלב אחר שלב -->
+            <div class="section" id="step-by-step">
+                <h2 class="section-title">📚 מדריך שלב אחר שלב</h2>
+
+                <!-- שלב 1 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        כניסה ל-Azure Portal
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <ol>
+                            <li>היכנסו ל-Azure Portal: <a href="https://portal.azure.com" target="_blank">https://portal.azure.com</a></li>
+                            <li>התחברו עם חשבון בעל הרשאות <span class="highlight">Global Administrator</span> או <span class="highlight">Application Administrator</span></li>
+                            <li>חפשו "Microsoft Entra ID" בסרגל החיפוש העליון</li>
+                            <li>לחצו על "Microsoft Entra ID" מהתוצאות</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- שלב 2 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        יצירת App Registration חדש
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <ol>
+                            <li>בתפריט הימני, לחצו על <strong>"App registrations"</strong></li>
+                            <li>לחצו על הכפתור <strong>"+ New registration"</strong> בחלק העליון</li>
+                            <li>מלאו את הפרטים הבאים:</li>
+                        </ol>
+
+                        <div class="code-block">
+<code>Name: SafeQ Cloud - Unified App
+(או כל שם אחר שמתאים לארגון שלכם)
+
+Supported account types:
+☑ Accounts in this organizational directory only (Single tenant)
+
+Redirect URI (optional):
+השאירו ריק בשלב זה - נוסיף מאוחר יותר
+</code>
+                        </div>
+
+                        <p>4. לחצו על הכפתור <strong>"Register"</strong></p>
+
+                        <div class="success-box">
+                            <div class="box-title"><span class="icon">✓</span>בוצע בהצלחה</div>
+                            <p>האפליקציה נוצרה! עכשיו נעבור להגדרות מתקדמות.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- שלב 3 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        שמירת מזהי האפליקציה
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <p>אחרי שהאפליקציה נוצרה, תועברו לעמוד ה-Overview שלה. <strong>העתיקו ושמרו</strong> את הערכים הבאים במקום מאובטח:</p>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>שדה</th>
+                                    <th>איפה למצוא</th>
+                                    <th>דוגמה</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Application (client) ID</strong></td>
+                                    <td>Overview → Application (client) ID</td>
+                                    <td><code>12345678-1234-1234-1234-123456789012</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Directory (tenant) ID</strong></td>
+                                    <td>Overview → Directory (tenant) ID</td>
+                                    <td><code>87654321-4321-4321-4321-210987654321</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="warning-box">
+                            <div class="box-title"><span class="icon">⚠️</span>חשוב</div>
+                            <p>שמרו ערכים אלו במקום מאובטח (Password Manager או קובץ מוצפן). תצטרכו אותם בהמשך!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- שלב 4 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        הוספת Redirect URIs
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <ol>
+                            <li>בתפריט הימני של האפליקציה, לחצו על <strong>"Authentication"</strong></li>
+                            <li>בחלק <strong>"Platform configurations"</strong>, לחצו <strong>"+ Add a platform"</strong></li>
+                            <li>בחרו <strong>"Web"</strong></li>
+                            <li>הזינו את ה-Redirect URI של הממשק שלכם:</li>
+                        </ol>
+
+                        <div class="code-block">
+<code>Redirect URIs:
+https://your-app-name.streamlit.app
+
+(החלף את your-app-name בשם האפליקציה שלך)
+</code>
+                        </div>
+
+                        <p>5. לחצו <strong>"Configure"</strong></p>
+                        <p>6. (אופציונלי) אם SafeQ Cloud דורש Redirect URI נוסף, לחצו שוב <strong>"+ Add a platform"</strong>, בחרו <strong>"Mobile and desktop applications"</strong>, והזינו את הכתובת הנדרשת.</p>
+                        <p>7. לחצו <strong>"Save"</strong> בחלק העליון של הדף</p>
+
+                        <div class="info-box">
+                            <div class="box-title"><span class="icon">💡</span>טיפ</div>
+                            <p>Azure מאפשר להוסיף מספר Redirect URIs לאותה אפליקציה. זה מאפשר לכם להשתמש באפליקציה אחת למספר מטרות!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- שלב 5 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        הפעלת Public Client Flows
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <p>אתם כבר בעמוד Authentication, גללו למטה ל:</p>
+                        <ol>
+                            <li>מצאו את החלק <strong>"Advanced settings"</strong></li>
+                            <li>תחת <strong>"Allow public client flows"</strong></li>
+                            <li>הפכו את הערך ל-<strong>"Yes"</strong></li>
+                            <li>לחצו <strong>"Save"</strong> בחלק העליון</li>
+                        </ol>
+
+                        <div class="danger-box">
+                            <div class="box-title"><span class="icon">🚨</span>קריטי!</div>
+                            <p>
+                                <strong>Allow public client flows</strong> חייב להיות מופעל (Yes) כדי ש-Service Account Sync יעבוד.
+                                זוהי דרישה קריטית של SafeQ Cloud!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- שלב 6 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">6</span>
+                        הגדרת הרשאות API
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <ol>
+                            <li>בתפריט הימני, לחצו על <strong>"API permissions"</strong></li>
+                            <li>תראו הרשאה ברירת מחדל: <code>User.Read</code> - <strong>מחקו אותה</strong> (לחצו על ... ← Delete permission)</li>
+                            <li>לחצו על <strong>"+ Add a permission"</strong></li>
+                            <li>בחרו <strong>"Microsoft Graph"</strong> מהרשימה</li>
+                            <li>בחרו <strong>"Delegated permissions"</strong></li>
+                            <li>חפשו והוסיפו את ההרשאות הבאות:</li>
+                        </ol>
+
+                        <div class="code-block">
+<code>☑ User.Read.All
+  קריאת פרופילים מלאים של משתמשים
+
+☑ GroupMember.Read.All
+  קריאת חברות בקבוצות
+</code>
+                        </div>
+
+                        <p>7. לחצו <strong>"Add permissions"</strong></p>
+                        <p>8. כעת לחצו על הכפתור <strong>"Grant admin consent for [Your Organization]"</strong></p>
+                        <p>9. אשרו על ידי לחיצה על <strong>"Yes"</strong></p>
+
+                        <div class="success-box">
+                            <div class="box-title"><span class="icon">✓</span>הרשאות הוגדרו</div>
+                            <p>אתם אמורים לראות סימן ✓ ירוק בעמודת "Status" ליד כל הרשאה.</p>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="box-title"><span class="icon">📌</span>למה ההרשאות האלה?</div>
+                            <ul>
+                                <li><strong>User.Read.All:</strong> מאפשר קריאת מידע מלא על משתמשים (שם, אימייל, מחלקה, וכו')</li>
+                                <li><strong>GroupMember.Read.All:</strong> מאפשר לדעת לאילו קבוצות משתמש שייך (לצורך הרשאות)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- שלב 7 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">7</span>
+                        יצירת Client Secret
+                    </div>
+                    <div class="step-content">
+                        <p><strong>פעולה:</strong></p>
+                        <ol>
+                            <li>בתפריט הימני, לחצו על <strong>"Certificates & secrets"</strong></li>
+                            <li>לחצו על הטאב <strong>"Client secrets"</strong></li>
+                            <li>לחצו <strong>"+ New client secret"</strong></li>
+                            <li>מלאו את הפרטים:</li>
+                        </ol>
+
+                        <div class="code-block">
+<code>Description: SafeQ Manager & Service Account Secret
+
+Expires: 24 months (המלצה)
+</code>
+                        </div>
+
+                        <p>5. לחצו <strong>"Add"</strong></p>
+
+                        <div class="danger-box">
+                            <div class="box-title"><span class="icon">🔒</span>חשוב מאוד!</div>
+                            <p>
+                                <strong>העתיקו את ה-Value (הסוד) מיד!</strong> הוא מוצג רק פעם אחת ולא ניתן לשחזר אותו מאוחר יותר.
+                                <br><br>
+                                אם לא העתקתם - תצטרכו ליצור Client Secret חדש.
+                            </p>
+                        </div>
+
+                        <p>6. שמרו את ה-<strong>Value</strong> (לא את ה-Secret ID!) במקום מאובטח</p>
+
+                        <div class="warning-box">
+                            <div class="box-title"><span class="icon">🗓️</span>תזכורת</div>
+                            <p>
+                                Client Secret פג תוקף אחרי 24 חודשים.
+                                הגדירו תזכורת ביומן לחידוש הסוד 2-3 שבועות לפני התפוגה!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- שלב 8 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">8</span>
+                        סיכום ואימות
+                    </div>
+                    <div class="step-content">
+                        <p><strong>בדיקת תקינות:</strong></p>
+                        <p>ודאו שיש לכם את כל הפרטים הבאים:</p>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>פרמטר</th>
+                                    <th>תיאור</th>
+                                    <th>סטטוס</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Application (client) ID</strong></td>
+                                    <td>מזהה האפליקציה</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Directory (tenant) ID</strong></td>
+                                    <td>מזהה הטננט</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Client Secret (Value)</strong></td>
+                                    <td>הסוד של האפליקציה</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Redirect URI</strong></td>
+                                    <td>כתובת הממשק</td>
+                                    <td>✅</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="success-box">
+                            <div class="box-title"><span class="icon">🎉</span>סיימתם!</div>
+                            <p>
+                                האפליקציה ב-Entra ID מוכנה לשימוש!
+                                <br>
+                                כעת תוכלו להעביר את הפרטים הללו לצוות הטכני להגדרה במערכת SafeQ Cloud Manager ובממשק ניהול SafeQ Cloud.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- טבלת סיכום -->
+            <div class="section" id="summary">
+                <h2 class="section-title">📊 טבלת סיכום - מה הגדרנו?</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>רכיב</th>
+                            <th>ערך/הגדרה</th>
+                            <th>מיקום באפליקציה</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Application Name</strong></td>
+                            <td>SafeQ Cloud - Unified App</td>
+                            <td>Overview</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Account Type</strong></td>
+                            <td>Single-Tenant</td>
+                            <td>Overview → Supported account types</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redirect URI (Web)</strong></td>
+                            <td>https://your-app.streamlit.app</td>
+                            <td>Authentication → Platform configurations</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Public Client Flows</strong></td>
+                            <td><span class="badge badge-success">Yes</span></td>
+                            <td>Authentication → Advanced settings</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Delegated Permissions</strong></td>
+                            <td>User.Read.All<br>GroupMember.Read.All</td>
+                            <td>API permissions → Microsoft Graph</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Admin Consent</strong></td>
+                            <td><span class="badge badge-success">Granted</span></td>
+                            <td>API permissions → Status column</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Client Secret</strong></td>
+                            <td>24 months expiry</td>
+                            <td>Certificates & secrets → Client secrets</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Checklist -->
+            <div class="section" id="checklist">
+                <h2 class="section-title">✅ Checklist סופי</h2>
+
+                <p>ודאו שכל הפריטים הבאים בוצעו לפני סגירת המדריך:</p>
+
+                <ul class="checklist">
+                    <li>נוצרה App Registration חדשה ב-Microsoft Entra ID</li>
+                    <li>נבחר Account Type: Single-Tenant</li>
+                    <li>נוספו Redirect URIs (לפחות אחד מסוג Web)</li>
+                    <li>הופעל Allow Public Client Flows = Yes</li>
+                    <li>נוספו הרשאות: User.Read.All + GroupMember.Read.All</li>
+                    <li>ניתן Admin Consent להרשאות</li>
+                    <li>נוצר Client Secret בתוקף של 24 חודשים</li>
+                    <li>הועתקו ונשמרו: Application ID, Tenant ID, Client Secret</li>
+                    <li>הפרטים הועברו לצוות הטכני להגדרה במערכת</li>
+                    <li>נקבעה תזכורת לחידוש Client Secret לפני התפוגה</li>
+                </ul>
+            </div>
+
+            <!-- שאלות ותשובות -->
+            <div class="section" id="faq">
+                <h2 class="section-title">❓ שאלות ותשובות</h2>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        האם Public Client Flows מסכן את האבטחה?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            לא, כל עוד אתם משתמשים גם ב-<strong>Client Secret</strong> (שאתם משתמשים).
+                            הממשק שלכם משתמש ב-Authorization Code Flow עם PKCE + Client Secret, שזה מאובטח מאוד.
+                            <br><br>
+                            Public Client Flows נדרש ספציפית ל-Service Account כדי לאפשר אימות דרך SafeQ Cloud.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        מה קורה אם שכחתי להעתיק את ה-Client Secret?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            אין בעיה! פשוט צרו Client Secret חדש:
+                        </p>
+                        <ol>
+                            <li>חזרו ל-Certificates & secrets</li>
+                            <li>צרו Secret חדש</li>
+                            <li>העתיקו את ה-Value הפעם</li>
+                            <li>(אופציונלי) מחקו את הסוד הישן אם אינכם זקוקים לו</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        האם אפשר לשנות את שם האפליקציה אחרי היצירה?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            כן! פשוט עברו ל-Overview → לחצו על "Display name" ושנו את השם.
+                            <br>
+                            שימו לב ש-Application ID ו-Tenant ID לא משתנים.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        כמה זמן לוקח עד שההגדרות נכנסות לתוקף?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            שינויים ב-Entra ID בדרך כלל נכנסים לתוקף <strong>מיידי</strong>.
+                            <br>
+                            במקרים נדירים, זה יכול לקחת עד <strong>5-10 דקות</strong> עד שהשינויים מתפשטים לכל השרתים של Microsoft.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        מה קורה כאשר ה-Client Secret פג תוקף?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            כאשר Client Secret פג תוקף, <strong>המערכת תפסיק לעבוד</strong> ותקבלו שגיאות אימות.
+                            <br><br>
+                            <strong>למניעת הפסקה:</strong>
+                        </p>
+                        <ul>
+                            <li>הגדירו תזכורת ביומן 2-3 שבועות לפני התפוגה</li>
+                            <li>צרו Client Secret חדש מראש</li>
+                            <li>עדכנו את המערכת עם הסוד החדש</li>
+                            <li>מחקו את הסוד הישן רק אחרי שהמערכת עובדת עם החדש</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        האם צריך להוסיף הרשאות Application במקום Delegated?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            <strong>לא.</strong> במקרה שלנו, כל ההרשאות הן מסוג <strong>Delegated</strong> בלבד.
+                            <br><br>
+                            Delegated = הרשאות בשם משתמש מחובר<br>
+                            Application = הרשאות ברקע ללא משתמש (לא נדרש כאן)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="icon">❓</span>
+                        איך אני יודע שההגדרה הצליחה?
+                    </div>
+                    <div class="step-content">
+                        <p><strong>תשובה:</strong></p>
+                        <p>
+                            אחרי שהעברתם את הפרטים לצוות הטכני, הם יבצעו בדיקת אינטגרציה:
+                        </p>
+                        <ol>
+                            <li>ניסיון כניסה לממשק SafeQ Cloud Manager</li>
+                            <li>אימות שמשתמשי Entra יכולים להתחבר</li>
+                            <li>בדיקת Service Account Sync ב-SafeQ Cloud</li>
+                            <li>אימות שמשיכת נתונים מ-Entra עובדת</li>
+                        </ol>
+                        <p>אם כל הבדיקות עברו - ההגדרה הצליחה! 🎉</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- מידע נוסף -->
+            <div class="section">
+                <h2 class="section-title">📚 מידע נוסף ומשאבים</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">📖 דוקומנטציה רשמית</div>
+                        <ul>
+                            <li><a href="https://learn.microsoft.com/en-us/entra/" target="_blank">Microsoft Entra ID Documentation</a></li>
+                            <li><a href="https://docs.ysoft.cloud/docs/microsoft-entra-authentication" target="_blank">YSoft SafeQ Cloud - Entra Authentication</a></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🛠️ כלים מומלצים</div>
+                        <ul>
+                            <li>Password Manager (לשמירת Secrets)</li>
+                            <li>Microsoft Authenticator (MFA)</li>
+                            <li>Azure Portal Mobile App</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">💡 טיפים מקצועיים</div>
+                        <ul>
+                            <li>גבו את פרטי האפליקציה במקום מאובטח</li>
+                            <li>תעדו את תהליך החידוש של Client Secret</li>
+                            <li>הגדירו Monitoring לבדיקת תקינות</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>מדריך הקמת אפליקציית Microsoft Entra ID למערכת SafeQ Cloud</strong></p>
+            <p>גרסה: 1.0 | תאריך עדכון אחרון: דצמבר 2025</p>
+            <p>מוכן על ידי: SafeQ Cloud Manager Implementation Team</p>
+            <p style="margin-top: 20px; font-size: 0.9em; color: #999;">
+                © 2025 All Rights Reserved | For internal use only
+            </p>
+        </div>
+    </div>
+</body>
+</html>
