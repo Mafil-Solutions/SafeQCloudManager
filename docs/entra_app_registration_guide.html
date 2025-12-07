@@ -437,6 +437,83 @@
             color: #666;
             margin-top: 5px;
         }
+
+        /* Print Styles - for PDF export */
+        @media print {
+            body {
+                background: white !important;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none !important;
+                max-width: 100%;
+            }
+
+            .header {
+                background: linear-gradient(135deg, #D71F27 0%, #009BDB 100%) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                page-break-after: avoid;
+            }
+
+            .header-logos {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Page breaks at strategic points */
+            .toc {
+                page-break-after: always;
+            }
+
+            #requirements {
+                page-break-before: always;
+            }
+
+            #step-by-step {
+                page-break-before: always;
+            }
+
+            .step:nth-child(4) {
+                page-break-after: always;
+            }
+
+            #summary {
+                page-break-before: always;
+            }
+
+            /* Prevent page breaks inside important elements */
+            .step, .info-box, .warning-box, .success-box, .danger-box, table, .card {
+                page-break-inside: avoid;
+            }
+
+            /* Ensure colors print correctly */
+            .section-title, .subsection-title, .badge, thead {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .step-number {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Adjust spacing for print */
+            .content {
+                padding: 20px 40px;
+            }
+
+            /* Ensure links are visible in print */
+            a[href]:after {
+                content: none;
+            }
+
+            /* Hide footer page break */
+            .footer {
+                page-break-before: avoid;
+            }
+        }
     </style>
 </head>
 <body>
