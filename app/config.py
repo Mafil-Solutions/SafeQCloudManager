@@ -66,7 +66,6 @@ class Config:
                 'SCOPE': [
                     'https://graph.microsoft.com/User.Read',
                     'https://graph.microsoft.com/GroupMember.Read.All',
-                    'https://graph.microsoft.com/Directory.Read.All'
                 ],
                 'REDIRECT_URI': self._get_secret('REDIRECT_URI', 'http://localhost:8501'),
             },
