@@ -147,24 +147,48 @@ def show():
         st.warning("👁️ רמת ההרשאה שלך (viewer) מאפשרת רק צפייה. יצירת משתמשים חדשים זמינה רק לתמיכה/מנהלים.")
         return
 
-    # טעינת כל המחלקות מ-SafeQ Cloud (לא רק מורשות)
-    # זה צריך להיטען פעם אחת בלבד
-    if 'all_safeq_departments' not in st.session_state:
-        with st.spinner("טוען מחלקות מ-SafeQ Cloud..."):
-            all_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
-            if all_groups:
-                # חילוץ מחלקות מקבוצות (קבוצות עם " - " בשם)
-                departments = set()
-                for group in all_groups:
-                    group_name = group.get('groupName', '')
-                    if ' - ' in group_name:
-                        departments.add(group_name)
-                st.session_state.all_safeq_departments = sorted(departments)
-            else:
-                st.session_state.all_safeq_departments = []
+    # טעינת מחלקות - לפי הרשאות
+    # SuperAdmin: כל המחלקות | Support/Admin: רק מחלקות מורשות
+    allowed_departments = st.session_state.get('allowed_departments', [])
 
-    department_options = st.session_state.all_safeq_departments
-    print(f"[DEBUG] All SafeQ departments: {len(department_options)} options")
+    if role == 'superadmin':
+        # SuperAdmin - טוען את כל המחלקות מ-SafeQ Cloud
+        if 'all_safeq_departments' not in st.session_state:
+            with st.spinner("טוען מחלקות מ-SafeQ Cloud..."):
+                all_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
+                if all_groups:
+                    # חילוץ מחלקות מקבוצות (קבוצות עם " - " בשם)
+                    departments = set()
+                    for group in all_groups:
+                        group_name = group.get('groupName', '')
+                        if ' - ' in group_name:
+                            departments.add(group_name)
+                    st.session_state.all_safeq_departments = sorted(departments)
+                else:
+                    st.session_state.all_safeq_departments = []
+
+        department_options = st.session_state.all_safeq_departments
+        print(f"[DEBUG] SuperAdmin - All SafeQ departments: {len(department_options)} options")
+    else:
+        # Support/Admin - רק מחלקות מורשות
+        if 'authorized_departments' not in st.session_state:
+            with st.spinner("טוען מחלקות מורשות..."):
+                all_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
+                if all_groups:
+                    departments = set()
+                    for group in all_groups:
+                        group_name = group.get('groupName', '')
+                        # רק קבוצות עם " - " שהן במחלקות מורשות
+                        if ' - ' in group_name:
+                            # בדיקה אם זה ALL או שהמחלקה ברשימת המורשות
+                            if allowed_departments == ["ALL"] or group_name in allowed_departments:
+                                departments.add(group_name)
+                    st.session_state.authorized_departments = sorted(departments)
+                else:
+                    st.session_state.authorized_departments = []
+
+        department_options = st.session_state.authorized_departments
+        print(f"[DEBUG] {role} - Authorized departments: {len(department_options)} options")
 
     has_departments = len(department_options) > 0
 
