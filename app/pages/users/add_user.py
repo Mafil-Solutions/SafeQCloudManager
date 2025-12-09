@@ -16,6 +16,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import get_api_instance, get_logger_instance, check_authentication, CONFIG
 from permissions import filter_groups_by_departments
 
+@st.dialog("✅ משתמש נוצר בהצלחה", width="small")
+def user_created_success_dialog(username):
+    """Modal להצגת הצלחת יצירת משתמש"""
+    st.success(f"✅ המשתמש **{username}** נוצר בהצלחה!")
+    st.balloons()
+
+    col_ok = st.columns(1)[0]
+    if st.button("✓ אישור", key="modal_user_created_ok", type="primary", use_container_width=True):
+        # ניקוי הטופס
+        if 'add_user_form_state' in st.session_state:
+            del st.session_state.add_user_form_state
+        if 'user_created_success' in st.session_state:
+            del st.session_state.user_created_success
+        # עדכון form_reset_key כדי לאפס את הטופס
+        import time
+        st.session_state.form_reset_key = f"form_{int(time.time())}"
+        st.rerun()
+
 def get_department_options(allowed_departments, local_groups):
     """מחזיר רשימת אפשרויות מחלקות לפי הרשאות"""
     # Debug: בדיקת מצב ההתחלה
@@ -207,8 +225,8 @@ def show():
                                         help="אם לא מוזן - סיסמה ברירת מחדל: Aa123456")
             new_pin = st.text_input("קוד PIN", value=form_state.get('pin', ''),
                                    help="קוד PIN ייחודי למשתמש")
-            new_cardid = st.text_input("מזהה כרטיס", value=form_state.get('cardid', ''),
-                                      help="מזהה כרטיס ייחודי")
+            new_cardid = st.text_input("סיסמא למערכת דוחות(מנהלי בית ספר)", value=form_state.get('cardid', ''),
+                                      help="סיסמא למערכת הדוחות עבור מנהלי בית הספר")
 
         # כפתורים
         col_submit, col_cancel = st.columns(2)
@@ -254,7 +272,7 @@ def show():
             if new_cardid and hasattr(api, 'check_cardid_exists'):
                 cardid_exists, existing_user = api.check_cardid_exists(new_cardid)
                 if cardid_exists:
-                    validation_errors.append(f"❌ מזהה כרטיס '{new_cardid}' כבר קיים אצל משתמש: {existing_user}")
+                    validation_errors.append(f"❌ סיסמא למערכת הדוחות '{new_cardid}' כבר קיימת אצל משתמש: {existing_user}")
 
             # אם יש שגיאות validation
             if validation_errors:
@@ -291,20 +309,19 @@ def show():
             with st.spinner("יוצר משתמש..."):
                 success = api.create_user(new_username, provider_id, details)
                 if success:
-                    st.success("✅ המשתמש נוצר בהצלחה!")
-                    st.balloons()
-                    # ניקוי הטופס - גם state וגם reset key
-                    if 'add_user_form_state' in st.session_state:
-                        del st.session_state.add_user_form_state
-                    # עדכון form_reset_key כדי לאפס את הטופס
-                    import time
-                    st.session_state.form_reset_key = f"form_{int(time.time())}"
-                    time.sleep(1.5)
+                    # שמירת המידע להצגה במודל
+                    st.session_state.user_created_success = {
+                        'username': new_username
+                    }
                     st.rerun()
                 else:
                     st.error("❌ יצירת המשתמש נכשלה")
                     logger.log_action(st.session_state.username, "User Creation Failed", f"Username: {new_username}",
                                     st.session_state.get('user_email', ''), user_groups_str, False, st.session_state.get('access_level', 'viewer'))
+
+    # הצגת modal dialog להצלחה
+    if 'user_created_success' in st.session_state:
+        user_created_success_dialog(st.session_state.user_created_success['username'])
 
 if __name__ == "__main__":
     show()

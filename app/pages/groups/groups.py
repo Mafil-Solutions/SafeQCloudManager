@@ -15,6 +15,140 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import get_api_instance, get_logger_instance, check_authentication, CONFIG
 from permissions import filter_groups_by_departments, filter_users_by_departments
 
+@st.dialog("אישור הסרת משתמשים", width="small")
+def confirm_bulk_remove_dialog(num_selected, group_name, selected_users, api, logger):
+    """Modal לאישור הסרת משתמשים מקבוצה"""
+    st.warning(f"⚠️ האם אתה בטוח שברצונך להסיר {num_selected} משתמשים מהקבוצה **{group_name}**?")
+    st.error("⚠️ פעולה זו תסיר את המשתמשים מהקבוצה!")
+
+    col_yes, col_no = st.columns(2)
+    with col_yes:
+        if st.button("✅ אשר הסרה", key="modal_confirm_bulk_remove_yes", type="primary", use_container_width=True):
+            with st.spinner("מסיר משתמשים..."):
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+
+                success_count = 0
+                fail_count = 0
+                failed_users = []
+
+                total = len(selected_users)
+
+                for idx, username in enumerate(selected_users):
+                    status_text.text(f"מסיר {idx + 1}/{total}: {username}...")
+                    progress_bar.progress((idx + 1) / total)
+
+                    success = api.remove_user_from_group(username, group_name)
+                    if success:
+                        success_count += 1
+                    else:
+                        fail_count += 1
+                        failed_users.append(username)
+
+                # תוצאות
+                if success_count > 0:
+                    st.success(f"✅ {success_count} משתמשים הוסרו בהצלחה!")
+                if failed_users:
+                    st.error(f"❌ {fail_count} משתמשים נכשלו:")
+                    for u in failed_users:
+                        st.write(f"  • {u}")
+
+                # לוג
+                user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+                logger.log_action(st.session_state.username, "Bulk Remove from Group",
+                                f"Removed {success_count}/{total} users from {group_name}",
+                                st.session_state.get('user_email', ''), user_groups_str, success_count > 0,
+                                st.session_state.get('access_level', 'viewer'))
+
+                # רענון הקבוצה
+                members = api.get_group_members(group_name)
+                if members is not None:
+                    st.session_state.group_members_data = {
+                        'group_name': group_name,
+                        'members': members,
+                        'count': len(members)
+                    }
+
+                # ניקוי
+                if 'confirm_bulk_remove' in st.session_state:
+                    del st.session_state.confirm_bulk_remove
+                st.session_state.selected_group_members = []
+                st.rerun()
+
+    with col_no:
+        if st.button("❌ ביטול", key="modal_confirm_bulk_remove_no", use_container_width=True):
+            if 'confirm_bulk_remove' in st.session_state:
+                del st.session_state.confirm_bulk_remove
+            st.rerun()
+
+@st.dialog("אישור הוספת משתמשים", width="small")
+def confirm_bulk_add_dialog(num_selected, group_name, selected_users, api, logger):
+    """Modal לאישור הוספת משתמשים לקבוצה"""
+    st.warning(f"⚠️ האם אתה בטוח שברצונך להוסיף {num_selected} משתמשים לקבוצה **{group_name}**?")
+
+    col_yes, col_no = st.columns(2)
+    with col_yes:
+        if st.button("✅ אשר", key="modal_confirm_bulk_add_yes", type="primary", use_container_width=True):
+            with st.spinner("מוסיף משתמשים..."):
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+
+                success_add_count = 0
+                fail_add_count = 0
+                failed_add_users = []
+
+                total_add = len(selected_users)
+
+                for idx, username in enumerate(selected_users):
+                    status_text.text(f"מוסיף {idx + 1}/{total_add}: {username}...")
+                    progress_bar.progress((idx + 1) / total_add)
+
+                    success = api.add_user_to_group(username, group_name)
+                    if success:
+                        success_add_count += 1
+                    else:
+                        fail_add_count += 1
+                        failed_add_users.append(username)
+
+                # תוצאות
+                if success_add_count > 0:
+                    st.success(f"✅ {success_add_count} משתמשים נוספו בהצלחה!")
+                if failed_add_users:
+                    st.error(f"❌ {fail_add_count} משתמשים נכשלו:")
+                    for u in failed_add_users:
+                        st.write(f"  • {u}")
+
+                # לוג
+                user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+                logger.log_action(st.session_state.username, "Bulk Add to Group",
+                                f"Added {success_add_count}/{total_add} users to {group_name}",
+                                st.session_state.get('user_email', ''), user_groups_str, success_add_count > 0,
+                                st.session_state.get('access_level', 'viewer'))
+
+                # רענון הקבוצה
+                members = api.get_group_members(group_name)
+                if members is not None:
+                    st.session_state.group_members_data = {
+                        'group_name': group_name,
+                        'members': members,
+                        'count': len(members)
+                    }
+
+                # ניקוי
+                if 'confirm_bulk_add' in st.session_state:
+                    del st.session_state.confirm_bulk_add
+                st.session_state.users_to_add_selected = []
+                if 'search_results_add' in st.session_state:
+                    del st.session_state.search_results_add
+
+                st.rerun()
+
+    with col_no:
+        if st.button("❌ ביטול", key="modal_confirm_bulk_add_no", use_container_width=True):
+            if 'confirm_bulk_add' in st.session_state:
+                del st.session_state.confirm_bulk_add
+            st.rerun()
+
 def show():
     """הצגת דף ניהול קבוצות"""
     check_authentication()
@@ -350,114 +484,10 @@ def show():
                             st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
 
-            # אימות הסרה
-            if st.session_state.get('confirm_bulk_remove', False) and not st.session_state.get('bulk_remove_in_progress', False) and not st.session_state.get('bulk_remove_results'):
-                st.warning(f"⚠️ האם אתה בטוח שברצונך להסיר {num_selected} משתמשים מהקבוצה '{group_data['group_name']}'?")
-                st.error("⚠️ פעולה זו תסיר את המשתמשים מהקבוצה!")
-
-                col_yes, col_no, col_spacer = st.columns([1, 1, 2])
-                with col_yes:
-                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                    if st.button("✅ אשר הסרה", key="confirm_remove_yes"):
-                        st.session_state.bulk_remove_in_progress = True
-                        st.session_state.confirm_bulk_remove = False
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-                with col_no:
-                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                    if st.button("❌ ביטול", key="confirm_remove_no"):
-                        st.session_state.confirm_bulk_remove = False
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-            # ביצוע ההסרה
-            if st.session_state.get('bulk_remove_in_progress', False):
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-
-                success_count = 0
-                fail_count = 0
-                failed_users = []
-
-                total = len(st.session_state.selected_group_members)
-
-                for idx, username in enumerate(st.session_state.selected_group_members):
-                    status_text.text(f"מסיר {idx + 1}/{total}: {username}...")
-                    progress_bar.progress((idx + 1) / total)
-
-                    success = api.remove_user_from_group(username, group_data['group_name'])
-                    if success:
-                        success_count += 1
-                    else:
-                        fail_count += 1
-                        failed_users.append(username)
-
-                st.session_state.bulk_remove_results = {
-                    'success_count': success_count,
-                    'fail_count': fail_count,
-                    'failed_users': failed_users,
-                    'total': total,
-                    'group_name': group_data['group_name']
-                }
-
-                st.session_state.bulk_remove_in_progress = False
-
-                user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
-                logger.log_action(st.session_state.username, "Bulk Remove from Group",
-                                f"Removed {success_count}/{total} users from {group_data['group_name']}",
-                                st.session_state.get('user_email', ''), user_groups_str,
-                                success_count > 0, st.session_state.get('access_level', 'viewer'))
-
-                st.rerun()
-
-            # הצגת סיכום
-            if st.session_state.get('bulk_remove_results'):
-                results = st.session_state.bulk_remove_results
-
-                st.markdown("---")
-                st.subheader("📊 סיכום הסרה")
-
-                col_s, col_f = st.columns(2)
-                with col_s:
-                    st.metric("✅ הוסרו בהצלחה", results['success_count'])
-                with col_f:
-                    st.metric("❌ כשלונות", results['fail_count'])
-
-                if results['success_count'] > 0:
-                    st.success(f"✅ {results['success_count']} משתמשים הוסרו בהצלחה")
-
-                if results['failed_users']:
-                    st.error(f"❌ {results['fail_count']} משתמשים נכשלו:")
-                    for user in results['failed_users']:
-                        st.write(f"  • {user}")
-
-                # כפתור אישור
-                col_confirm, col_spacer = st.columns([1, 3])
-                with col_confirm:
-                    st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                    if st.button("✓ אישור והמשך", key="confirm_bulk_remove_results"):
-                        # רענון הקבוצה
-                        with st.spinner("מרענן..."):
-                            members = api.get_group_members(results['group_name'])
-                            if members is not None:
-                                st.session_state.group_members_data = {
-                                    'group_name': results['group_name'],
-                                    'members': members,
-                                    'count': len(members)
-                                }
-
-                        # ניקוי
-                        st.session_state.selected_group_members = []
-                        st.session_state.confirm_bulk_remove = False
-                        st.session_state.group_checkbox_counter += 1
-                        if 'bulk_remove_results' in st.session_state:
-                            del st.session_state.bulk_remove_results
-                        if 'bulk_remove_in_progress' in st.session_state:
-                            del st.session_state.bulk_remove_in_progress
-
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
+            # אימות הסרה - עם Modal Dialog
+            if st.session_state.get('confirm_bulk_remove', False):
+                confirm_bulk_remove_dialog(num_selected, group_data['group_name'],
+                                          st.session_state.selected_group_members, api, logger)
 
         # === טופס הוספה ===
         if st.session_state.get('show_add_section', False):
@@ -640,98 +670,28 @@ def show():
                         if checkbox_result:
                             temp_cart_selections.append(username)
 
-                # עדכון המחסנית רק אם השתנה משהו
+                # עדכון הבחירה רק אם השתנה משהו
                 if set(temp_cart_selections) != set(st.session_state.users_cart):
                     st.session_state.users_cart = temp_cart_selections
                     st.rerun()
 
-            # הצגת מחסנית משתמשים
+            # הצגת הודעת info עם מספר המשתמשים הנבחרים וכפתור הוספה
             if st.session_state.users_cart:
-                st.markdown("---")
-                st.markdown(f"**📦 מחסנית משתמשים ({len(st.session_state.users_cart)}):**")
+                num_to_add = len(st.session_state.users_cart)
+                st.info(f"✓ נבחרו {num_to_add} משתמשים להוספה")
 
-                # שימוש ב-container עם גובה קבוע ליצירת סקרול אוטומטי
-                with st.container(height=300, border=True):
-                    for username in st.session_state.users_cart:
-                        col_name, col_remove = st.columns([3, 1])
-                        with col_name:
-                            st.write(f"• {username}")
-                        with col_remove:
-                            if st.button("❌", key=f"remove_from_cart_{username}"):
-                                st.session_state.users_cart.remove(username)
-                                st.rerun()
-
-                # כפתור הוספה
                 col_add, col_spacer = st.columns([1, 3])
                 with col_add:
                     st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                    if st.button(f"➕ הוסף {len(st.session_state.users_cart)} משתמשים", key="add_users_from_cart"):
+                    if st.button(f"➕ הוסף {num_to_add} משתמשים", key="add_users_from_selection"):
                         st.session_state.confirm_bulk_add = True
                         st.rerun()
                     st.markdown('</div>', unsafe_allow_html=True)
 
-                # אימות הוספה
+                # אימות הוספה - עם Modal Dialog
                 if st.session_state.get('confirm_bulk_add', False):
-                    st.warning(f"⚠️ האם אתה בטוח שברצונך להוסיף {len(st.session_state.users_cart)} משתמשים?")
-
-                    col_y, col_n, col_spacer = st.columns([1, 1, 2])
-                    with col_y:
-                        st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                        if st.button("✅ אשר", key="confirm_add_yes"):
-                            # ביצוע ההוספה
-                            with st.spinner("מוסיף משתמשים..."):
-                                progress_bar = st.progress(0)
-                                status_text = st.empty()
-
-                                success_add_count = 0
-                                fail_add_count = 0
-                                failed_add_users = []
-
-                                total_add = len(st.session_state.users_cart)
-
-                                for idx, username in enumerate(st.session_state.users_cart):
-                                    status_text.text(f"מוסיף {idx + 1}/{total_add}: {username}...")
-                                    progress_bar.progress((idx + 1) / total_add)
-
-                                    success = api.add_user_to_group(username, group_data['group_name'])
-                                    if success:
-                                        success_add_count += 1
-                                    else:
-                                        fail_add_count += 1
-                                        failed_add_users.append(username)
-
-                                # תוצאות
-                                if success_add_count > 0:
-                                    st.success(f"✅ {success_add_count} משתמשים נוספו בהצלחה!")
-                                if failed_add_users:
-                                    st.error(f"❌ {fail_add_count} משתמשים נכשלו:")
-                                    for u in failed_add_users:
-                                        st.write(f"  • {u}")
-
-                                # רענון הקבוצה
-                                members = api.get_group_members(group_data['group_name'])
-                                if members is not None:
-                                    st.session_state.group_members_data = {
-                                        'group_name': group_data['group_name'],
-                                        'members': members,
-                                        'count': len(members)
-                                    }
-
-                                # ניקוי
-                                st.session_state.confirm_bulk_add = False
-                                st.session_state.users_cart = []
-                                if 'search_results_add' in st.session_state:
-                                    del st.session_state.search_results_add
-
-                                st.rerun()
-                        st.markdown('</div>', unsafe_allow_html=True)
-
-                    with col_n:
-                        st.markdown('<div class="action-button">', unsafe_allow_html=True)
-                        if st.button("❌ ביטול", key="confirm_add_no"):
-                            st.session_state.confirm_bulk_add = False
-                            st.rerun()
-                        st.markdown('</div>', unsafe_allow_html=True)
+                    confirm_bulk_add_dialog(num_to_add, group_data['group_name'],
+                                          st.session_state.users_cart, api, logger)
 
         # כפתור סגור קבוצה
         if role not in ['viewer']:

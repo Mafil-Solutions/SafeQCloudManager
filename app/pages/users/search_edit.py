@@ -18,6 +18,81 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import get_api_instance, get_logger_instance, check_authentication, CONFIG
 from permissions import filter_users_by_departments, filter_groups_by_departments
 
+@st.dialog("אישור הסרה מקבוצה", width="small")
+def confirm_remove_from_group_dialog(username, group_name, api, logger):
+    """Modal לאישור הסרת משתמש מקבוצה"""
+    st.warning(f"⚠️ האם אתה בטוח שברצונך להסיר את **{username}** מהקבוצה **{group_name}**?")
+
+    col_yes, col_no = st.columns(2)
+    with col_yes:
+        if st.button("✅ אשר", key="modal_confirm_remove_yes", type="primary", use_container_width=True):
+            with st.spinner(f"מסיר את {username} מהקבוצה {group_name}..."):
+                success = api.remove_user_from_group(username, group_name)
+                if success:
+                    st.success(f"✅ המשתמש הוסר בהצלחה מהקבוצה {group_name}")
+
+                    # לוג
+                    user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+                    logger.log_action(st.session_state.username, "Remove from Group",
+                                    f"Removed {username} from {group_name}",
+                                    st.session_state.get('user_email', ''), user_groups_str, True,
+                                    st.session_state.get('access_level', 'viewer'))
+
+                    # רענון
+                    if 'remove_from_group_request' in st.session_state:
+                        del st.session_state.remove_from_group_request
+                    user_groups = api.get_user_groups(username)
+                    if user_groups:
+                        st.session_state.user_groups_display = {
+                            'username': username,
+                            'groups': user_groups
+                        }
+                    st.rerun()
+                else:
+                    st.error("❌ ההסרה מהקבוצה נכשלה")
+
+    with col_no:
+        if st.button("❌ ביטול", key="modal_confirm_remove_no", use_container_width=True):
+            if 'remove_from_group_request' in st.session_state:
+                del st.session_state.remove_from_group_request
+            st.rerun()
+
+@st.dialog("אישור מחיקת משתמש", width="small")
+def confirm_delete_user_dialog(username, user_data, api, logger):
+    """Modal לאישור מחיקת משתמש"""
+    st.warning(f"⚠️ האם אתה בטוח שברצונך למחוק את המשתמש **{username}**?")
+    st.error("⚠️ פעולה זו בלתי הפיכה!")
+
+    col_confirm, col_cancel = st.columns(2)
+    with col_confirm:
+        if st.button("✅ אשר מחיקה", key="modal_confirm_delete", type="primary", use_container_width=True):
+            provider_id = user_data.get('providerId')
+            with st.spinner(f"מוחק את {username}..."):
+                success = api.delete_user(username, provider_id)
+                if success:
+                    st.success(f"✅ המשתמש {username} נמחק בהצלחה")
+
+                    user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+                    logger.log_action(st.session_state.username, "Delete User",
+                                    f"Deleted: {username}, Provider: {provider_id}",
+                                    st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
+
+                    # ניקוי session state
+                    if 'delete_user_confirmation' in st.session_state:
+                        del st.session_state.delete_user_confirmation
+                    if 'search_results' in st.session_state:
+                        del st.session_state.search_results
+
+                    st.rerun()
+                else:
+                    st.error("❌ מחיקת המשתמש נכשלה")
+
+    with col_cancel:
+        if st.button("❌ ביטול", key="modal_cancel_delete", use_container_width=True):
+            if 'delete_user_confirmation' in st.session_state:
+                del st.session_state.delete_user_confirmation
+            st.rerun()
+
 def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
     """ייצוא DataFrame ל-Excel עם עיצוב"""
     output = io.BytesIO()
@@ -386,6 +461,11 @@ def show():
                     st.info(f"🔍 נמצאו {users_before_filter} משתמשים, מוצגים {users_after_filter} (מסוננים לפי מחלקות מורשות)")
 
                 st.session_state.search_results = matching_users
+
+                # הצגת הודעה אם לא נמצאו תוצאות
+                if not matching_users:
+                    st.warning(f"🔍 לא נמצאו תוצאות עבור החיפוש: **{search_term}** ב-**{search_type_he}** במקור **{search_provider}**")
+                    st.info("💡 נסה:\n- לשנות את סוג החיפוש\n- להשתמש בהתאמה חלקית\n- לבדוק שהמשתמש קיים במקור הנבחר")
 
     # ============ תוצאות חיפוש ============
     if 'search_results' in st.session_state and st.session_state.search_results:
@@ -837,44 +917,12 @@ def show():
                                         else:
                                             st.error("❌ ההוספה לקבוצה נכשלה")
 
-                # אימות הסרה מקבוצה (מחוץ לעמודות, בשורה נפרדת)
+                # אימות הסרה מקבוצה - עם Modal Dialog
                 if 'remove_from_group_request' in st.session_state:
                     request = st.session_state.remove_from_group_request
                     if request['username'] == selected_user_for_actions:
-                        st.markdown("---")
-                        st.warning(f"⚠️ האם אתה בטוח שברצונך להסיר את **{request['username']}** מהקבוצה **{request['group']}**?")
-
-                        col_spacer1, col_yes, col_no, col_spacer2 = st.columns([1, 2, 2, 1])
-                        with col_yes:
-                            if st.button("✅ אשר", key="confirm_remove_from_group_yes", type="primary", use_container_width=True):
-                                with st.spinner(f"מסיר את {request['username']} מהקבוצה {request['group']}..."):
-                                    success = api.remove_user_from_group(request['username'], request['group'])
-                                    if success:
-                                        st.success(f"✅ המשתמש הוסר בהצלחה מהקבוצה {request['group']}")
-
-                                        # לוג
-                                        user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
-                                        logger.log_action(st.session_state.username, "Remove from Group",
-                                                        f"Removed {request['username']} from {request['group']}",
-                                                        st.session_state.get('user_email', ''), user_groups_str, True,
-                                                        st.session_state.get('access_level', 'viewer'))
-
-                                        # רענון
-                                        del st.session_state.remove_from_group_request
-                                        user_groups = api.get_user_groups(selected_user_for_actions)
-                                        if user_groups:
-                                            st.session_state.user_groups_display = {
-                                                'username': selected_user_for_actions,
-                                                'groups': user_groups
-                                            }
-                                        st.rerun()
-                                    else:
-                                        st.error("❌ ההסרה מהקבוצה נכשלה")
-
-                        with col_no:
-                            if st.button("❌ ביטול", key="confirm_remove_from_group_no", use_container_width=True):
-                                del st.session_state.remove_from_group_request
-                                st.rerun()
+                        # קריאה למודל Dialog
+                        confirm_remove_from_group_dialog(request['username'], request['group'], api, logger)
 
                 # תיקון #1: Section 2 - עריכה ומחיקה
                 st.markdown("---")
@@ -904,42 +952,11 @@ def show():
                     else:
                         st.info("👁️ מוגבל ל-Admin")
 
-                # אזור אימות מחיקה (מחוץ לעמודות, בשורה נפרדת)
+                # אזור אימות מחיקה - עם Modal Dialog
                 if st.session_state.get('delete_user_confirmation') == selected_user_for_actions:
-                    st.markdown("---")
-                    st.warning(f"⚠️ האם אתה בטוח שברצונך למחוק את המשתמש **{selected_user_for_actions}**?")
-                    st.error("⚠️ פעולה זו בלתי הפיכה!")
-
-                    col_spacer1, col_confirm, col_cancel, col_spacer2 = st.columns([1, 2, 2, 1])
-                    with col_confirm:
-                        if st.button("✅ אשר מחיקה", key="confirm_delete_user", type="primary", use_container_width=True):
-                            if selected_user_data:
-                                provider_id = selected_user_data.get('providerId')
-                                with st.spinner(f"מוחק את {selected_user_for_actions}..."):
-                                    success = api.delete_user(selected_user_for_actions, provider_id)
-                                    if success:
-                                        st.success(f"✅ המשתמש {selected_user_for_actions} נמחק בהצלחה")
-
-                                        user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
-                                        logger.log_action(st.session_state.username, "Delete User",
-                                                        f"Deleted: {selected_user_for_actions}, Provider: {provider_id}",
-                                                        st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
-
-                                        # ניקוי session state
-                                        if 'delete_user_confirmation' in st.session_state:
-                                            del st.session_state.delete_user_confirmation
-                                        if 'search_results' in st.session_state:
-                                            del st.session_state.search_results
-
-                                        st.rerun()
-                                    else:
-                                        st.error("❌ מחיקת המשתמש נכשלה")
-
-                    with col_cancel:
-                        if st.button("❌ ביטול", key="cancel_delete_user", use_container_width=True):
-                            if 'delete_user_confirmation' in st.session_state:
-                                del st.session_state.delete_user_confirmation
-                            st.rerun()
+                    if selected_user_data:
+                        # קריאה למודל Dialog
+                        confirm_delete_user_dialog(selected_user_for_actions, selected_user_data, api, logger)
 
             # טופס עריכה (מחוץ ל-elif כי צריך להיות נגיש גם אחרי לחיצה)
             if 'user_to_edit' in st.session_state and st.session_state.user_to_edit:
@@ -952,6 +969,14 @@ def show():
                 current_department = user_data.get('department', '')
                 current_pin = user_data.get('shortId', '')
                 current_card_id = next((d.get('detailData', '') for d in user_data.get('details', []) if isinstance(d, dict) and d.get('detailType') == 4), "")
+                provider_id = user_data.get('providerId')
+
+                # זיהוי האם זה משתמש Provider Entra
+                is_entra_user = (provider_id == CONFIG['PROVIDERS']['ENTRA'])
+
+                # הצגת אזהרה למשתמשי Entra
+                if is_entra_user:
+                    st.info("🔒 משתמש Entra ID - ניתן לערוך רק: PIN, סיסמא למערכת הדוחות ומחלקה. שדות המסונכרנים מ-Entra (שם, אימייל) אינם ניתנים לעריכה.")
 
                 # הכנת אפשרויות מחלקה
                 allowed_departments = st.session_state.get('allowed_departments', [])
@@ -964,8 +989,13 @@ def show():
                 with st.form(f"edit_user_form_{st.session_state.edit_username}"):
                     col1, col2 = st.columns(2)
                     with col1:
-                        new_full_name = st.text_input("שם מלא", value=current_full_name)
-                        new_email = st.text_input("אימייל", value=current_email)
+                        # שדות שם ואימייל - מנועלים למשתמשי Entra
+                        new_full_name = st.text_input("שם מלא", value=current_full_name,
+                                                     disabled=is_entra_user,
+                                                     help="🔒 שדה זה מסונכרן מ-Entra ID ולא ניתן לעריכה" if is_entra_user else None)
+                        new_email = st.text_input("אימייל", value=current_email,
+                                                 disabled=is_entra_user,
+                                                 help="🔒 שדה זה מסונכרן מ-Entra ID ולא ניתן לעריכה" if is_entra_user else None)
 
                         # שדה Department דינמי - כמו בהוספת משתמש
                         if has_single_dept:
@@ -1001,8 +1031,8 @@ def show():
                         # בדיקות validation
                         validation_errors = []
 
-                        # בדיקת אימייל
-                        if new_email and new_email != current_email:
+                        # בדיקת אימייל - רק למשתמשי Local (לא Entra)
+                        if not is_entra_user and new_email and new_email != current_email:
                             if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_email):
                                 validation_errors.append("❌ כתובת אימייל לא תקינה")
 
@@ -1020,10 +1050,13 @@ def show():
                         else:
                             # אין שגיאות - עדכן משתמש
                             updates_made = 0
-                            provider_id = user_data.get('providerId')
 
-                            if new_full_name != current_full_name and api.update_user_detail(st.session_state.edit_username, 0, new_full_name, provider_id): updates_made += 1
-                            if new_email != current_email and api.update_user_detail(st.session_state.edit_username, 1, new_email, provider_id): updates_made += 1
+                            # עדכון שדות - עבור משתמשי Entra, לא מעדכנים שם ואימייל
+                            if not is_entra_user:
+                                if new_full_name != current_full_name and api.update_user_detail(st.session_state.edit_username, 0, new_full_name, provider_id): updates_made += 1
+                                if new_email != current_email and api.update_user_detail(st.session_state.edit_username, 1, new_email, provider_id): updates_made += 1
+
+                            # שדות שניתן לעדכן לכל המשתמשים (Local וגם Entra)
                             if new_department != current_department and api.update_user_detail(st.session_state.edit_username, 11, new_department, provider_id): updates_made += 1
                             if new_pin != current_pin and api.update_user_detail(st.session_state.edit_username, 5, new_pin, provider_id): updates_made += 1
                             if new_card_id != current_card_id and api.update_user_detail(st.session_state.edit_username, 4, new_card_id, provider_id): updates_made += 1
