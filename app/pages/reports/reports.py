@@ -37,9 +37,13 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
 
     counter = st.session_state.filter_reset_counter
 
+    # ניהול מצב expander של סינונים - ברירת מחדל סגור
+    if 'filters_expanded' not in st.session_state:
+        st.session_state.filters_expanded = False
+
     st.markdown("---")
 
-    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=True):
+    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=st.session_state.filters_expanded):
         st.markdown("##### סנן את הנתונים המוצגים בדשבורד ובדוח המפורט")
 
         filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
@@ -461,6 +465,12 @@ def show_dashboard_tab(api, status_filter_list):
     total_pages = int(df['עמודים'].sum())
     total_color_pages = int(df['צבע'].sum())
 
+    # חישוב דו צדדי וחד צדדי
+    duplex_pages = int(df[df['דופלקס'] == 'כן']['עמודים'].sum())
+    simplex_pages = int(df[df['דופלקס'] == 'לא']['עמודים'].sum())
+    duplex_percentage = (duplex_pages / total_pages * 100) if total_pages > 0 else 0
+    simplex_percentage = (simplex_pages / total_pages * 100) if total_pages > 0 else 0
+
     # כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
 
@@ -477,6 +487,13 @@ def show_dashboard_tab(api, status_filter_list):
         <div class="stats-card">
             <div class="stats-number">{total_pages:,}</div>
             <div class="stats-label">סה"כ עמודים</div>
+            <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(196, 30, 58, 0.2);">
+                <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.3rem;">פילוח הדפסה:</div>
+                <div style="font-size: 0.85rem; color: #555;">
+                    <span style="font-weight: 600;">דו צדדי:</span> {duplex_percentage:.1f}%<br>
+                    <span style="font-weight: 600;">חד צדדי:</span> {simplex_percentage:.1f}%
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -907,8 +924,9 @@ def show():
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
-            # סגירת expander של הגדרות דוח
+            # סגירת expander של הגדרות דוח ופתיחת expander של סינונים
             st.session_state.report_settings_expanded = False
+            st.session_state.filters_expanded = True
             # קריאת נתונים מ-API
             fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records)
 
