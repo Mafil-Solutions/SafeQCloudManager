@@ -93,6 +93,24 @@ def confirm_delete_user_dialog(username, user_data, api, logger):
                 del st.session_state.delete_user_confirmation
             st.rerun()
 
+@st.dialog("✅ עדכון בוצע בהצלחה", width="small")
+def user_updated_success_dialog(username, updates_count):
+    """Modal להצגת הצלחת עדכון משתמש"""
+    st.success(f"✅ עודכנו בהצלחה **{updates_count}** שדות עבור המשתמש **{username}**")
+
+    col_ok = st.columns(1)[0]
+    if st.button("✓ אישור", key="modal_user_updated_ok", type="primary", use_container_width=True):
+        # ניקוי הטופס
+        if 'user_to_edit' in st.session_state:
+            del st.session_state.user_to_edit
+        if 'edit_username' in st.session_state:
+            del st.session_state.edit_username
+        if 'user_update_success' in st.session_state:
+            del st.session_state.user_update_success
+        if 'search_results' in st.session_state:
+            del st.session_state.search_results
+        st.rerun()
+
 def export_to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
     """ייצוא DataFrame ל-Excel עם עיצוב"""
     output = io.BytesIO()
@@ -971,6 +989,13 @@ def show():
                         confirm_delete_user_dialog(selected_user_for_actions, selected_user_data, api, logger)
 
             # טופס עריכה (מחוץ ל-elif כי צריך להיות נגיש גם אחרי לחיצה)
+            # ניקוי טופס עריכה אם המשתמש שנבחר שונה מהמשתמש שנטען לעריכה
+            if 'user_to_edit' in st.session_state and 'edit_username' in st.session_state:
+                if st.session_state.edit_username != selected_user_for_actions:
+                    # משתמש אחר נבחר - נקה את טופס העריכה
+                    del st.session_state.user_to_edit
+                    del st.session_state.edit_username
+
             if 'user_to_edit' in st.session_state and st.session_state.user_to_edit:
                 st.markdown("---")
                 st.subheader(f"📝 עריכת משתמש: {st.session_state.edit_username}")
@@ -1009,20 +1034,31 @@ def show():
                                                  disabled=is_entra_user,
                                                  help="🔒 שדה זה מסונכרן מ-Entra ID ולא ניתן לעריכה" if is_entra_user else None)
 
-                        # שדה Department דינמי - כמו בהוספת משתמש
-                        if has_single_dept:
-                            new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
-                                                          help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
+                        # שדה Department דינמי
+                        # עבור משתמשי Entra, SuperAdmin תמיד רואה selectbox עם כל האפשרויות
+                        if is_entra_user and role == 'superadmin' and has_multiple_depts:
+                            # משתמש Entra + SuperAdmin - selectbox עם כל המחלקות
+                            default_dept_idx = 0
+                            if current_department in department_options:
+                                default_dept_idx = department_options.index(current_department)
+                            new_department = st.selectbox("מחלקה", options=department_options, index=default_dept_idx,
+                                                         help="בחר מחלקה (רק SuperAdmin יכול לערוך משתמשי Entra)")
+                        elif has_single_dept:
+                            # מחלקה אחת בלבד - תצוגה בלבד
+                            st.text_input("מחלקה", value=department_options[0], disabled=True,
+                                         help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
+                            new_department = department_options[0]  # השתמש בערך הקבוע
                         elif has_multiple_depts:
-                            # מצא את האינדקס של המחלקה הנוכחית
+                            # כמה מחלקות - selectbox
                             default_dept_idx = 0
                             if current_department in department_options:
                                 default_dept_idx = department_options.index(current_department)
                             new_department = st.selectbox("מחלקה", options=department_options, index=default_dept_idx,
                                                          help="בחר מחלקה מהרשימה המורשות")
                         else:
-                            new_department = st.text_input("מחלקה", value=current_department, disabled=True,
-                                                          help="לא נמצאו מחלקות זמינות")
+                            # אין מחלקות - שדה חופשי
+                            new_department = st.text_input("מחלקה", value=current_department,
+                                                          help="הזן מחלקה (אין מחלקות מוגדרות במערכת)")
 
                     with col2:
                         new_pin = st.text_input("קוד PIN", value=current_pin)
@@ -1074,14 +1110,19 @@ def show():
                             if new_card_id != current_card_id and api.update_user_detail(st.session_state.edit_username, 4, new_card_id, provider_id): updates_made += 1
 
                             if updates_made > 0:
-                                st.success(f"עודכנו בהצלחה {updates_made} שדות עבור {st.session_state.edit_username}")
-
-                                # ניקוי הטופס והנתונים לאחר הצלחה
-                                del st.session_state.user_to_edit
-                                del st.session_state.edit_username
-                                if 'search_results' in st.session_state:
-                                    del st.session_state.search_results
+                                # שמירת המידע להצגה במודל
+                                st.session_state.user_update_success = {
+                                    'username': st.session_state.edit_username,
+                                    'updates_count': updates_made
+                                }
                                 st.rerun()
+
+                # הצגת modal dialog להצלחת עדכון
+                if 'user_update_success' in st.session_state:
+                    user_updated_success_dialog(
+                        st.session_state.user_update_success['username'],
+                        st.session_state.user_update_success['updates_count']
+                    )
 
 if __name__ == "__main__":
     show()
