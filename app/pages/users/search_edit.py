@@ -394,6 +394,10 @@ def show():
         pass  # עמודה ריקה משמאל
 
     if st.button("🔍 חפש", key="search_users_btn", type="primary", use_container_width=True):
+        # ניקוי תוצאות חיפוש קודמות
+        if 'search_results' in st.session_state:
+            del st.session_state.search_results
+
         if not search_term:
              st.error("נא להזין ערך לחיפוש")
         elif not search_provider:
@@ -1015,13 +1019,23 @@ def show():
                 if is_entra_user:
                     st.info("🔒 משתמש Entra ID - ניתן לערוך רק: PIN, סיסמא למערכת הדוחות ומחלקה. שדות המסונכרנים מ-Entra (שם, אימייל) אינם ניתנים לעריכה.")
 
-                # הכנת אפשרויות מחלקה
-                allowed_departments = st.session_state.get('allowed_departments', [])
-                local_groups = st.session_state.get('local_groups', [])
-                department_options = get_department_options(allowed_departments, local_groups)
+                # טעינת כל המחלקות מ-SafeQ Cloud (לא רק מורשות)
+                # זה צריך להיטען פעם אחת בלבד
+                if 'all_safeq_departments' not in st.session_state:
+                    with st.spinner("טוען מחלקות מ-SafeQ Cloud..."):
+                        all_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
+                        if all_groups:
+                            # חילוץ מחלקות מקבוצות (קבוצות עם " - " בשם)
+                            departments = set()
+                            for group in all_groups:
+                                group_name = group.get('groupName', '')
+                                if ' - ' in group_name:
+                                    departments.add(group_name)
+                            st.session_state.all_safeq_departments = sorted(departments)
+                        else:
+                            st.session_state.all_safeq_departments = []
 
-                has_single_dept = len(department_options) == 1
-                has_multiple_depts = len(department_options) > 1
+                all_dept_options = st.session_state.all_safeq_departments
 
                 with st.form(f"edit_user_form_{st.session_state.edit_username}"):
                     col1, col2 = st.columns(2)
@@ -1034,31 +1048,18 @@ def show():
                                                  disabled=is_entra_user,
                                                  help="🔒 שדה זה מסונכרן מ-Entra ID ולא ניתן לעריכה" if is_entra_user else None)
 
-                        # שדה Department דינמי
-                        # עבור משתמשי Entra, SuperAdmin תמיד רואה selectbox עם כל האפשרויות
-                        if is_entra_user and role == 'superadmin' and has_multiple_depts:
-                            # משתמש Entra + SuperAdmin - selectbox עם כל המחלקות
+                        # שדה Department - תמיד selectbox עם כל המחלקות
+                        if all_dept_options:
+                            # מצא את האינדקס של המחלקה הנוכחית
                             default_dept_idx = 0
-                            if current_department in department_options:
-                                default_dept_idx = department_options.index(current_department)
-                            new_department = st.selectbox("מחלקה", options=department_options, index=default_dept_idx,
-                                                         help="בחר מחלקה (רק SuperAdmin יכול לערוך משתמשי Entra)")
-                        elif has_single_dept:
-                            # מחלקה אחת בלבד - תצוגה בלבד
-                            st.text_input("מחלקה", value=department_options[0], disabled=True,
-                                         help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
-                            new_department = department_options[0]  # השתמש בערך הקבוע
-                        elif has_multiple_depts:
-                            # כמה מחלקות - selectbox
-                            default_dept_idx = 0
-                            if current_department in department_options:
-                                default_dept_idx = department_options.index(current_department)
-                            new_department = st.selectbox("מחלקה", options=department_options, index=default_dept_idx,
-                                                         help="בחר מחלקה מהרשימה המורשות")
+                            if current_department in all_dept_options:
+                                default_dept_idx = all_dept_options.index(current_department)
+                            new_department = st.selectbox("מחלקה", options=all_dept_options, index=default_dept_idx,
+                                                         help="בחר מחלקה מהרשימה")
                         else:
                             # אין מחלקות - שדה חופשי
                             new_department = st.text_input("מחלקה", value=current_department,
-                                                          help="הזן מחלקה (אין מחלקות מוגדרות במערכת)")
+                                                          help="הזן מחלקה")
 
                     with col2:
                         new_pin = st.text_input("קוד PIN", value=current_pin)
