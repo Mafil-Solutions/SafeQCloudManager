@@ -207,8 +207,8 @@ def show():
                                         help="אם לא מוזן - סיסמה ברירת מחדל: Aa123456")
             new_pin = st.text_input("קוד PIN", value=form_state.get('pin', ''),
                                    help="קוד PIN ייחודי למשתמש")
-            new_cardid = st.text_input("מזהה כרטיס", value=form_state.get('cardid', ''),
-                                      help="מזהה כרטיס ייחודי")
+            new_cardid = st.text_input("סיסמא למערכת דוחות(מנהלי בית ספר)", value=form_state.get('cardid', ''),
+                                      help="סיסמא למערכת הדוחות עבור מנהלי בית הספר")
 
         # כפתורים
         col_submit, col_cancel = st.columns(2)
@@ -254,7 +254,7 @@ def show():
             if new_cardid and hasattr(api, 'check_cardid_exists'):
                 cardid_exists, existing_user = api.check_cardid_exists(new_cardid)
                 if cardid_exists:
-                    validation_errors.append(f"❌ מזהה כרטיס '{new_cardid}' כבר קיים אצל משתמש: {existing_user}")
+                    validation_errors.append(f"❌ סיסמא למערכת הדוחות '{new_cardid}' כבר קיימת אצל משתמש: {existing_user}")
 
             # אם יש שגיאות validation
             if validation_errors:
