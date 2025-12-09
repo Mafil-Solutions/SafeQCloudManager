@@ -223,7 +223,7 @@ def show():
         column_config={
             'מיקום': st.column_config.TextColumn(
                 'מיקום',
-                width="large",  # רוחב גדול יותר
+                width="medium",
                 help="מיקום המדפסת"
             )
         }

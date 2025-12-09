@@ -568,6 +568,12 @@ def show():
                                 matching_users = filter_users_by_departments(matching_users, allowed_departments)
 
                                 st.session_state.search_results_add = matching_users
+
+                                # הצגת הודעה אם לא נמצאו תוצאות
+                                if not matching_users:
+                                    st.warning(f"🔍 לא נמצאו משתמשים עבור החיפוש: **{search_term}** ב-**{search_type_he}**")
+                                    st.info("💡 נסה:\n- לשנות את סוג החיפוש\n- לבדוק שהמשתמש לא כבר בקבוצה\n- לוודא שהמשתמש שייך למחלקות המורשות שלך")
+
                                 st.rerun()
 
                             except Exception as e:
@@ -610,7 +616,13 @@ def show():
                                         matching_users = filter_users_by_departments(matching_users, allowed_departments)
 
                                         st.session_state.search_results_add = matching_users
-                                        st.success(f"✓ החיפוש הושלם בהצלחה (מוגבל ל-500 משתמשים)")
+
+                                        # הצגת הודעה אם לא נמצאו תוצאות
+                                        if matching_users:
+                                            st.success(f"✓ החיפוש הושלם בהצלחה (מוגבל ל-500 משתמשים)")
+                                        else:
+                                            st.warning(f"🔍 לא נמצאו משתמשים עבור החיפוש: **{search_term}** ב-**{search_type_he}**")
+                                            st.info("💡 נסה:\n- לשנות את סוג החיפוש\n- לבדוק שהמשתמש לא כבר בקבוצה\n- לוודא שהמשתמש שייך למחלקות המורשות שלך")
 
                                     st.rerun()
 

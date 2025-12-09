@@ -186,7 +186,11 @@ def show_report_settings(api):
     </style>
     """, unsafe_allow_html=True)
 
-    with st.expander("⚙️ הגדרות דוח (לחץ להסתרה/הרחבה)", expanded=True):
+    # ניהול מצב expanders - ברירת מחדל פתוח
+    if 'report_settings_expanded' not in st.session_state:
+        st.session_state.report_settings_expanded = True
+
+    with st.expander("⚙️ הגדרות דוח (לחץ להסתרה/הרחבה)", expanded=st.session_state.report_settings_expanded):
 
         # שורה 0: פילטר מהיר + איפוס
         col_quick, col_reset = st.columns([3, 1])
@@ -902,6 +906,8 @@ def show():
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
+            # סגירת expander של הגדרות דוח
+            st.session_state.report_settings_expanded = False
             # קריאת נתונים מ-API
             fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records)
 
@@ -1093,6 +1099,8 @@ def show_history_report(api, logger, role, username):
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
+            # סגירת expander של הגדרות דוח
+            st.session_state.report_settings_expanded = False
             # בדיקה אם צריך לפצל לשבועות
             # date_diff מחשב ימים ביניהם, אז date_diff=6 זה 7 ימים (כולל התחלה)
             date_diff = (date_end - date_start).days
