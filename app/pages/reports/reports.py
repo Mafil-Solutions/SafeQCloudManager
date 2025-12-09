@@ -462,27 +462,24 @@ def show_dashboard_tab(api, status_filter_list):
     # חישוב סטטיסטיקות ישירות מהDataFrame המסונן
     # כולל כל סוגי העבודות: הדפסה, העתקה, סריקה, פקס
     total_docs = len(df)
-    total_pages = int(df['עמודים'].sum())
-    total_color_pages = int(df['צבע'].sum())
 
-    # חישוב דו צדדי וחד צדדי
-    duplex_pages = int(df[df['דופלקס'] == 'כן']['עמודים'].sum())
-    simplex_pages = int(df[df['דופלקס'] == 'לא']['עמודים'].sum())
+    # סינון לפי הדפסה והעתקה בלבד (ללא סריקה ופקס)
+    print_copy_df = df[df['סוג'].isin(['הדפסה', 'העתקה'])]
+
+    total_pages = int(print_copy_df['עמודים'].sum())
+    total_color_pages = int(print_copy_df['צבע'].sum())
+
+    # חישוב דו צדדי וחד צדדי (רק הדפסה והעתקה)
+    duplex_pages = int(print_copy_df[print_copy_df['דופלקס'] == 'כן']['עמודים'].sum())
+    simplex_pages = int(print_copy_df[print_copy_df['דופלקס'] == 'לא']['עמודים'].sum())
     duplex_percentage = (duplex_pages / total_pages * 100) if total_pages > 0 else 0
     simplex_percentage = (simplex_pages / total_pages * 100) if total_pages > 0 else 0
 
     # כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
 
+    # col1 - סה"כ עמודים (ראשון מימין) עם פילוח דו/חד צדדי
     with col1:
-        st.markdown(f"""
-        <div class="stats-card">
-            <div class="stats-number">{total_docs:,}</div>
-            <div class="stats-label">סה"כ עבודות</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
         st.markdown(f"""
         <div class="stats-card">
             <div class="stats-number">{total_pages:,}</div>
@@ -497,6 +494,16 @@ def show_dashboard_tab(api, status_filter_list):
         </div>
         """, unsafe_allow_html=True)
 
+    # col2 - סה"כ עבודות
+    with col2:
+        st.markdown(f"""
+        <div class="stats-card">
+            <div class="stats-number">{total_docs:,}</div>
+            <div class="stats-label">סה"כ עבודות</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # col3 - עמודי צבע
     with col3:
         st.markdown(f"""
         <div class="stats-card">
@@ -505,6 +512,7 @@ def show_dashboard_tab(api, status_filter_list):
         </div>
         """, unsafe_allow_html=True)
 
+    # col4 - עמודים ש/ל
     with col4:
         bw_pages = total_pages - total_color_pages
         st.markdown(f"""
@@ -929,6 +937,8 @@ def show():
             st.session_state.filters_expanded = True
             # קריאת נתונים מ-API
             fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records)
+            # אילוץ rerun כדי לעדכן את מצב ה-expanders
+            st.rerun()
 
         # טעינת הנתונים והכנת DataFrame מסונן משותף
         if 'history_report_data' in st.session_state:
