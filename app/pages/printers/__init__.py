@@ -215,11 +215,18 @@ def show():
     # סידור עמודות RTL - מימין לשמאל: שם, מיקום, כתובת IP, מספר סידורי, יצרן, מדפסת צבע?, בית ספר, בקר פנימי?
     df = df[['בקר פנימי?', 'בית ספר', 'מדפסת צבע?', 'יצרן', 'מספר סידורי', 'כתובת IP', 'מיקום', 'שם']]
 
-    # הצגת הטבלה
+    # הצגת הטבלה עם column_config לעמודת מיקום
     st.dataframe(
         df,
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
+        column_config={
+            'מיקום': st.column_config.TextColumn(
+                'מיקום',
+                width="large",  # רוחב גדול יותר
+                help="מיקום המדפסת"
+            )
+        }
     )
 
     # אפשרות להורדת רשימה

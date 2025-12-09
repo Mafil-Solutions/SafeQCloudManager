@@ -201,16 +201,6 @@ def show():
                         # חיפוש שם מלא
                         full_name = user_cache.get(username, username)
 
-                        # תרגום סוג עבודה
-                        job_type_en = doc.get('jobType', '')
-                        job_type_map = {
-                            'PRINT': 'הדפסה',
-                            'COPY': 'העתקה',
-                            'SCAN': 'סריקה',
-                            'FAX': 'פקס'
-                        }
-                        job_type_he = job_type_map.get(job_type_en, job_type_en)
-
                         row = {
                             'תאריך': date_str,
                             'שם מלא': full_name,
@@ -218,7 +208,6 @@ def show():
                             'סוג משתמש': source,
                             'מחלקה': department_str,
                             'שם מסמך': doc.get('documentName', ''),
-                            'סוג': job_type_he,
                             'עמודים': doc.get('totalPages', 0),
                             'צבע': doc.get('colorPages', 0),
                             'עותקים': doc.get('copies', 1),
@@ -227,8 +216,8 @@ def show():
 
                     df = pd.DataFrame(rows)
 
-                    # סידור עמודות RTL - מימין לשמאל
-                    df = df[['עותקים', 'צבע', 'עמודים', 'סוג', 'שם מסמך', 'מחלקה', 'סוג משתמש', 'משתמש', 'שם מלא', 'תאריך']]
+                    # סידור עמודות RTL - מימין לשמאל (הוסר 'סוג' כי המסך מציג רק הדפסות)
+                    df = df[['עותקים', 'צבע', 'עמודים', 'שם מסמך', 'מחלקה', 'סוג משתמש', 'משתמש', 'שם מלא', 'תאריך']]
 
                     # כפתור ייצוא
                     result_col1, result_col2 = st.columns([3, 1])

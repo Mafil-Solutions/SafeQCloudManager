@@ -462,6 +462,11 @@ def show():
 
                 st.session_state.search_results = matching_users
 
+                # הצגת הודעה אם לא נמצאו תוצאות
+                if not matching_users:
+                    st.warning(f"🔍 לא נמצאו תוצאות עבור החיפוש: **{search_term}** ב-**{search_type_he}** במקור **{search_provider}**")
+                    st.info("💡 נסה:\n- לשנות את סוג החיפוש\n- להשתמש בהתאמה חלקית\n- לבדוק שהמשתמש קיים במקור הנבחר")
+
     # ============ תוצאות חיפוש ============
     if 'search_results' in st.session_state and st.session_state.search_results:
         matching_users = st.session_state.search_results
