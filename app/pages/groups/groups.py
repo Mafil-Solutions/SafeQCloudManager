@@ -222,8 +222,8 @@ def show():
             line-height: 1 !important;
         }
 
-        /* כפתורי קבוצות - עיצוב טבלה נקי */
-        button[key^="group_btn_"] {
+        /* כפתורי קבוצות - עיצוב טבלה נקי (רק כפתורי הקבוצות!) */
+        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"] {
             background-color: white !important;
             color: #333 !important;
             border: none !important;
@@ -241,22 +241,18 @@ def show():
             box-shadow: none !important;
         }
 
-        button[key^="group_btn_"]:hover {
+        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"]:hover {
             background-color: #f8f9fa !important;
             color: #C41E3A !important;
         }
 
-        button[key^="group_btn_"],
-        button[key^="group_btn_"] * {
-            pointer-events: auto !important;
-        }
-
         /* הסרת כל האפקטים המיותרים */
-        button[key^="group_btn_"]:focus,
-        button[key^="group_btn_"]:active {
+        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"]:focus,
+        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"]:active {
             box-shadow: none !important;
             outline: none !important;
             border-bottom: 1px solid #e9ecef !important;
+            background-color: white !important;
         }
 
         /* Checkbox styling - פשוט וללא מסגרות מסביב */
@@ -359,8 +355,8 @@ def show():
     if 'available_groups_list' in st.session_state and 'group_members_data' not in st.session_state:
         st.markdown("---")
 
-        # חיפוש קבוצות (מיידי - עובד בלי Enter)
-        search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
+        # חיפוש קבוצות (מיידי)
+        search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש - תוצאות מיידיות", key="group_search", label_visibility="visible")
 
         groups_to_show = st.session_state.available_groups_list
 
@@ -396,9 +392,9 @@ def show():
                     text-align: right;
                 }
 
-                .header-group-id {
+                .header-user-count {
                     flex: 1;
-                    text-align: right;
+                    text-align: center;
                     padding-right: 1rem;
                 }
             </style>
@@ -408,17 +404,19 @@ def show():
             st.markdown("""
             <div class="groups-table-header">
                 <div class="header-group-name">👥 שם הקבוצה</div>
-                <div class="header-group-id">🆔 מזהה קבוצה</div>
+                <div class="header-user-count">👤 משתמשים בקבוצה</div>
             </div>
             """, unsafe_allow_html=True)
 
             # שורות הטבלה
             for idx, group in enumerate(groups_to_show):
                 group_name = group.get('groupName', group.get('groupId', 'Unknown Group'))
-                group_id = group.get('groupId', '')
+
+                # קבלת מספר משתמשים - אם יש במטמון או מהשדה של הקבוצה
+                user_count = group.get('memberCount', group.get('usersCount', '...'))
 
                 # כל שורה עם 2 עמודות
-                col_name, col_id = st.columns([2, 1])
+                col_name, col_count = st.columns([2, 1])
 
                 with col_name:
                     if st.button(f"{group_name}", key=f"group_btn_{group_name}", use_container_width=True):
@@ -454,9 +452,9 @@ def show():
 
                         st.rerun()
 
-                with col_id:
-                    # הצגת Group ID כטקסט בלבד
-                    st.markdown(f"<div style='padding: 0.5rem; color: #666; font-size: 0.9rem;'>{group_id}</div>", unsafe_allow_html=True)
+                with col_count:
+                    # הצגת מספר משתמשים במרכז
+                    st.markdown(f"<div style='padding: 0.75rem; color: #666; font-size: 0.95rem; text-align: center;'>{user_count}</div>", unsafe_allow_html=True)
 
         else:
             st.info("לא נמצאו קבוצות התואמות את קריטריוני החיפוש")
@@ -508,6 +506,13 @@ def show():
         if st.session_state.get('show_remove_section', False):
             st.markdown("---")
             st.markdown("### 🗑️ הסרת משתמשים מהקבוצה")
+
+            # גלילה אוטומטית למטה
+            st.markdown("""
+            <script>
+                window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+            </script>
+            """, unsafe_allow_html=True)
 
             # איתחול
             if 'selected_group_members' not in st.session_state:
@@ -592,6 +597,13 @@ def show():
         if st.session_state.get('show_add_section', False):
             st.markdown("---")
             st.markdown("### ➕ הוספת משתמשים לקבוצה")
+
+            # גלילה אוטומטית למטה
+            st.markdown("""
+            <script>
+                window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+            </script>
+            """, unsafe_allow_html=True)
 
             # איתחול מחסנית משתמשים
             if 'users_cart' not in st.session_state:
