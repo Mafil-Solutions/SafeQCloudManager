@@ -222,26 +222,28 @@ def show():
             line-height: 1 !important;
         }
 
-        /* כפתורי קבוצות - עיצוב שורות טבלה נקיות */
+        /* כפתורי קבוצות - עיצוב טבלה נקי */
         button[key^="group_btn_"] {
             background-color: white !important;
-            color: #2C3E50 !important;
+            color: #333 !important;
             border: none !important;
-            border-bottom: 1px solid #e0e0e0 !important;
+            border-bottom: 1px solid #e9ecef !important;
             border-radius: 0 !important;
-            padding: 1rem !important;
-            font-weight: 500 !important;
-            font-size: 1rem !important;
+            padding: 0.75rem 1rem !important;
+            font-weight: 400 !important;
+            font-size: 0.95rem !important;
             text-align: right !important;
-            transition: background-color 0.2s ease !important;
+            transition: all 0.15s ease !important;
             cursor: pointer !important;
             user-select: none !important;
             width: 100% !important;
             display: block !important;
+            box-shadow: none !important;
         }
 
         button[key^="group_btn_"]:hover {
-            background-color: rgba(196, 30, 58, 0.05) !important;
+            background-color: #f8f9fa !important;
+            color: #C41E3A !important;
         }
 
         button[key^="group_btn_"],
@@ -249,11 +251,12 @@ def show():
             pointer-events: auto !important;
         }
 
-        /* הסרת shadow ואפקטים מיותרים מכפתורי הקבוצות */
+        /* הסרת כל האפקטים המיותרים */
         button[key^="group_btn_"]:focus,
         button[key^="group_btn_"]:active {
             box-shadow: none !important;
-            border-bottom: 1px solid #e0e0e0 !important;
+            outline: none !important;
+            border-bottom: 1px solid #e9ecef !important;
         }
 
         /* Checkbox styling - פשוט וללא מסגרות מסביב */
@@ -325,32 +328,32 @@ def show():
     else:
         st.header("👥 ניהול קבוצות")
 
-    # כפתור רענן קבוצות - משמאל (מוצמד לצד השני)
-    col_spacer, col_refresh = st.columns([2, 2])
-    with col_refresh:
-        st.markdown('<div class="action-button">', unsafe_allow_html=True)
-        if st.button("🔄 רענן קבוצות", key="refresh_groups_btn"):
-            user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
-            logger.log_action(st.session_state.username, "Refresh Groups", "",
-                            st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
-            with st.spinner("מרענן קבוצות..."):
-                groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
-                if groups:
-                    allowed_departments = st.session_state.get('allowed_departments', [])
-                    groups_before_filter = len(groups)
-                    filtered_groups = filter_groups_by_departments(groups, allowed_departments)
-                    groups_after_filter = len(filtered_groups)
+        # כפתור רענן קבוצות - רק בדף הראשי (לא בתצוגת קבוצה ספציפית)
+        col_spacer, col_refresh = st.columns([3, 1])
+        with col_refresh:
+            st.markdown('<div class="action-button">', unsafe_allow_html=True)
+            if st.button("🔄 רענן קבוצות", key="refresh_groups_btn"):
+                user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+                logger.log_action(st.session_state.username, "Refresh Groups", "",
+                                st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
+                with st.spinner("מרענן קבוצות..."):
+                    groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+                    if groups:
+                        allowed_departments = st.session_state.get('allowed_departments', [])
+                        groups_before_filter = len(groups)
+                        filtered_groups = filter_groups_by_departments(groups, allowed_departments)
+                        groups_after_filter = len(filtered_groups)
 
-                    st.session_state.available_groups_list = filtered_groups
+                        st.session_state.available_groups_list = filtered_groups
 
-                    if groups_after_filter < groups_before_filter:
-                        st.success(f"נטענו {groups_after_filter} קבוצות מתוך {groups_before_filter} (מסוננות לפי הרשאות)")
+                        if groups_after_filter < groups_before_filter:
+                            st.success(f"נטענו {groups_after_filter} קבוצות מתוך {groups_before_filter} (מסוננות לפי הרשאות)")
+                        else:
+                            st.success(f"נטענו {groups_after_filter} קבוצות")
+                        st.rerun()
                     else:
-                        st.success(f"נטענו {groups_after_filter} קבוצות")
-                    st.rerun()
-                else:
-                    st.warning("לא נמצאו קבוצות")
-        st.markdown('</div>', unsafe_allow_html=True)
+                        st.warning("לא נמצאו קבוצות")
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # הצגת חיפוש ורשימת קבוצות - רק אחרי טעינה וכשלא בתצוגת קבוצה ספציפית
     if 'available_groups_list' in st.session_state and 'group_members_data' not in st.session_state:
@@ -374,52 +377,51 @@ def show():
 
             st.subheader(f"📋 קבוצות זמינות ({len(groups_to_show)})")
 
-            # עיצוב טבלה מודרני
+            # עיצוב טבלה נקייה
             st.markdown("""
             <style>
-                .groups-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 1rem;
-                    background-color: white;
+                /* כותרות טבלה */
+                .groups-table-header {
+                    display: flex;
+                    padding: 0.75rem 1rem;
+                    background-color: #f8f9fa;
+                    border-bottom: 2px solid #dee2e6;
+                    font-weight: 600;
+                    color: #495057;
                     direction: rtl;
                 }
 
-                .groups-table-row {
-                    border-bottom: 1px solid #e0e0e0;
-                    transition: background-color 0.2s ease;
-                    cursor: pointer;
-                }
-
-                .groups-table-row:hover {
-                    background-color: rgba(196, 30, 58, 0.05);
-                }
-
-                .groups-table-cell {
-                    padding: 1rem;
+                .header-group-name {
+                    flex: 2;
                     text-align: right;
                 }
 
-                .group-icon {
-                    margin-left: 0.5rem;
-                    color: #666;
-                }
-
-                .group-name {
-                    font-weight: 500;
-                    color: #2C3E50;
+                .header-group-id {
+                    flex: 1;
+                    text-align: right;
+                    padding-right: 1rem;
                 }
             </style>
             """, unsafe_allow_html=True)
 
-            # יצירת טבלה עם שורות לחיצות
+            # כותרות טבלה
+            st.markdown("""
+            <div class="groups-table-header">
+                <div class="header-group-name">👥 שם הקבוצה</div>
+                <div class="header-group-id">🆔 מזהה קבוצה</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # שורות הטבלה
             for idx, group in enumerate(groups_to_show):
                 group_name = group.get('groupName', group.get('groupId', 'Unknown Group'))
+                group_id = group.get('groupId', '')
 
-                # כל שורה היא כפתור בעיצוב של שורת טבלה
-                col_full = st.columns([1])
-                with col_full[0]:
-                    if st.button(f"👥  {group_name}", key=f"group_btn_{group_name}", use_container_width=True):
+                # כל שורה עם 2 עמודות
+                col_name, col_id = st.columns([2, 1])
+
+                with col_name:
+                    if st.button(f"{group_name}", key=f"group_btn_{group_name}", use_container_width=True):
                         st.session_state.selected_group_name = group_name
 
                         # טעינה אוטומטית של חברי הקבוצה
@@ -451,6 +453,10 @@ def show():
                             del st.session_state.show_add_section
 
                         st.rerun()
+
+                with col_id:
+                    # הצגת Group ID כטקסט בלבד
+                    st.markdown(f"<div style='padding: 0.5rem; color: #666; font-size: 0.9rem;'>{group_id}</div>", unsafe_allow_html=True)
 
         else:
             st.info("לא נמצאו קבוצות התואמות את קריטריוני החיפוש")
