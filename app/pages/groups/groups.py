@@ -6,6 +6,7 @@ SafeQ Cloud Manager - Groups Management Page
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import sys
 import os
 
@@ -222,9 +223,9 @@ def show():
             line-height: 1 !important;
         }
 
-        /* כפתורי קבוצות - עיצוב טבלה נקי (רק כפתורי הקבוצות!) */
-        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"] {
-            background-color: white !important;
+        /* כפתורי קבוצות - מבוסס על class שניתן ע"י streamlit */
+        .stButton > button[kind="secondary"] {
+            background: white !important;
             color: #333 !important;
             border: none !important;
             border-bottom: 1px solid #e9ecef !important;
@@ -234,25 +235,26 @@ def show():
             font-size: 0.95rem !important;
             text-align: right !important;
             transition: all 0.15s ease !important;
-            cursor: pointer !important;
-            user-select: none !important;
             width: 100% !important;
-            display: block !important;
             box-shadow: none !important;
         }
 
-        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"]:hover {
+        .stButton > button[kind="secondary"]:hover {
             background-color: #f8f9fa !important;
             color: #C41E3A !important;
         }
 
-        /* הסרת כל האפקטים המיותרים */
-        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"]:focus,
-        div[data-testid="stColumn"] button[kind="secondary"][key^="group_btn_"]:active {
+        .stButton > button[kind="secondary"]:focus,
+        .stButton > button[kind="secondary"]:active {
             box-shadow: none !important;
             outline: none !important;
-            border-bottom: 1px solid #e9ecef !important;
             background-color: white !important;
+        }
+
+        /* כפתורי action - להישאר אדומים */
+        .action-button button {
+            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+            color: white !important;
         }
 
         /* Checkbox styling - פשוט וללא מסגרות מסביב */
@@ -286,6 +288,20 @@ def show():
             if groups:
                 allowed_departments = st.session_state.get('allowed_departments', [])
                 filtered_groups = filter_groups_by_departments(groups, allowed_departments)
+
+                # טעינת מספר משתמשים לכל קבוצה
+                st.session_state.group_member_counts = {}
+                for group in filtered_groups:
+                    group_name = group.get('groupName', group.get('groupId', ''))
+                    try:
+                        members = api.get_group_members(group_name)
+                        if members:
+                            st.session_state.group_member_counts[group_name] = len(members)
+                        else:
+                            st.session_state.group_member_counts[group_name] = 0
+                    except:
+                        st.session_state.group_member_counts[group_name] = 0
+
                 st.session_state.available_groups_list = filtered_groups
 
     # Breadcrumb navigation
@@ -339,6 +355,19 @@ def show():
                         groups_before_filter = len(groups)
                         filtered_groups = filter_groups_by_departments(groups, allowed_departments)
                         groups_after_filter = len(filtered_groups)
+
+                        # טעינת מספר משתמשים לכל קבוצה
+                        st.session_state.group_member_counts = {}
+                        for group in filtered_groups:
+                            group_name = group.get('groupName', group.get('groupId', ''))
+                            try:
+                                members = api.get_group_members(group_name)
+                                if members:
+                                    st.session_state.group_member_counts[group_name] = len(members)
+                                else:
+                                    st.session_state.group_member_counts[group_name] = 0
+                            except:
+                                st.session_state.group_member_counts[group_name] = 0
 
                         st.session_state.available_groups_list = filtered_groups
 
@@ -412,8 +441,8 @@ def show():
             for idx, group in enumerate(groups_to_show):
                 group_name = group.get('groupName', group.get('groupId', 'Unknown Group'))
 
-                # קבלת מספר משתמשים - אם יש במטמון או מהשדה של הקבוצה
-                user_count = group.get('memberCount', group.get('usersCount', '...'))
+                # קבלת מספר משתמשים מהמטמון
+                user_count = st.session_state.group_member_counts.get(group_name, 0)
 
                 # כל שורה עם 2 עמודות
                 col_name, col_count = st.columns([2, 1])
@@ -508,11 +537,16 @@ def show():
             st.markdown("### 🗑️ הסרת משתמשים מהקבוצה")
 
             # גלילה אוטומטית למטה
-            st.markdown("""
+            components.html("""
             <script>
-                window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+                setTimeout(function() {
+                    window.parent.document.querySelector('section.main').scrollTo({
+                        top: window.parent.document.querySelector('section.main').scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 100);
             </script>
-            """, unsafe_allow_html=True)
+            """, height=0)
 
             # איתחול
             if 'selected_group_members' not in st.session_state:
@@ -599,11 +633,16 @@ def show():
             st.markdown("### ➕ הוספת משתמשים לקבוצה")
 
             # גלילה אוטומטית למטה
-            st.markdown("""
+            components.html("""
             <script>
-                window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+                setTimeout(function() {
+                    window.parent.document.querySelector('section.main').scrollTo({
+                        top: window.parent.document.querySelector('section.main').scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 100);
             </script>
-            """, unsafe_allow_html=True)
+            """, height=0)
 
             # איתחול מחסנית משתמשים
             if 'users_cart' not in st.session_state:
