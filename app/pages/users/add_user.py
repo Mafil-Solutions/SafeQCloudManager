@@ -147,33 +147,50 @@ def show():
         st.warning("👁️ רמת ההרשאה שלך (viewer) מאפשרת רק צפייה. יצירת משתמשים חדשים זמינה רק לתמיכה/מנהלים.")
         return
 
-    # הכנת אפשרויות מחלקה
+    # טעינת מחלקות - לפי הרשאות
+    # SuperAdmin: כל המחלקות | Support/Admin: רק מחלקות מורשות
     allowed_departments = st.session_state.get('allowed_departments', [])
-    local_groups = st.session_state.get('local_groups', [])
 
-    # Debug: הצגת מצב התחלתי
-    print(f"[DEBUG] Add User - Initial state:")
-    print(f"  - allowed_departments: {allowed_departments}")
-    print(f"  - local_groups in session: {len(local_groups)}")
+    if role == 'superadmin':
+        # SuperAdmin - טוען את כל המחלקות מ-SafeQ Cloud
+        if 'all_safeq_departments' not in st.session_state:
+            with st.spinner("טוען מחלקות מ-SafeQ Cloud..."):
+                all_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
+                if all_groups:
+                    # חילוץ מחלקות מקבוצות (קבוצות עם " - " בשם)
+                    departments = set()
+                    for group in all_groups:
+                        group_name = group.get('groupName', '')
+                        if ' - ' in group_name:
+                            departments.add(group_name)
+                    st.session_state.all_safeq_departments = sorted(departments)
+                else:
+                    st.session_state.all_safeq_departments = []
 
-    # Superadmin תמיד טוען את כל הקבוצות מה-API (לא תלוי במה שב-session)
-    # כי משתמשים דרך Entra עשויים להיות שייכים רק לחלק מהקבוצות
-    if allowed_departments == ["ALL"]:
-        with st.spinner("טוען רשימת מחלקות..."):
-            provider_id = CONFIG['PROVIDERS']['LOCAL']
-            print(f"[DEBUG] Superadmin: Loading ALL groups from API (provider_id: {provider_id})...")
-            local_groups = api.get_groups(provider_id) or []
-            print(f"[DEBUG] Loaded {len(local_groups)} groups from API")
-            st.session_state.local_groups = local_groups
+        department_options = st.session_state.all_safeq_departments
+        print(f"[DEBUG] SuperAdmin - All SafeQ departments: {len(department_options)} options")
+    else:
+        # Support/Admin - רק מחלקות מורשות
+        if 'authorized_departments' not in st.session_state:
+            with st.spinner("טוען מחלקות מורשות..."):
+                all_groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=1000)
+                if all_groups:
+                    departments = set()
+                    for group in all_groups:
+                        group_name = group.get('groupName', '')
+                        # רק קבוצות עם " - " שהן במחלקות מורשות
+                        if ' - ' in group_name:
+                            # בדיקה אם זה ALL או שהמחלקה ברשימת המורשות
+                            if allowed_departments == ["ALL"] or group_name in allowed_departments:
+                                departments.add(group_name)
+                    st.session_state.authorized_departments = sorted(departments)
+                else:
+                    st.session_state.authorized_departments = []
 
-    department_options = get_department_options(allowed_departments, local_groups)
-    print(f"[DEBUG] Final department_options: {len(department_options)} options")
-    if department_options:
-        print(f"  - First 3 options: {department_options[:3]}")
+        department_options = st.session_state.authorized_departments
+        print(f"[DEBUG] {role} - Authorized departments: {len(department_options)} options")
 
-    is_superadmin = allowed_departments == ["ALL"]
-    has_single_dept = len(department_options) == 1
-    has_multiple_depts = len(department_options) > 1
+    has_departments = len(department_options) > 0
 
     # ניהול מצב הטופס
     form_state = st.session_state.get('add_user_form_state', {})
@@ -191,32 +208,17 @@ def show():
             new_last_name = st.text_input("שם משפחה", value=form_state.get('last_name', ''))
             new_email = st.text_input("אימייל", value=form_state.get('email', ''))
 
-            # שדה Department דינמי
-            # Superadmin תמיד מקבל dropdown (גם אם יש רק מחלקה אחת)
-            # משתמשים אחרים: dropdown רק אם יש יותר ממחלקה אחת
-            if is_superadmin and department_options:
-                # Superadmin - תמיד dropdown
+            # שדה מחלקה - תמיד selectbox עם כל המחלקות הקיימות ב-SafeQ
+            if has_departments:
                 default_dept_idx = 0
                 if form_state.get('department') in department_options:
                     default_dept_idx = department_options.index(form_state.get('department'))
                 new_department = st.selectbox("מחלקה *", options=department_options, index=default_dept_idx,
                                              help="בחר מחלקה מהרשימה")
-            elif has_single_dept:
-                # משתמש רגיל עם מחלקה אחת - שדה חסום
-                new_department = st.text_input("מחלקה", value=department_options[0], disabled=True,
-                                              help="מחלקה זו נקבעת אוטומטית לפי ההרשאות שלך")
-            elif has_multiple_depts:
-                # משתמש רגיל עם מספר מחלקות - dropdown
-                default_dept_idx = 0
-                if form_state.get('department') in department_options:
-                    default_dept_idx = department_options.index(form_state.get('department'))
-                new_department = st.selectbox("מחלקה *", options=department_options, index=default_dept_idx,
-                                             help="בחר מחלקה מהרשימה המורשות")
             else:
                 # אין מחלקות זמינות
-                new_department = st.text_input("מחלקה", disabled=True,
-                                              help="לא נמצאו מחלקות זמינות")
-                st.error("⚠️ לא ניתן ליצור משתמש - אין מחלקות מורשות")
+                new_department = None
+                st.error("⚠️ לא ניתן ליצור משתמש - אין מחלקות במערכת SafeQ")
 
         # עמודה שמאלית (col2 מופיע שני ב-RTL)
         with col2:

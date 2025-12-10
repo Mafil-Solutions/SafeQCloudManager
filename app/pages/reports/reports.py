@@ -37,9 +37,13 @@ def apply_data_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
 
     counter = st.session_state.filter_reset_counter
 
+    # ניהול מצב expander של סינונים - ברירת מחדל סגור
+    if 'filters_expanded' not in st.session_state:
+        st.session_state.filters_expanded = False
+
     st.markdown("---")
 
-    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=True):
+    with st.expander("🔍 **סינון נתונים** (לחץ להצגה/הסתרה)", expanded=st.session_state.filters_expanded):
         st.markdown("##### סנן את הנתונים המוצגים בדשבורד ובדוח המפורט")
 
         filter_row1_col1, filter_row1_col2, filter_row1_col3 = st.columns(3)
@@ -186,7 +190,12 @@ def show_report_settings(api):
     </style>
     """, unsafe_allow_html=True)
 
-    with st.expander("⚙️ הגדרות דוח (לחץ להסתרה/הרחבה)", expanded=True):
+    # ניהול מצב expanders - ברירת מחדל פתוח
+    if 'report_settings_expanded' not in st.session_state:
+        st.session_state.report_settings_expanded = True
+
+    # לא משתמש ב-key כי גרסת Streamlit לא תומכת
+    with st.expander("⚙️ הגדרות דוח (לחץ להסתרה/הרחבה)", expanded=st.session_state.report_settings_expanded):
 
         # שורה 0: פילטר מהיר + איפוס
         col_quick, col_reset = st.columns([3, 1])
@@ -453,13 +462,40 @@ def show_dashboard_tab(api, status_filter_list):
     # חישוב סטטיסטיקות ישירות מהDataFrame המסונן
     # כולל כל סוגי העבודות: הדפסה, העתקה, סריקה, פקס
     total_docs = len(df)
-    total_pages = int(df['עמודים'].sum())
-    total_color_pages = int(df['צבע'].sum())
+
+    # סינון לפי הדפסה והעתקה בלבד (ללא סריקה ופקס)
+    print_copy_df = df[df['סוג'].isin(['הדפסה', 'העתקה'])]
+
+    total_pages = int(print_copy_df['עמודים'].sum())
+    total_color_pages = int(print_copy_df['צבע'].sum())
+
+    # חישוב דו צדדי וחד צדדי (רק הדפסה והעתקה)
+    duplex_pages = int(print_copy_df[print_copy_df['דופלקס'] == 'כן']['עמודים'].sum())
+    simplex_pages = int(print_copy_df[print_copy_df['דופלקס'] == 'לא']['עמודים'].sum())
+    duplex_percentage = (duplex_pages / total_pages * 100) if total_pages > 0 else 0
+    simplex_percentage = (simplex_pages / total_pages * 100) if total_pages > 0 else 0
 
     # כרטיסי סטטיסטיקה
     col1, col2, col3, col4 = st.columns(4)
 
+    # col1 - סה"כ עמודים (ראשון מימין) עם פילוח דו/חד צדדי
     with col1:
+        st.markdown(f"""
+        <div class="stats-card">
+            <div class="stats-number">{total_pages:,}</div>
+            <div class="stats-label">סה"כ עמודים</div>
+            <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(196, 30, 58, 0.2);">
+                <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.3rem;">פילוח הדפסה:</div>
+                <div style="font-size: 0.85rem; color: #555;">
+                    <span style="font-weight: 600;">דו צדדי:</span> {duplex_percentage:.1f}%<br>
+                    <span style="font-weight: 600;">חד צדדי:</span> {simplex_percentage:.1f}%
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # col2 - סה"כ עבודות
+    with col2:
         st.markdown(f"""
         <div class="stats-card">
             <div class="stats-number">{total_docs:,}</div>
@@ -467,14 +503,7 @@ def show_dashboard_tab(api, status_filter_list):
         </div>
         """, unsafe_allow_html=True)
 
-    with col2:
-        st.markdown(f"""
-        <div class="stats-card">
-            <div class="stats-number">{total_pages:,}</div>
-            <div class="stats-label">סה"כ עמודים</div>
-        </div>
-        """, unsafe_allow_html=True)
-
+    # col3 - עמודי צבע
     with col3:
         st.markdown(f"""
         <div class="stats-card">
@@ -483,6 +512,7 @@ def show_dashboard_tab(api, status_filter_list):
         </div>
         """, unsafe_allow_html=True)
 
+    # col4 - עמודים ש/ל
     with col4:
         bw_pages = total_pages - total_color_pages
         st.markdown(f"""
@@ -902,8 +932,13 @@ def show():
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
+            # סגירת expander של הגדרות דוח ופתיחת expander של סינונים
+            st.session_state.report_settings_expanded = False
+            st.session_state.filters_expanded = True
             # קריאת נתונים מ-API
             fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records)
+            # אילוץ rerun כדי לעדכן את מצב ה-expanders
+            st.rerun()
 
         # טעינת הנתונים והכנת DataFrame מסונן משותף
         if 'history_report_data' in st.session_state:
@@ -1093,6 +1128,8 @@ def show_history_report(api, logger, role, username):
     # ביצוע החיפוש
     if search_clicked or 'history_report_data' in st.session_state:
         if search_clicked:
+            # סגירת expander של הגדרות דוח
+            st.session_state.report_settings_expanded = False
             # בדיקה אם צריך לפצל לשבועות
             # date_diff מחשב ימים ביניהם, אז date_diff=6 זה 7 ימים (כולל התחלה)
             date_diff = (date_end - date_start).days
