@@ -1038,6 +1038,14 @@ def main():
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
     local_username = st.session_state.get('local_username', None)
 
+    # Debug - הצגת מידע על משתמש (זמני)
+    with st.sidebar:
+        with st.expander("🔍 Debug Info", expanded=False):
+            st.write(f"Role: {role}")
+            st.write(f"Local Username: {local_username}")
+            st.write(f"Username: {st.session_state.get('username', 'N/A')}")
+            st.write(f"Auth Method: {st.session_state.get('auth_method', 'N/A')}")
+
     # בדיקת הרשאה לגישה לרשימת משתמשים
     # רק superadmin או admin מקומי (משתמש חירום) רואים את רשימת המשתמשים
     can_view_user_list = (role == 'superadmin') or (role == 'admin' and local_username)
