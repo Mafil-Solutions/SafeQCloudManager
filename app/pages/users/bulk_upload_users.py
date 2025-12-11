@@ -19,6 +19,43 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import get_api_instance, get_logger_instance, check_authentication, CONFIG
 
 
+@st.dialog("📊 תוצאות העלאה", width="large")
+def show_upload_results_dialog(stats):
+    """Modal להצגת תוצאות העלאה"""
+    st.subheader("📈 תוצאות העלאה")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("✅ הצלחות", stats['success'], delta=None, delta_color="normal")
+    with col2:
+        st.metric("❌ כשלונות", stats['failed'], delta=None, delta_color="inverse")
+
+    if stats['success'] > 0:
+        st.success(f"🎉 {stats['success']} משתמשים נוצרו בהצלחה!")
+        st.balloons()
+
+    if stats['failed'] > 0:
+        st.error(f"⚠️ {stats['failed']} משתמשים נכשלו")
+        if stats['errors']:
+            with st.expander("📋 פרטי שגיאות", expanded=True):
+                for error in stats['errors']:
+                    st.write(f"• {error}")
+
+    st.markdown("---")
+
+    col_ok = st.columns(1)[0]
+    if st.button("✓ סיום - נקה מסך", key="upload_results_ok", type="primary", use_container_width=True):
+        # ניקוי מלא של כל ה-session state הקשור להעלאה
+        keys_to_delete = [
+            'validated_df', 'general_errors', 'confirm_upload',
+            'upload_completed', 'upload_stats'
+        ]
+        for key in keys_to_delete:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
+
+
 def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]:
     """
     בדיקת תקינות הנתונים מה-CSV
@@ -305,6 +342,17 @@ def show():
         help="העלה קובץ CSV עם רשימת המשתמשים להעלאה (בפורמט: username, full_name, email, password, shortid, department)"
     )
 
+    # ניקוי session state כאשר מסירים את הקובץ (לוחצים X)
+    if uploaded_file is None:
+        # אם היה קובץ לפני והעלאה בתהליך - נקה הכל
+        keys_to_delete = [
+            'validated_df', 'general_errors', 'confirm_upload',
+            'upload_completed', 'upload_stats'
+        ]
+        for key in keys_to_delete:
+            if key in st.session_state:
+                del st.session_state[key]
+
     if uploaded_file is not None:
         try:
             # קריאת הקובץ CSV ללא כותרות (כמו בסקריפט המקורי)
@@ -457,27 +505,6 @@ def show():
                 progress_bar.empty()
                 progress_text.empty()
 
-                # תוצאות
-                st.markdown("---")
-                st.subheader("📈 תוצאות העלאה")
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("הצלחות", stats['success'], delta=None, delta_color="normal")
-                with col2:
-                    st.metric("כשלונות", stats['failed'], delta=None, delta_color="inverse")
-
-                if stats['success'] > 0:
-                    st.success(f"✅ {stats['success']} משתמשים נוצרו בהצלחה!")
-                    st.balloons()
-
-                if stats['failed'] > 0:
-                    st.error(f"❌ {stats['failed']} משתמשים נכשלו")
-                    if stats['errors']:
-                        with st.expander("פרטי שגיאות"):
-                            for error in stats['errors']:
-                                st.write(f"• {error}")
-
                 # לוג
                 logger.log_action(
                     current_username,
@@ -489,20 +516,18 @@ def show():
                     st.session_state.get('access_level', 'admin')
                 )
 
-                # כפתור לאיפוס
-                if st.button("🔄 העלאה נוספת", use_container_width=True):
-                    # ניקוי
-                    if 'validated_df' in st.session_state:
-                        del st.session_state.validated_df
-                    if 'general_errors' in st.session_state:
-                        del st.session_state.general_errors
-                    if 'confirm_upload' in st.session_state:
-                        del st.session_state.confirm_upload
-                    st.rerun()
+                # שמירת התוצאות ב-session state והצגת Dialog
+                st.session_state.upload_stats = stats
+                st.session_state.upload_completed = True
+                st.rerun()
 
         except Exception as e:
             st.error(f"❌ שגיאה בקריאת הקובץ: {str(e)}")
-            st.info("💡 ודא שהקובץ בפורמט תקין (Excel או CSV)")
+            st.info("💡 ודא שהקובץ בפורמט תקין (CSV)")
+
+    # הצגת Dialog עם תוצאות (אחרי rerun)
+    if st.session_state.get('upload_completed', False):
+        show_upload_results_dialog(st.session_state.upload_stats)
 
 
 if __name__ == "__main__":
