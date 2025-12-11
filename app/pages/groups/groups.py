@@ -224,7 +224,7 @@ def show():
         }
 
         /* כפתורי קבוצות בלבד - לא משפיע על action buttons */
-        /* נכנס רק לכפתורים בתוך אזור רשימת הקבוצות */
+        /* נכנס רק לכפתורים בתוך אזור רשימת הקבוצות, לא בכפתור רענן */
         [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"] {
             background: white !important;
             color: #333 !important;
@@ -252,10 +252,14 @@ def show():
             background-color: white !important;
         }
 
-        /* כפתורי action - להישאר אדומים */
-        .action-button button {
+        /* כפתורי action - אדומים תמיד (כולל רענן) */
+        .action-button button,
+        button[key="refresh_groups_btn"],
+        button[key="back_to_groups"] {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
         }
 
         /* Checkbox styling - פשוט וללא מסגרות מסביב */
@@ -290,9 +294,13 @@ def show():
                 allowed_departments = st.session_state.get('allowed_departments', [])
                 filtered_groups = filter_groups_by_departments(groups, allowed_departments)
 
-                # סינון קבוצות מערכת
-                system_groups = ['Local Users', 'Local admins']
-                filtered_groups = [g for g in filtered_groups if g.get('groupName', '') not in system_groups]
+                # סינון קבוצות מערכת - בדיקה רחבה יותר
+                system_groups_lower = ['local users', 'local admins', 'localusers', 'localadmins']
+                filtered_groups = [
+                    g for g in filtered_groups
+                    if g.get('groupName', '').lower() not in system_groups_lower
+                    and g.get('groupId', '').lower() not in system_groups_lower
+                ]
 
                 # טעינת מספר משתמשים לכל קבוצה
                 st.session_state.group_member_counts = {}
@@ -302,7 +310,7 @@ def show():
                 total = len(filtered_groups)
                 for idx, group in enumerate(filtered_groups):
                     group_name = group.get('groupName', group.get('groupId', ''))
-                    progress_text.text(f"טוען משתמשים... ({idx + 1}/{total})")
+                    progress_text.text(f"טוען קבוצות... ({idx + 1}/{total})")
                     progress_bar.progress((idx + 1) / total)
 
                     try:
@@ -322,24 +330,11 @@ def show():
     if 'group_members_data' in st.session_state:
         group_name = st.session_state.group_members_data.get('group_name', '')
 
-        # שורת ניווט
-        st.markdown(f"""
-        <div style="margin-bottom: 1rem; padding: 0.5rem; background-color: #f8f9fa; border-radius: 5px; direction: rtl;">
-            <span style="color: #666; font-size: 0.9rem;">
-                <a href="#" style="color: #C41E3A; text-decoration: none; font-weight: 600;"
-                   onclick="return false;">קבוצות</a>
-                <span style="margin: 0 0.5rem; color: #999;">/</span>
-                <span style="color: #333; font-weight: 600;">{group_name}</span>
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # כפתור חזרה
-        col_back, col_spacer = st.columns([1, 3])
-        with col_back:
-            st.markdown('<div class="action-button">', unsafe_allow_html=True)
-            if st.button("⬅️ חזור לקבוצות", key="back_to_groups"):
-                # ניקוי מלא
+        # שורת ניווט לחיצה
+        col_nav = st.columns([1])
+        with col_nav[0]:
+            if st.button("⬅️ קבוצות", key="breadcrumb_back", use_container_width=False):
+                # ניקוי מלא וחזרה
                 keys_to_delete = [
                     'group_members_data', 'selected_group_name', 'selected_group_members',
                     'confirm_bulk_remove', 'bulk_remove_in_progress', 'bulk_remove_results',
@@ -350,7 +345,8 @@ def show():
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown(f"<h3 style='margin-top: 0.5rem;'>👥 קבוצה: '{group_name}' ({st.session_state.group_members_data.get('count', 0)} חברים)</h3>", unsafe_allow_html=True)
     else:
         st.header("👥 ניהול קבוצות")
 
@@ -370,9 +366,13 @@ def show():
                         filtered_groups = filter_groups_by_departments(groups, allowed_departments)
                         groups_after_filter = len(filtered_groups)
 
-                        # סינון קבוצות מערכת
-                        system_groups = ['Local Users', 'Local admins']
-                        filtered_groups = [g for g in filtered_groups if g.get('groupName', '') not in system_groups]
+                        # סינון קבוצות מערכת - בדיקה רחבה יותר
+                        system_groups_lower = ['local users', 'local admins', 'localusers', 'localadmins']
+                        filtered_groups = [
+                            g for g in filtered_groups
+                            if g.get('groupName', '').lower() not in system_groups_lower
+                            and g.get('groupId', '').lower() not in system_groups_lower
+                        ]
 
                         # טעינת מספר משתמשים לכל קבוצה
                         st.session_state.group_member_counts = {}
@@ -382,7 +382,7 @@ def show():
                         total = len(filtered_groups)
                         for idx, group in enumerate(filtered_groups):
                             group_name = group.get('groupName', group.get('groupId', ''))
-                            progress_text.text(f"טוען משתמשים... ({idx + 1}/{total})")
+                            progress_text.text(f"טוען קבוצות... ({idx + 1}/{total})")
                             progress_bar.progress((idx + 1) / total)
 
                             try:
