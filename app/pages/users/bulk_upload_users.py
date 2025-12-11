@@ -445,6 +445,13 @@ def show():
 
             # ביצוע העלאה
             if st.session_state.get('confirm_upload', False):
+                # בדיקת תקינות - לוודא ש-validated_df קיים
+                if 'validated_df' not in st.session_state:
+                    st.error("❌ שגיאה: נתוני הקובץ אינם זמינים. אנא העלה את הקובץ מחדש.")
+                    if 'confirm_upload' in st.session_state:
+                        del st.session_state.confirm_upload
+                    return
+
                 st.markdown("---")
                 st.subheader("⏳ מעלה משתמשים...")
 
