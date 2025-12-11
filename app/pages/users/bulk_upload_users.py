@@ -21,10 +21,11 @@ from shared import get_api_instance, get_logger_instance, check_authentication, 
 
 def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]:
     """
-    בדיקת תקינות הנתונים מהאקסל
+    בדיקת תקינות הנתונים מה-CSV
+    פורמט: username, full_name, email, password, shortid, department
 
     Args:
-        df: DataFrame עם הנתונים מהאקסל
+        df: DataFrame עם הנתונים מה-CSV
         api: SafeQAPI instance
 
     Returns:
@@ -32,13 +33,19 @@ def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]
     """
     errors = []
 
-    # בדיקת עמודות נדרשות
-    required_columns = ['username']
+    # בדיקת עמודות נדרשות - בסדר מדויק
+    required_columns = ['username', 'full_name']
+    expected_columns = ['username', 'full_name', 'email', 'password', 'shortid', 'department']
+
     missing_columns = [col for col in required_columns if col not in df.columns]
 
     if missing_columns:
         errors.append(f"❌ חסרות עמודות חובה: {', '.join(missing_columns)}")
         return df, errors
+
+    # אזהרה אם העמודות לא בסדר הנכון
+    if list(df.columns[:6]) != expected_columns[:len(df.columns[:6])]:
+        errors.append(f"⚠️ העמודות לא בסדר הנכון. הסדר הנכון: {', '.join(expected_columns)}")
 
     # הוספת עמודת סטטוס
     df['status'] = ''
@@ -47,8 +54,9 @@ def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]
     # בדיקת כל שורה
     for idx, row in df.iterrows():
         username = str(row.get('username', '')).strip()
+        full_name = str(row.get('full_name', '')).strip() if pd.notna(row.get('full_name')) else ''
         email = str(row.get('email', '')).strip() if pd.notna(row.get('email')) else ''
-        pin = str(row.get('pin', '')).strip() if pd.notna(row.get('pin')) else ''
+        shortid = str(row.get('shortid', '')).strip() if pd.notna(row.get('shortid')) else ''
 
         row_errors = []
 
@@ -59,15 +67,19 @@ def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]
             # בדיקת username קיים
             username_exists, provider_name = api.check_username_exists(username)
             if username_exists:
-                row_errors.append(f"שם משתמש קיים במערכת ({provider_name})")
+                row_errors.append(f"שם משתמש קיים ({provider_name})")
+
+        # בדיקת שם מלא חובה
+        if not full_name:
+            row_errors.append("שם מלא חסר")
 
         # בדיקת אימייל
         if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
             row_errors.append("אימייל לא תקין")
 
         # בדיקת PIN כפול
-        if pin:
-            pin_exists, existing_user = api.check_pin_exists(pin)
+        if shortid:
+            pin_exists, existing_user = api.check_pin_exists(shortid)
             if pin_exists:
                 row_errors.append(f"PIN כפול (קיים אצל {existing_user})")
 
@@ -211,32 +223,33 @@ def show():
     # הנחיות שימוש
     with st.expander("📋 הנחיות שימוש", expanded=False):
         st.markdown("""
-        ### פורמט קובץ האקסל:
+        ### פורמט קובץ ה-CSV/Excel:
 
-        הקובץ חייב להכיל את העמודות הבאות (בשורה הראשונה):
+        הקובץ חייב להכיל את העמודות הבאות **בסדר המדויק** (בשורה הראשונה):
 
-        | עמודה | שם באנגלית | חובה | הערות |
-        |--------|------------|------|-------|
-        | שם משתמש | username | ✅ | שם ייחודי |
-        | שם פרטי | first_name | ❌ | |
-        | שם משפחה | last_name | ❌ | |
-        | אימייל | email | ❌ | פורמט תקין |
-        | מחלקה | department | ❌ | |
-        | סיסמה | password | ❌ | ברירת מחדל: Aa123456 |
-        | PIN | pin | ❌ | ייחודי |
-        | מזהה כרטיס | cardid | ❌ | |
+        | מס' | עמודה | שם באנגלית | חובה | הערות |
+        |-----|--------|------------|------|-------|
+        | 1 | שם משתמש | username | ✅ | שם ייחודי |
+        | 2 | שם מלא | full_name | ✅ | שם פרטי ומשפחה |
+        | 3 | אימייל | email | ❌ | פורמט תקין |
+        | 4 | סיסמה | password | ❌ | ברירת מחדל: Aa123456 |
+        | 5 | PIN/קוד זיהוי | shortid | ❌ | ייחודי (4-6 ספרות) |
+        | 6 | מחלקה | department | ❌ | שם המחלקה |
 
-        ### דוגמה:
+        ### דוגמה לקובץ CSV:
         ```
-        username,first_name,last_name,email,department,password,pin,cardid
-        user1,משה,כהן,moshe@example.com,מחלקת IT,Aa123456,1234,
-        user2,שרה,לוי,sarah@example.com,מחלקת כספים,,5678,
+        username,full_name,email,password,shortid,department
+        moshe.cohen,משה כהן,moshe@example.com,Aa123456,1234,מחלקת IT
+        sarah.levi,שרה לוי,sarah@example.com,Aa123456,5678,מחלקת כספים
+        david.israel,דוד ישראל,david@example.com,,2345,הנהלה
         ```
 
         ### שימו לב:
-        - הקובץ חייב להיות בפורמט Excel (.xlsx) או CSV
-        - שם המשתמש הוא שדה חובה
-        - המערכת תבדוק אם שמות המשתמשים והPINים כבר קיימים
+        - **חובה**: הקובץ חייב להיות בפורמט CSV (לא Excel - ייצא מ-Excel כ-CSV)
+        - **חובה**: העמודות חייבות להיות בסדר המדויק שמופיע למעלה
+        - שם משתמש ושם מלא הם שדות חובה
+        - אם לא מציינים סיסמה - תיווצר סיסמת ברירת מחדל: Aa123456
+        - המערכת תבדוק אם שמות משתמשים ו-PINים כבר קיימים
         - משתמשים עם שגיאות לא יועלו
         """)
 
@@ -245,18 +258,15 @@ def show():
     # העלאת קובץ
     st.subheader("📁 העלאת קובץ")
     uploaded_file = st.file_uploader(
-        "בחר קובץ Excel או CSV",
-        type=['xlsx', 'xls', 'csv'],
-        help="העלה קובץ עם רשימת המשתמשים להעלאה"
+        "בחר קובץ CSV",
+        type=['csv'],
+        help="העלה קובץ CSV עם רשימת המשתמשים להעלאה (בפורמט: username, full_name, email, password, shortid, department)"
     )
 
     if uploaded_file is not None:
         try:
-            # קריאת הקובץ
-            if uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file)
-            else:
-                df = pd.read_excel(uploaded_file)
+            # קריאת הקובץ CSV
+            df = pd.read_csv(uploaded_file, encoding='utf-8')
 
             st.success(f"✅ הקובץ נטען בהצלחה! ({len(df)} שורות)")
 
@@ -303,7 +313,7 @@ def show():
 
                 # טבלה מפורטת
                 st.dataframe(
-                    validated_df[['username', 'first_name', 'last_name', 'email', 'status', 'error_message']],
+                    validated_df[['username', 'full_name', 'email', 'shortid', 'department', 'status', 'error_message']],
                     use_container_width=True,
                     height=400
                 )
@@ -355,21 +365,18 @@ def show():
 
                 for idx, row in valid_df.iterrows():
                     username = str(row.get('username', '')).strip()
-                    first_name = str(row.get('first_name', '')).strip() if pd.notna(row.get('first_name')) else ''
-                    last_name = str(row.get('last_name', '')).strip() if pd.notna(row.get('last_name')) else ''
+                    full_name = str(row.get('full_name', '')).strip() if pd.notna(row.get('full_name')) else ''
                     email = str(row.get('email', '')).strip() if pd.notna(row.get('email')) else ''
-                    department = str(row.get('department', '')).strip() if pd.notna(row.get('department')) else ''
                     password = str(row.get('password', '')).strip() if pd.notna(row.get('password')) else 'Aa123456'
-                    pin = str(row.get('pin', '')).strip() if pd.notna(row.get('pin')) else ''
-                    cardid = str(row.get('cardid', '')).strip() if pd.notna(row.get('cardid')) else ''
+                    shortid = str(row.get('shortid', '')).strip() if pd.notna(row.get('shortid')) else ''
+                    department = str(row.get('department', '')).strip() if pd.notna(row.get('department')) else ''
 
                     details = {
-                        'fullname': f"{first_name} {last_name}".strip(),
+                        'fullname': full_name,
                         'email': email,
                         'password': password,
-                        'department': department,
-                        'shortid': pin,
-                        'cardid': cardid
+                        'shortid': shortid,
+                        'department': department
                     }
 
                     try:
