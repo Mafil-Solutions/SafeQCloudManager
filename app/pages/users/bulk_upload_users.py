@@ -47,6 +47,32 @@ def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]
     if list(df.columns[:6]) != expected_columns[:len(df.columns[:6])]:
         errors.append(f"⚠️ העמודות לא בסדר הנכון. הסדר הנכון: {', '.join(expected_columns)}")
 
+    # בדיקת כפילויות בתוך הקובץ עצמו
+    duplicates_in_file = {}
+
+    # בדיקת usernames כפולים בקובץ
+    usernames_in_file = df['username'].str.strip()
+    duplicate_usernames = usernames_in_file[usernames_in_file.duplicated()].unique()
+    if len(duplicate_usernames) > 0:
+        duplicates_in_file['usernames'] = list(duplicate_usernames)
+        errors.append(f"⚠️ שמות משתמש כפולים בקובץ: {', '.join(duplicate_usernames)}")
+
+    # בדיקת PINים כפולים בקובץ (רק אלה שלא ריקים)
+    pins_in_file = df['shortid'].str.strip()
+    non_empty_pins = pins_in_file[pins_in_file != '']
+    duplicate_pins = non_empty_pins[non_empty_pins.duplicated()].unique()
+    if len(duplicate_pins) > 0:
+        duplicates_in_file['pins'] = list(duplicate_pins)
+        errors.append(f"⚠️ PINים כפולים בקובץ: {', '.join(duplicate_pins)}")
+
+    # בדיקת אימיילים כפולים בקובץ (רק אלה שלא ריקים)
+    emails_in_file = df['email'].str.strip()
+    non_empty_emails = emails_in_file[emails_in_file != '']
+    duplicate_emails = non_empty_emails[non_empty_emails.duplicated()].unique()
+    if len(duplicate_emails) > 0:
+        duplicates_in_file['emails'] = list(duplicate_emails)
+        errors.append(f"⚠️ אימיילים כפולים בקובץ: {', '.join(duplicate_emails)}")
+
     # הוספת עמודת סטטוס
     df['status'] = ''
     df['error_message'] = ''
@@ -65,24 +91,36 @@ def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]
         if not username:
             row_errors.append("שם משתמש חסר")
         else:
-            # בדיקת username קיים
-            username_exists, provider_name = api.check_username_exists(username)
-            if username_exists:
-                row_errors.append(f"שם משתמש קיים ({provider_name})")
+            # בדיקת username כפול בקובץ
+            if 'usernames' in duplicates_in_file and username in duplicates_in_file['usernames']:
+                row_errors.append("שם משתמש כפול בקובץ")
+            else:
+                # רק אם לא כפול בקובץ, בדוק במערכת
+                username_exists, provider_name = api.check_username_exists(username)
+                if username_exists:
+                    row_errors.append(f"שם משתמש קיים במערכת ({provider_name})")
 
         # בדיקת שם מלא חובה
         if not full_name:
             row_errors.append("שם מלא חסר")
 
         # בדיקת אימייל
-        if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            row_errors.append("אימייל לא תקין")
+        if email:
+            if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                row_errors.append("אימייל לא תקין")
+            elif 'emails' in duplicates_in_file and email in duplicates_in_file['emails']:
+                row_errors.append("אימייל כפול בקובץ")
 
         # בדיקת PIN כפול
         if shortid:
-            pin_exists, existing_user = api.check_pin_exists(shortid)
-            if pin_exists:
-                row_errors.append(f"PIN כפול (קיים אצל {existing_user})")
+            # בדיקת PIN כפול בקובץ
+            if 'pins' in duplicates_in_file and shortid in duplicates_in_file['pins']:
+                row_errors.append("PIN כפול בקובץ")
+            else:
+                # רק אם לא כפול בקובץ, בדוק במערכת
+                pin_exists, existing_user = api.check_pin_exists(shortid)
+                if pin_exists:
+                    row_errors.append(f"PIN כפול במערכת (קיים אצל {existing_user})")
 
         # עדכון סטטוס
         if row_errors:
