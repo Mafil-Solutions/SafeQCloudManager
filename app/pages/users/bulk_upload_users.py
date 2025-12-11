@@ -53,10 +53,11 @@ def validate_excel_data(df: pd.DataFrame, api) -> Tuple[pd.DataFrame, List[str]]
 
     # בדיקת כל שורה
     for idx, row in df.iterrows():
+        # הנתונים כבר string בגלל dtype=str, פשוט strip
         username = str(row.get('username', '')).strip()
-        full_name = str(row.get('full_name', '')).strip() if pd.notna(row.get('full_name')) else ''
-        email = str(row.get('email', '')).strip() if pd.notna(row.get('email')) else ''
-        shortid = str(row.get('shortid', '')).strip() if pd.notna(row.get('shortid')) else ''
+        full_name = str(row.get('full_name', '')).strip()
+        email = str(row.get('email', '')).strip()
+        shortid = str(row.get('shortid', '')).strip()
 
         row_errors = []
 
@@ -270,11 +271,14 @@ def show():
         try:
             # קריאת הקובץ CSV ללא כותרות (כמו בסקריפט המקורי)
             # העמודות בסדר: username, full_name, email, password, shortid, department
+            # חשוב: קריאת כל העמודות כטקסט כדי לשמור 0 מובילים (ת.ז, PIN וכו')
             df = pd.read_csv(
                 uploaded_file,
                 encoding='utf-8',
                 header=None,  # אין כותרות בקובץ
-                names=['username', 'full_name', 'email', 'password', 'shortid', 'department']
+                names=['username', 'full_name', 'email', 'password', 'shortid', 'department'],
+                dtype=str,  # קרא הכל כטקסט - חשוב לשמירת 0 מובילים!
+                keep_default_na=False  # אל תמיר ערכים ריקים ל-NaN
             )
 
             st.success(f"✅ הקובץ נטען בהצלחה! ({len(df)} שורות נתונים)")
@@ -376,12 +380,17 @@ def show():
                 valid_df = validated_df[validated_df['status'] == '✅ תקין']
 
                 for idx, row in valid_df.iterrows():
+                    # הנתונים כבר string בגלל dtype=str, פשוט strip
                     username = str(row.get('username', '')).strip()
-                    full_name = str(row.get('full_name', '')).strip() if pd.notna(row.get('full_name')) else ''
-                    email = str(row.get('email', '')).strip() if pd.notna(row.get('email')) else ''
-                    password = str(row.get('password', '')).strip() if pd.notna(row.get('password')) else 'Aa123456'
-                    shortid = str(row.get('shortid', '')).strip() if pd.notna(row.get('shortid')) else ''
-                    department = str(row.get('department', '')).strip() if pd.notna(row.get('department')) else ''
+                    full_name = str(row.get('full_name', '')).strip()
+                    email = str(row.get('email', '')).strip()
+                    password = str(row.get('password', '')).strip()
+                    shortid = str(row.get('shortid', '')).strip()
+                    department = str(row.get('department', '')).strip()
+
+                    # ברירת מחדל לסיסמה אם ריקה
+                    if not password:
+                        password = 'Aa123456'
 
                     details = {
                         'fullname': full_name,
