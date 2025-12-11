@@ -1063,8 +1063,8 @@ def main():
             # הוספת רשימת משתמשים למיקום השני (אחרי סקירה)
             user_pages.insert(1, users_list_page)
 
-        # העלאה המונית - רק ל-Admin מקומי
-        if role == 'admin' and local_username:
+        # העלאה המונית - רק למנהלים מקומיים (admin או superadmin)
+        if local_username and role in ['admin', 'superadmin']:
             user_pages.append(users_bulk_upload_page)
 
         nav = st.navigation({

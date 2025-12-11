@@ -208,13 +208,13 @@ def show():
 
     st.title("📤 העלאה המונית של משתמשים")
 
-    # בדיקת הרשאות - רק Admin מקומי
+    # בדיקת הרשאות - רק למנהלים מקומיים
     role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
     local_username = st.session_state.get('local_username', None)
 
-    if not (role == 'admin' and local_username):
-        st.error("❌ תכונה זו זמינה רק למשתמש Admin מקומי")
-        st.info("💡 יש להתחבר כמשתמש Admin מקומי (לא משתמש Entra)")
+    if not (local_username and role in ['admin', 'superadmin']):
+        st.error("❌ תכונה זו זמינה רק למנהלים מקומיים (Admin/SuperAdmin)")
+        st.info("💡 יש להתחבר כמשתמש מקומי עם הרשאות ניהול (לא משתמש Entra)")
         return
 
     api = get_api_instance()
