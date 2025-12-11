@@ -519,6 +519,9 @@ def show():
                 # שמירת התוצאות ב-session state והצגת Dialog
                 st.session_state.upload_stats = stats
                 st.session_state.upload_completed = True
+                # חשוב! נקה את confirm_upload לפני rerun כדי למנוע לופ אינסופי
+                if 'confirm_upload' in st.session_state:
+                    del st.session_state.confirm_upload
                 st.rerun()
 
         except Exception as e:
