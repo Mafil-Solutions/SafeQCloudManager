@@ -253,13 +253,24 @@ def show():
         }
 
         /* כפתורי action - אדומים תמיד (כולל רענן) */
-        .action-button button,
-        button[key="refresh_groups_btn"],
-        button[key="back_to_groups"] {
+        /* עם specificity גבוה יותר כדי לעקוף את הסטיילים הלבנים */
+        div[data-testid="column"] .action-button button,
+        div[data-testid="stColumn"] .action-button button,
+        button[data-testid="baseButton-secondary"][key="refresh_groups_btn"],
+        button[data-testid="baseButton-secondary"][key="breadcrumb_back"],
+        .action-button > button {
             background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
             color: white !important;
             border: none !important;
             box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
+            font-weight: 600 !important;
+        }
+
+        div[data-testid="column"] .action-button button:hover,
+        div[data-testid="stColumn"] .action-button button:hover,
+        .action-button > button:hover {
+            background: linear-gradient(45deg, #a01829, #e05555) !important;
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4) !important;
         }
 
         /* Checkbox styling - פשוט וללא מסגרות מסביב */
@@ -326,14 +337,31 @@ def show():
                 progress_bar.empty()
                 st.session_state.available_groups_list = filtered_groups
 
-    # Breadcrumb navigation
+    # Breadcrumb navigation with visual breadcrumb bar
     if 'group_members_data' in st.session_state:
         group_name = st.session_state.group_members_data.get('group_name', '')
+        member_count = st.session_state.group_members_data.get('count', 0)
 
-        # שורת ניווט לחיצה
-        col_nav = st.columns([1])
-        with col_nav[0]:
-            if st.button("⬅️ קבוצות", key="breadcrumb_back", use_container_width=False):
+        # שורת ניווט מעוצבת
+        st.markdown(f"""
+        <div style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                    border-right: 4px solid #C41E3A; border-radius: 8px; direction: rtl; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="color: #666; font-size: 0.95rem;">
+                    <span style="color: #C41E3A; font-weight: 600;">קבוצות</span>
+                    <span style="margin: 0 0.5rem; color: #999;">›</span>
+                    <span style="color: #333; font-weight: 700; font-size: 1.1rem;">{group_name}</span>
+                    <span style="margin-right: 0.75rem; color: #888; font-size: 0.9rem;">({member_count} חברים)</span>
+                </span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # כפתור חזרה
+        col_back, col_spacer = st.columns([1, 3])
+        with col_back:
+            st.markdown('<div class="action-button">', unsafe_allow_html=True)
+            if st.button("⬅️ חזור לקבוצות", key="breadcrumb_back"):
                 # ניקוי מלא וחזרה
                 keys_to_delete = [
                     'group_members_data', 'selected_group_name', 'selected_group_members',
@@ -345,8 +373,7 @@ def show():
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
-
-        st.markdown(f"<h3 style='margin-top: 0.5rem;'>👥 קבוצה: '{group_name}' ({st.session_state.group_members_data.get('count', 0)} חברים)</h3>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.header("👥 ניהול קבוצות")
 
@@ -529,7 +556,7 @@ def show():
     if 'group_members_data' in st.session_state:
         st.markdown("---")
         group_data = st.session_state.group_members_data
-        st.subheader(f"👥 קבוצה: '{group_data['group_name']}' ({group_data['count']} חברים)")
+        # כותרת מוצגת למעלה בשורת הניווט - אין צורך להציג פעמיים
 
         role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
 

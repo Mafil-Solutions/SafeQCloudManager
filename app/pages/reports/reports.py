@@ -6,6 +6,7 @@
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from datetime import datetime, timedelta
 import json
@@ -935,6 +936,8 @@ def show():
             # סגירת expander של הגדרות דוח ופתיחת expander של סינונים
             st.session_state.report_settings_expanded = False
             st.session_state.filters_expanded = True
+            # הגדרת דגל גלילה אוטומטית לאחר rerun
+            st.session_state.trigger_report_scroll = True
             # קריאת נתונים מ-API
             fetch_report_data(api, logger, username, date_start, date_end, status_filter_list, max_records)
             # אילוץ rerun כדי לעדכן את מצב ה-expanders
@@ -985,6 +988,38 @@ def show():
             else:
                 st.warning("⚠️ אין נתונים להצגה")
                 return
+
+    # גלילה אוטומטית לתוצאות הדוח אחרי rerun
+    if st.session_state.get('trigger_report_scroll', False):
+        components.html("""
+        <script>
+            // מנסה מספר דרכים לגלילה
+            setTimeout(function() {
+                // דרך 1: גלילה ל-main section
+                try {
+                    var mainSection = window.parent.document.querySelector('section.main');
+                    if (mainSection) {
+                        mainSection.scrollTop = mainSection.scrollHeight;
+                    }
+                } catch(e) {}
+
+                // דרך 2: גלילה לחלון כולו
+                try {
+                    window.parent.window.scrollTo(0, document.body.scrollHeight);
+                } catch(e) {}
+
+                // דרך 3: גלילה לאלמנט האחרון
+                try {
+                    var elements = window.parent.document.querySelectorAll('[data-testid="stVerticalBlock"]');
+                    if (elements.length > 0) {
+                        elements[elements.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                } catch(e) {}
+            }, 300);
+        </script>
+        """, height=0)
+        # ניקוי דגל הגלילה
+        st.session_state.trigger_report_scroll = False
 
     # יצירת טאבים - רק 2 טאבים
     tab1, tab2 = st.tabs([
