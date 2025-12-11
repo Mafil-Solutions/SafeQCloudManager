@@ -277,10 +277,13 @@ def show():
                 names=['username', 'full_name', 'email', 'password', 'shortid', 'department']
             )
 
-            st.success(f"✅ הקובץ נטען בהצלחה! ({len(df)} שורות)")
+            st.success(f"✅ הקובץ נטען בהצלחה! ({len(df)} שורות נתונים)")
+            st.info(f"📊 הקובץ מכיל {len(df)} משתמשים (ללא שורת כותרות)")
 
             # תצוגת נתונים גולמיים
             with st.expander("👁️ הצגת נתונים גולמיים", expanded=False):
+                st.write("**שימו לב:** הכותרות באפור (username, full_name וכו') הן לתצוגה בלבד. הנתונים מתחילים מאינדקס 0.")
+                st.write(f"**מספר שורות בקובץ:** {len(df)}")
                 st.dataframe(df, use_container_width=True)
 
             st.markdown("---")
