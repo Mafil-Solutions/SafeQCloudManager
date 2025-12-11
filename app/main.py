@@ -981,6 +981,7 @@ def main():
     from pages.users.user_list import show as users_list_show
     from pages.users.search_edit import show as users_search_show
     from pages.users.add_user import show as users_add_show
+    from pages.users.bulk_upload_users import show as users_bulk_upload_show
     from pages.groups.groups import show as users_groups_show
     from pages.printers import show as printers_show
     from pages.print_queues import show as print_queues_show
@@ -993,6 +994,7 @@ def main():
     users_list_page = st.Page(users_list_show, title="רשימת משתמשים", icon="📋", url_path="users_list")
     users_search_page = st.Page(users_search_show, title="חיפוש ועריכה", icon="🔍", url_path="users_search")
     users_add_page = st.Page(users_add_show, title="הוספת משתמש", icon="➕", url_path="users_add")
+    users_bulk_upload_page = st.Page(users_bulk_upload_show, title="העלאה המונית", icon="📤", url_path="users_bulk_upload")
     users_groups_page = st.Page(users_groups_show, title="קבוצות", icon="👨‍👩‍👧‍👦", url_path="users_groups")
 
     # דף סקירה - עם גישה לדפים אחרים
@@ -1052,6 +1054,10 @@ def main():
         if can_view_user_list:
             # הוספת רשימת משתמשים למיקום השני (אחרי סקירה)
             user_pages.insert(1, users_list_page)
+
+        # העלאה המונית - רק ל-Admin מקומי
+        if role == 'admin' and local_username:
+            user_pages.append(users_bulk_upload_page)
 
         nav = st.navigation({
             "ראשי": [home_page],
