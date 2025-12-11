@@ -6,6 +6,7 @@ SafeQ Cloud Manager - Groups Management Page
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import sys
 import os
 
@@ -222,27 +223,54 @@ def show():
             line-height: 1 !important;
         }
 
-        /* כפתורי קבוצות - עיצוב Secondary בהיר */
-        .group-button button {
-            background-color: inherit !important;
-            color: #2C3E50 !important;
-            border: 1px solid #ddd !important;
-            border-radius: 8px !important;
-            padding: 8px 16px !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-            cursor: pointer !important;
-            user-select: none !important;
+        /* כפתורי קבוצות בלבד - לא משפיע על action buttons */
+        /* נכנס רק לכפתורים בתוך אזור רשימת הקבוצות, לא בכפתור רענן */
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"] {
+            background: white !important;
+            color: #333 !important;
+            border: none !important;
+            border-bottom: 1px solid #e9ecef !important;
+            border-radius: 0 !important;
+            padding: 0.75rem 1rem !important;
+            font-weight: 400 !important;
+            font-size: 0.95rem !important;
+            text-align: right !important;
+            transition: all 0.15s ease !important;
+            width: 100% !important;
+            box-shadow: none !important;
         }
 
-        .group-button button:hover {
-            background-color: rgba(151, 166, 195, 0.15) !important;
-            border-color: #C41E3A !important;
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"]:hover {
+            background-color: #f8f9fa !important;
+            color: #C41E3A !important;
         }
 
-        .group-button button,
-        .group-button button * {
-            pointer-events: auto !important;
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"]:focus,
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"]:active {
+            box-shadow: none !important;
+            outline: none !important;
+            background-color: white !important;
+        }
+
+        /* כפתורי action - אדומים תמיד (כולל רענן) */
+        /* עם specificity גבוה יותר כדי לעקוף את הסטיילים הלבנים */
+        div[data-testid="column"] .action-button button,
+        div[data-testid="stColumn"] .action-button button,
+        button[data-testid="baseButton-secondary"][key="refresh_groups_btn"],
+        button[data-testid="baseButton-secondary"][key="breadcrumb_back"],
+        .action-button > button {
+            background: linear-gradient(45deg, #C41E3A, #FF6B6B) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
+            font-weight: 600 !important;
+        }
+
+        div[data-testid="column"] .action-button button:hover,
+        div[data-testid="stColumn"] .action-button button:hover,
+        .action-button > button:hover {
+            background: linear-gradient(45deg, #a01829, #e05555) !important;
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4) !important;
         }
 
         /* Checkbox styling - פשוט וללא מסגרות מסביב */
@@ -269,41 +297,159 @@ def show():
     api = get_api_instance()
     logger = get_logger_instance()
 
-    st.header("👥 ניהול קבוצות")
+    # טעינה אוטומטית של קבוצות בכניסה לדף
+    if 'available_groups_list' not in st.session_state:
+        with st.spinner("טוען קבוצות..."):
+            groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+            if groups:
+                allowed_departments = st.session_state.get('allowed_departments', [])
+                filtered_groups = filter_groups_by_departments(groups, allowed_departments)
 
-    # כפתור טען קבוצות - תמיד בראש, מוצמד לימין
-    col1, col_spacer = st.columns([2, 2])
-    with col1:
-        st.markdown('<div class="action-button">', unsafe_allow_html=True)
-        if st.button("🔄 טען קבוצות", key="refresh_groups_btn"):
-            user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
-            logger.log_action(st.session_state.username, "Load Groups", "",
-                            st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
-            with st.spinner("טוען קבוצות..."):
-                groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
-                if groups:
-                    allowed_departments = st.session_state.get('allowed_departments', [])
-                    groups_before_filter = len(groups)
-                    filtered_groups = filter_groups_by_departments(groups, allowed_departments)
-                    groups_after_filter = len(filtered_groups)
+                # סינון קבוצות מערכת - בדיקה רחבה יותר
+                system_groups_lower = ['local users', 'local admins', 'localusers', 'localadmins']
+                filtered_groups = [
+                    g for g in filtered_groups
+                    if g.get('groupName', '').lower() not in system_groups_lower
+                    and g.get('groupId', '').lower() not in system_groups_lower
+                ]
 
-                    st.session_state.available_groups_list = filtered_groups
+                # טעינת מספר משתמשים לכל קבוצה
+                st.session_state.group_member_counts = {}
+                progress_text = st.empty()
+                progress_bar = st.progress(0)
 
-                    if groups_after_filter < groups_before_filter:
-                        st.success(f"נטענו {groups_after_filter} קבוצות מתוך {groups_before_filter} (מסוננות לפי הרשאות)")
+                total = len(filtered_groups)
+                for idx, group in enumerate(filtered_groups):
+                    group_name = group.get('groupName', group.get('groupId', ''))
+                    progress_text.text(f"טוען קבוצות... ({idx + 1}/{total})")
+                    progress_bar.progress((idx + 1) / total)
+
+                    try:
+                        members = api.get_group_members(group_name)
+                        if members:
+                            st.session_state.group_member_counts[group_name] = len(members)
+                        else:
+                            st.session_state.group_member_counts[group_name] = 0
+                    except:
+                        st.session_state.group_member_counts[group_name] = 0
+
+                progress_text.empty()
+                progress_bar.empty()
+                st.session_state.available_groups_list = filtered_groups
+
+    # Breadcrumb navigation with visual breadcrumb bar
+    if 'group_members_data' in st.session_state:
+        group_name = st.session_state.group_members_data.get('group_name', '')
+        member_count = st.session_state.group_members_data.get('count', 0)
+
+        # שורת ניווט מעוצבת
+        st.markdown(f"""
+        <div style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                    border-right: 4px solid #C41E3A; border-radius: 8px; direction: rtl; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="color: #666; font-size: 0.95rem;">
+                    <span style="color: #C41E3A; font-weight: 600;">קבוצות</span>
+                    <span style="margin: 0 0.5rem; color: #999;">›</span>
+                    <span style="color: #333; font-weight: 700; font-size: 1.1rem;">{group_name}</span>
+                    <span style="margin-right: 0.75rem; color: #888; font-size: 0.9rem;">({member_count} חברים)</span>
+                </span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # כפתור חזרה
+        col_back, col_spacer = st.columns([1, 3])
+        with col_back:
+            st.markdown('<div class="action-button">', unsafe_allow_html=True)
+            if st.button("⬅️ חזור לקבוצות", key="breadcrumb_back"):
+                # ניקוי מלא וחזרה
+                keys_to_delete = [
+                    'group_members_data', 'selected_group_name', 'selected_group_members',
+                    'confirm_bulk_remove', 'bulk_remove_in_progress', 'bulk_remove_results',
+                    'group_checkbox_counter', 'show_remove_section', 'show_add_section',
+                    'users_cart', 'search_results_add', 'confirm_bulk_add'
+                ]
+                for key in keys_to_delete:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.header("👥 ניהול קבוצות")
+
+        # כפתור רענן קבוצות - רק בדף הראשי (לא בתצוגת קבוצה ספציפית)
+        col_spacer, col_refresh = st.columns([3, 1])
+        with col_refresh:
+            st.markdown('<div class="action-button">', unsafe_allow_html=True)
+            if st.button("🔄 רענן קבוצות", key="refresh_groups_btn"):
+                user_groups_str = ', '.join([g['displayName'] for g in st.session_state.get('user_groups', [])]) if st.session_state.get('user_groups') else ""
+                logger.log_action(st.session_state.username, "Refresh Groups", "",
+                                st.session_state.get('user_email', ''), user_groups_str, True, st.session_state.get('access_level', 'viewer'))
+                with st.spinner("מרענן קבוצות..."):
+                    groups = api.get_groups(CONFIG['PROVIDERS']['LOCAL'], max_records=500)
+                    if groups:
+                        allowed_departments = st.session_state.get('allowed_departments', [])
+                        groups_before_filter = len(groups)
+                        filtered_groups = filter_groups_by_departments(groups, allowed_departments)
+                        groups_after_filter = len(filtered_groups)
+
+                        # סינון קבוצות מערכת - בדיקה רחבה יותר
+                        system_groups_lower = ['local users', 'local admins', 'localusers', 'localadmins']
+                        filtered_groups = [
+                            g for g in filtered_groups
+                            if g.get('groupName', '').lower() not in system_groups_lower
+                            and g.get('groupId', '').lower() not in system_groups_lower
+                        ]
+
+                        # טעינת מספר משתמשים לכל קבוצה
+                        st.session_state.group_member_counts = {}
+                        progress_text = st.empty()
+                        progress_bar = st.progress(0)
+
+                        total = len(filtered_groups)
+                        for idx, group in enumerate(filtered_groups):
+                            group_name = group.get('groupName', group.get('groupId', ''))
+                            progress_text.text(f"טוען קבוצות... ({idx + 1}/{total})")
+                            progress_bar.progress((idx + 1) / total)
+
+                            try:
+                                members = api.get_group_members(group_name)
+                                if members:
+                                    st.session_state.group_member_counts[group_name] = len(members)
+                                else:
+                                    st.session_state.group_member_counts[group_name] = 0
+                            except:
+                                st.session_state.group_member_counts[group_name] = 0
+
+                        progress_text.empty()
+                        progress_bar.empty()
+                        st.session_state.available_groups_list = filtered_groups
+
+                        if groups_after_filter < groups_before_filter:
+                            st.success(f"נטענו {groups_after_filter} קבוצות מתוך {groups_before_filter} (מסוננות לפי הרשאות)")
+                        else:
+                            st.success(f"נטענו {groups_after_filter} קבוצות")
+                        st.rerun()
                     else:
-                        st.success(f"נטענו {groups_after_filter} קבוצות")
-                    st.rerun()
-                else:
-                    st.warning("לא נמצאו קבוצות")
-        st.markdown('</div>', unsafe_allow_html=True)
+                        st.warning("לא נמצאו קבוצות")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    # הצגת חיפוש ורשימת קבוצות - רק אחרי טעינה
-    if 'available_groups_list' in st.session_state:
+    # הצגת חיפוש ורשימת קבוצות - רק אחרי טעינה וכשלא בתצוגת קבוצה ספציפית
+    if 'available_groups_list' in st.session_state and 'group_members_data' not in st.session_state:
         st.markdown("---")
 
-        # חיפוש קבוצות
-        search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש קבוצות...", key="group_search")
+        # חיפוש קבוצות (מיידי עם on_change)
+        def on_search_change():
+            # פונקציה זו מאלצת rerun בכל שינוי
+            pass
+
+        search_term = st.text_input(
+            "🔍 חיפוש קבוצות",
+            placeholder="הקלד לחיפוש - תוצאות מיידיות",
+            key="group_search",
+            on_change=on_search_change,
+            label_visibility="visible"
+        )
 
         groups_to_show = st.session_state.available_groups_list
 
@@ -320,13 +466,53 @@ def show():
 
             st.subheader(f"📋 קבוצות זמינות ({len(groups_to_show)})")
 
-            # רשימה פשוטה מצד ימין
-            col_list, col_spacer = st.columns([3, 1])
-            with col_list:
-                for group in groups_to_show:
-                    group_name = group.get('groupName', group.get('groupId', 'Unknown Group'))
+            # עיצוב טבלה נקייה
+            st.markdown("""
+            <style>
+                /* כותרות טבלה */
+                .groups-table-header {
+                    display: flex;
+                    padding: 0.75rem 1rem;
+                    background-color: #f8f9fa;
+                    border-bottom: 2px solid #dee2e6;
+                    font-weight: 600;
+                    color: #495057;
+                    direction: rtl;
+                }
 
-                    if st.button(f"👥 {group_name}", key=f"group_btn_{group_name}"):
+                .header-group-name {
+                    flex: 2;
+                    text-align: right;
+                }
+
+                .header-user-count {
+                    flex: 1;
+                    text-align: center;
+                    padding-right: 1rem;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+
+            # כותרות טבלה
+            st.markdown("""
+            <div class="groups-table-header">
+                <div class="header-group-name">👥 שם הקבוצה</div>
+                <div class="header-user-count">👤 משתמשים בקבוצה</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # שורות הטבלה
+            for idx, group in enumerate(groups_to_show):
+                group_name = group.get('groupName', group.get('groupId', 'Unknown Group'))
+
+                # קבלת מספר משתמשים מהמטמון
+                user_count = st.session_state.group_member_counts.get(group_name, 0)
+
+                # כל שורה עם 2 עמודות
+                col_name, col_count = st.columns([2, 1])
+
+                with col_name:
+                    if st.button(f"{group_name}", key=f"group_btn_{group_name}", use_container_width=True):
                         st.session_state.selected_group_name = group_name
 
                         # טעינה אוטומטית של חברי הקבוצה
@@ -359,6 +545,10 @@ def show():
 
                         st.rerun()
 
+                with col_count:
+                    # הצגת מספר משתמשים במרכז
+                    st.markdown(f"<div style='padding: 0.75rem; color: #666; font-size: 0.95rem; text-align: center;'>{user_count}</div>", unsafe_allow_html=True)
+
         else:
             st.info("לא נמצאו קבוצות התואמות את קריטריוני החיפוש")
 
@@ -366,7 +556,7 @@ def show():
     if 'group_members_data' in st.session_state:
         st.markdown("---")
         group_data = st.session_state.group_members_data
-        st.subheader(f"👥 קבוצה: '{group_data['group_name']}' ({group_data['count']} חברים)")
+        # כותרת מוצגת למעלה בשורת הניווט - אין צורך להציג פעמיים
 
         role = st.session_state.get('role', st.session_state.get('access_level', 'viewer'))
 
@@ -409,6 +599,35 @@ def show():
         if st.session_state.get('show_remove_section', False):
             st.markdown("---")
             st.markdown("### 🗑️ הסרת משתמשים מהקבוצה")
+
+            # גלילה אוטומטית למטה
+            components.html("""
+            <script>
+                // מנסה מספר דרכים לגלילה
+                setTimeout(function() {
+                    // דרך 1: גלילה ל-main section
+                    try {
+                        var mainSection = window.parent.document.querySelector('section.main');
+                        if (mainSection) {
+                            mainSection.scrollTop = mainSection.scrollHeight;
+                        }
+                    } catch(e) {}
+
+                    // דרך 2: גלילה לחלון כולו
+                    try {
+                        window.parent.window.scrollTo(0, document.body.scrollHeight);
+                    } catch(e) {}
+
+                    // דרך 3: גלילה לאלמנט האחרון
+                    try {
+                        var elements = window.parent.document.querySelectorAll('[data-testid="stVerticalBlock"]');
+                        if (elements.length > 0) {
+                            elements[elements.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+                    } catch(e) {}
+                }, 300);
+            </script>
+            """, height=0)
 
             # איתחול
             if 'selected_group_members' not in st.session_state:
@@ -493,6 +712,35 @@ def show():
         if st.session_state.get('show_add_section', False):
             st.markdown("---")
             st.markdown("### ➕ הוספת משתמשים לקבוצה")
+
+            # גלילה אוטומטית למטה
+            components.html("""
+            <script>
+                // מנסה מספר דרכים לגלילה
+                setTimeout(function() {
+                    // דרך 1: גלילה ל-main section
+                    try {
+                        var mainSection = window.parent.document.querySelector('section.main');
+                        if (mainSection) {
+                            mainSection.scrollTop = mainSection.scrollHeight;
+                        }
+                    } catch(e) {}
+
+                    // דרך 2: גלילה לחלון כולו
+                    try {
+                        window.parent.window.scrollTo(0, document.body.scrollHeight);
+                    } catch(e) {}
+
+                    // דרך 3: גלילה לאלמנט האחרון
+                    try {
+                        var elements = window.parent.document.querySelectorAll('[data-testid="stVerticalBlock"]');
+                        if (elements.length > 0) {
+                            elements[elements.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+                    } catch(e) {}
+                }, 300);
+            </script>
+            """, height=0)
 
             # איתחול מחסנית משתמשים
             if 'users_cart' not in st.session_state:

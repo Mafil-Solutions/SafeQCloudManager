@@ -6,6 +6,7 @@ SafeQ Cloud Manager - Search and Edit Users Page
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import sys
 import os
@@ -484,6 +485,10 @@ def show():
 
                 st.session_state.search_results = matching_users
 
+                # גלילה אוטומטית לתוצאות אם נמצאו
+                if matching_users:
+                    st.session_state.trigger_scroll = True
+
                 # הצגת הודעה אם לא נמצאו תוצאות
                 if not matching_users:
                     st.warning(f"🔍 לא נמצאו תוצאות עבור החיפוש: **{search_term}** ב-**{search_type_he}** במקור **{search_provider}**")
@@ -493,6 +498,38 @@ def show():
     if 'search_results' in st.session_state and st.session_state.search_results:
         matching_users = st.session_state.search_results
         st.success(f"✅ נמצאו {len(matching_users)} משתמשים")
+
+        # גלילה אוטומטית לתוצאות
+        if st.session_state.get('trigger_scroll', False):
+            components.html("""
+            <script>
+                // מנסה מספר דרכים לגלילה
+                setTimeout(function() {
+                    // דרך 1: גלילה ל-main section
+                    try {
+                        var mainSection = window.parent.document.querySelector('section.main');
+                        if (mainSection) {
+                            mainSection.scrollTop = mainSection.scrollHeight;
+                        }
+                    } catch(e) {}
+
+                    // דרך 2: גלילה לחלון כולו
+                    try {
+                        window.parent.window.scrollTo(0, document.body.scrollHeight);
+                    } catch(e) {}
+
+                    // דרך 3: גלילה לאלמנט האחרון
+                    try {
+                        var elements = window.parent.document.querySelectorAll('[data-testid="stVerticalBlock"]');
+                        if (elements.length > 0) {
+                            elements[elements.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+                    } catch(e) {}
+                }, 300);
+            </script>
+            """, height=0)
+            # ניקוי דגל הגלילה
+            st.session_state.trigger_scroll = False
 
         df_data = []
         for idx, user in enumerate(matching_users, start=1):
