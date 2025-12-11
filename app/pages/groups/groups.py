@@ -223,8 +223,9 @@ def show():
             line-height: 1 !important;
         }
 
-        /* כפתורי קבוצות - מבוסס על class שניתן ע"י streamlit */
-        .stButton > button[kind="secondary"] {
+        /* כפתורי קבוצות בלבד - לא משפיע על action buttons */
+        /* נכנס רק לכפתורים בתוך אזור רשימת הקבוצות */
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"] {
             background: white !important;
             color: #333 !important;
             border: none !important;
@@ -239,13 +240,13 @@ def show():
             box-shadow: none !important;
         }
 
-        .stButton > button[kind="secondary"]:hover {
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"]:hover {
             background-color: #f8f9fa !important;
             color: #C41E3A !important;
         }
 
-        .stButton > button[kind="secondary"]:focus,
-        .stButton > button[kind="secondary"]:active {
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"]:focus,
+        [data-testid="stVerticalBlock"]:has(.groups-table-header) button[kind="secondary"]:active {
             box-shadow: none !important;
             outline: none !important;
             background-color: white !important;
@@ -289,10 +290,21 @@ def show():
                 allowed_departments = st.session_state.get('allowed_departments', [])
                 filtered_groups = filter_groups_by_departments(groups, allowed_departments)
 
+                # סינון קבוצות מערכת
+                system_groups = ['Local Users', 'Local admins']
+                filtered_groups = [g for g in filtered_groups if g.get('groupName', '') not in system_groups]
+
                 # טעינת מספר משתמשים לכל קבוצה
                 st.session_state.group_member_counts = {}
-                for group in filtered_groups:
+                progress_text = st.empty()
+                progress_bar = st.progress(0)
+
+                total = len(filtered_groups)
+                for idx, group in enumerate(filtered_groups):
                     group_name = group.get('groupName', group.get('groupId', ''))
+                    progress_text.text(f"טוען משתמשים... ({idx + 1}/{total})")
+                    progress_bar.progress((idx + 1) / total)
+
                     try:
                         members = api.get_group_members(group_name)
                         if members:
@@ -302,6 +314,8 @@ def show():
                     except:
                         st.session_state.group_member_counts[group_name] = 0
 
+                progress_text.empty()
+                progress_bar.empty()
                 st.session_state.available_groups_list = filtered_groups
 
     # Breadcrumb navigation
@@ -356,10 +370,21 @@ def show():
                         filtered_groups = filter_groups_by_departments(groups, allowed_departments)
                         groups_after_filter = len(filtered_groups)
 
+                        # סינון קבוצות מערכת
+                        system_groups = ['Local Users', 'Local admins']
+                        filtered_groups = [g for g in filtered_groups if g.get('groupName', '') not in system_groups]
+
                         # טעינת מספר משתמשים לכל קבוצה
                         st.session_state.group_member_counts = {}
-                        for group in filtered_groups:
+                        progress_text = st.empty()
+                        progress_bar = st.progress(0)
+
+                        total = len(filtered_groups)
+                        for idx, group in enumerate(filtered_groups):
                             group_name = group.get('groupName', group.get('groupId', ''))
+                            progress_text.text(f"טוען משתמשים... ({idx + 1}/{total})")
+                            progress_bar.progress((idx + 1) / total)
+
                             try:
                                 members = api.get_group_members(group_name)
                                 if members:
@@ -369,6 +394,8 @@ def show():
                             except:
                                 st.session_state.group_member_counts[group_name] = 0
 
+                        progress_text.empty()
+                        progress_bar.empty()
                         st.session_state.available_groups_list = filtered_groups
 
                         if groups_after_filter < groups_before_filter:
@@ -384,8 +411,18 @@ def show():
     if 'available_groups_list' in st.session_state and 'group_members_data' not in st.session_state:
         st.markdown("---")
 
-        # חיפוש קבוצות (מיידי)
-        search_term = st.text_input("🔍 חיפוש קבוצות", placeholder="הקלד לחיפוש - תוצאות מיידיות", key="group_search", label_visibility="visible")
+        # חיפוש קבוצות (מיידי עם on_change)
+        def on_search_change():
+            # פונקציה זו מאלצת rerun בכל שינוי
+            pass
+
+        search_term = st.text_input(
+            "🔍 חיפוש קבוצות",
+            placeholder="הקלד לחיפוש - תוצאות מיידיות",
+            key="group_search",
+            on_change=on_search_change,
+            label_visibility="visible"
+        )
 
         groups_to_show = st.session_state.available_groups_list
 
@@ -539,12 +576,29 @@ def show():
             # גלילה אוטומטית למטה
             components.html("""
             <script>
+                // מנסה מספר דרכים לגלילה
                 setTimeout(function() {
-                    window.parent.document.querySelector('section.main').scrollTo({
-                        top: window.parent.document.querySelector('section.main').scrollHeight,
-                        behavior: 'smooth'
-                    });
-                }, 100);
+                    // דרך 1: גלילה ל-main section
+                    try {
+                        var mainSection = window.parent.document.querySelector('section.main');
+                        if (mainSection) {
+                            mainSection.scrollTop = mainSection.scrollHeight;
+                        }
+                    } catch(e) {}
+
+                    // דרך 2: גלילה לחלון כולו
+                    try {
+                        window.parent.window.scrollTo(0, document.body.scrollHeight);
+                    } catch(e) {}
+
+                    // דרך 3: גלילה לאלמנט האחרון
+                    try {
+                        var elements = window.parent.document.querySelectorAll('[data-testid="stVerticalBlock"]');
+                        if (elements.length > 0) {
+                            elements[elements.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+                    } catch(e) {}
+                }, 300);
             </script>
             """, height=0)
 
@@ -635,12 +689,29 @@ def show():
             # גלילה אוטומטית למטה
             components.html("""
             <script>
+                // מנסה מספר דרכים לגלילה
                 setTimeout(function() {
-                    window.parent.document.querySelector('section.main').scrollTo({
-                        top: window.parent.document.querySelector('section.main').scrollHeight,
-                        behavior: 'smooth'
-                    });
-                }, 100);
+                    // דרך 1: גלילה ל-main section
+                    try {
+                        var mainSection = window.parent.document.querySelector('section.main');
+                        if (mainSection) {
+                            mainSection.scrollTop = mainSection.scrollHeight;
+                        }
+                    } catch(e) {}
+
+                    // דרך 2: גלילה לחלון כולו
+                    try {
+                        window.parent.window.scrollTo(0, document.body.scrollHeight);
+                    } catch(e) {}
+
+                    // דרך 3: גלילה לאלמנט האחרון
+                    try {
+                        var elements = window.parent.document.querySelectorAll('[data-testid="stVerticalBlock"]');
+                        if (elements.length > 0) {
+                            elements[elements.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+                    } catch(e) {}
+                }, 300);
             </script>
             """, height=0)
 
