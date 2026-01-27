@@ -1040,7 +1040,7 @@ def main():
 
     # Debug - הצגת מידע על משתמש (זמני)
     with st.sidebar:
-        with st.expander("🔍 Debug Info", expanded=False):
+        with st.expander("🔍 פרטי משתמש", expanded=False):
             st.write(f"Role: {role}")
             st.write(f"Local Username: {local_username}")
             st.write(f"Username: {st.session_state.get('username', 'N/A')}")
@@ -1064,7 +1064,7 @@ def main():
             user_pages.insert(1, users_list_page)
 
         # העלאה המונית - רק למנהלים מקומיים (admin או superadmin)
-        if local_username and role in ['admin', 'superadmin']:
+        if st.session_state.get('auth_method') == 'local' and role == 'superadmin':
             user_pages.append(users_bulk_upload_page)
 
         nav = st.navigation({
