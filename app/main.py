@@ -1064,7 +1064,7 @@ def main():
             user_pages.insert(1, users_list_page)
 
         # העלאה המונית - רק למנהלים מקומיים (admin או superadmin)
-        if auth_method == 'local' and role in ['admin', 'superadmin']:
+        if st.session_state.get('auth_method') == 'local' and role in ['admin', 'superadmin']:
             user_pages.append(users_bulk_upload_page)
 
         nav = st.navigation({
