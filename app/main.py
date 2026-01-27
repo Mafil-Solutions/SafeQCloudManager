@@ -1040,7 +1040,7 @@ def main():
 
     # Debug - הצגת מידע על משתמש (זמני)
     with st.sidebar:
-        with st.expander("🔍 Debug Info", expanded=False):
+        with st.expander("🔍 פרטי משתמש", expanded=False):
             st.write(f"Role: {role}")
             st.write(f"Local Username: {local_username}")
             st.write(f"Username: {st.session_state.get('username', 'N/A')}")
